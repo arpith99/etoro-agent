@@ -728,7 +728,7 @@
       "replies": {
         "type": "array",
         "items": {
-          "type": "object"
+          "$ref": "#/components/schemas/Comment"
         }
       },
       "emotionsData": {
@@ -1356,7 +1356,7 @@
         ]
       },
       "media": {
-        "type": "object"
+        "$ref": "#/components/schemas/Media"
       },
       "metadata": {
         "type": "object",

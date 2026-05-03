@@ -247,7 +247,7 @@ impl ::std::default::Default for ArticleMetadata {
 #[doc = "      \"type\": \"string\""]
 #[doc = "    },"]
 #[doc = "    \"media\": {"]
-#[doc = "      \"type\": \"object\""]
+#[doc = "      \"$ref\": \"#/$defs/Media\""]
 #[doc = "    },"]
 #[doc = "    \"mediaType\": {"]
 #[doc = "      \"type\": \"string\","]
@@ -295,8 +295,8 @@ impl ::std::default::Default for ArticleMetadata {
 pub struct Attachment {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub host: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::serde_json::Map::is_empty")]
-    pub media: ::serde_json::Map<::std::string::String, ::serde_json::Value>,
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub media: ::std::option::Option<Media>,
     #[serde(
         rename = "mediaType",
         default,
@@ -1198,7 +1198,7 @@ impl ::std::convert::TryFrom<::std::string::String> for AttachmentsItemMediaVide
 #[doc = "    \"replies\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Comment\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"repliesCount\": {"]
@@ -1248,7 +1248,7 @@ pub struct Comment {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub entity: ::std::option::Option<CommentEntity>,
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
-    pub replies: ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub replies: ::std::vec::Vec<Comment>,
     #[serde(
         rename = "repliesCount",
         default,
