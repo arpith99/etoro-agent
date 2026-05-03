@@ -1,0 +1,183 @@
+{
+  "_meta": {
+    "source": "https://api-portal.etoro.com (extracted via etoro-api-docs MCP)",
+    "openapi_version": "3.0.1",
+    "etoro_api_version": "v1.158.0",
+    "extracted_schemas": [
+      "WatchlistsResponse",
+      "WatchlistResponse",
+      "WatchlistItemDto",
+      "Market",
+      "Avatar",
+      "Svg",
+      "MarketAssetType",
+      "ApplicationSource"
+    ]
+  },
+  "WatchlistsResponse": {
+    "type": "object",
+    "description": "Response containing multiple watchlists with metadata",
+    "properties": {
+      "status": {
+        "type": "integer",
+        "format": "int32",
+        "description": "HTTP status code of the response",
+        "example": 200
+      },
+      "watchlists": {
+        "type": "array",
+        "description": "List of user watchlists",
+        "items": {
+          "$ref": "#/WatchlistResponse"
+        }
+      },
+      "exception": {
+        "type": "object",
+        "description": "Exception details when the request partially failed",
+        "properties": {
+          "invalidItems": {
+            "type": "array",
+            "description": "List of invalid item identifiers",
+            "items": { "type": "string" }
+          },
+          "reason":  { "type": "string", "description": "Reason for the exception" },
+          "message": { "type": "string", "description": "Human-readable exception message" }
+        }
+      },
+      "meta": {
+        "type": "object",
+        "description": "Response metadata including pagination info",
+        "properties": {
+          "pageNumber":               { "type": "integer", "format": "int32", "example": 0 },
+          "itemsPerPage":             { "type": "integer", "format": "int32", "example": 100 },
+          "maxItemsInWatchlistLimit": { "type": "integer", "format": "int32", "example": 1000 },
+          "maxWatchlistsLimit":       { "type": "integer", "format": "int32", "example": 10 }
+        }
+      },
+      "isSucceeded": { "type": "boolean", "description": "Whether the request succeeded", "example": true }
+    }
+  },
+  "WatchlistResponse": {
+    "type": "object",
+    "description": "Represents a watchlist with its metadata and items",
+    "properties": {
+      "watchlistId": { "type": "string", "example": "12345" },
+      "name":        { "type": "string", "example": "Tech Watchlist" },
+      "Gcid":        { "type": "integer", "format": "int32", "description": "Global Customer ID of the watchlist owner", "example": 12345 },
+      "watchlistType": {
+        "type": "string",
+        "enum": ["Static", "Dynamic", "RecentlyInvested", "Default"],
+        "example": "Static"
+      },
+      "totalItems":            { "type": "integer", "format": "int32", "example": 100 },
+      "isDefault":             { "type": "boolean", "example": true },
+      "isUserSelectedDefault": { "type": "boolean", "example": true },
+      "watchlistRank":         { "type": "integer", "format": "int32", "example": 1 },
+      "dynamicUrl":            { "type": "string", "nullable": true, "description": "URL for dynamic watchlist queries" },
+      "items": {
+        "type": "array",
+        "items": { "$ref": "#/WatchlistItemDto" }
+      },
+      "relatedAssets": {
+        "type": "array",
+        "nullable": true,
+        "items": { "type": "integer", "format": "int32" }
+      }
+    }
+  },
+  "WatchlistItemDto": {
+    "type": "object",
+    "description": "Represents an item in a watchlist",
+    "required": ["itemId", "itemType"],
+    "properties": {
+      "itemId":          { "type": "integer", "format": "int32", "example": 12345 },
+      "itemType":        { "type": "string", "example": "Instrument" },
+      "itemRank":        { "type": "integer", "format": "int32", "default": 0, "example": 1 },
+      "itemAddedReason": { "type": "string", "example": "Manual" },
+      "itemAddedDate":   { "type": "string", "format": "date-time" },
+      "market": {
+        "type": "object",
+        "description": "Market metadata for the instrument when included",
+        "properties": {
+          "id":                     { "type": "string" },
+          "symbolName":             { "type": "string" },
+          "displayName":            { "type": "string" },
+          "assetTypeId":            { "type": "integer", "format": "int32" },
+          "assetTypeSubCategoryId": { "type": "integer", "format": "int32", "nullable": true },
+          "exchangeId":             { "type": "integer", "format": "int32" },
+          "hasExpirationDate":      { "type": "boolean" },
+          "avatar": {
+            "type": "object",
+            "properties": {
+              "small":  { "type": "string" },
+              "medium": { "type": "string" },
+              "large":  { "type": "string" },
+              "svg": {
+                "type": "object",
+                "nullable": true,
+                "properties": {
+                  "url":             { "type": "string" },
+                  "backgroundColor": { "type": "string" },
+                  "textColor":       { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "Market": {
+    "_note": "Standalone Market schema (referenced elsewhere). NOTE: this is a different shape than the inline market on WatchlistItemDto above — many fields here are nullable. The watchlists endpoint returns the WatchlistItemDto.market shape, not this one.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "id":                     { "type": "string", "nullable": true },
+      "symbolName":             { "type": "string", "nullable": true },
+      "displayName":            { "type": "string", "nullable": true },
+      "updated":                { "type": "string", "format": "date-time", "nullable": true },
+      "assetType":              { "$ref": "#/MarketAssetType" },
+      "internalId":             { "type": "integer", "format": "int32" },
+      "avatar":                 { "$ref": "#/Avatar" },
+      "application":            { "$ref": "#/ApplicationSource" },
+      "metadata":               { "type": "string", "nullable": true },
+      "assetTypeId":            { "type": "integer", "format": "int32", "nullable": true },
+      "assetTypeSubCategoryId": { "type": "integer", "format": "int32", "nullable": true }
+    }
+  },
+  "Avatar": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "small":  { "type": "string", "nullable": true },
+      "medium": { "type": "string", "nullable": true },
+      "large":  { "type": "string", "nullable": true },
+      "svg":    { "$ref": "#/Svg" }
+    }
+  },
+  "Svg": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "url":             { "type": "string", "nullable": true },
+      "backgroundColor": { "type": "string", "nullable": true },
+      "textColor":       { "type": "string", "nullable": true }
+    }
+  },
+  "MarketAssetType": {
+    "type": "integer",
+    "format": "int32",
+    "description": "Enum encoded as integer; values listed below",
+    "enum": [
+      "Stocks", "Bonds", "ETF", "Index", "Warrants", "Options", "Futures",
+      "CFD", "TRS", "FOREX", "CommodityMetals", "CommodityEnergyAgriculture",
+      "CryptoCoin", "NFT"
+    ]
+  },
+  "ApplicationSource": {
+    "type": "integer",
+    "format": "int32",
+    "description": "Enum encoded as integer; values listed below",
+    "enum": ["eToro", "Delta", "Gatsby"]
+  }
+}

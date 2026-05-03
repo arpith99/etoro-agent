@@ -2,3 +2,4 @@
 .env
 watchlists
 *.json
+!docs/*.json
