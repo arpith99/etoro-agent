@@ -275,6 +275,87 @@ int_or_string_enum! {
 // identity domain
 // ---------------------------------------------------------------------------
 
+// Three well-formed integer enums (the spec lists `enum: [1, 2, ...]` with the
+// names in `x-enumNames`). typify generates an awkward newtype-around-Option
+// wrapper for these because the source schema is `nullable: true`, so we
+// override with hand-written enums and let typify wrap them in Option at the
+// field site.
+
+int_or_string_enum! {
+    pub enum PublicAggregatedInfoAccountStatus {
+        Open   = 1 => "Open",
+        Closed = 2 => "Closed",
+    }
+}
+
+int_or_string_enum! {
+    pub enum PublicAggregatedInfoPlayerStatus {
+        Normal                       =  1 => "Normal",
+        Blocked                      =  2 => "Blocked",
+        ChatBlocked                  =  3 => "ChatBlocked",
+        BlockedUponRequest           =  4 => "BlockedUponRequest",
+        Warning                      =  5 => "Warning",
+        BlockedUnderInvestigation    =  6 => "BlockedUnderInvestigation",
+        ScalpersBlock                =  7 => "ScalpersBlock",
+        BlockedPayPalInvestigation   =  8 => "BlockedPayPalInvestigation",
+        TradeBlock                   =  9 => "TradeBlock",
+        DepositBlocked               = 10 => "DepositBlocked",
+        SocialIndex                  = 11 => "SocialIndex",
+        CopyBlock                    = 12 => "CopyBlock",
+        PendingVerification          = 13 => "PendingVerification",
+        BlockedFailedVerification    = 14 => "BlockedFailedVerification",
+        BlockTrading                 = 15 => "BlockTrading",
+    }
+}
+
+int_or_string_enum! {
+    pub enum PublicAggregatedInfoPlayerStatusReason {
+        None                  =  0 => "None",
+        FailedVerification    =  1 => "FailedVerification",
+        ExpiredDocument       =  2 => "ExpiredDocument",
+        CloseAccountByUser    =  3 => "CloseAccountByUser",
+        Risk                  =  4 => "Risk",
+        Chargeback            =  5 => "Chargeback",
+        AmlAccountClosed      =  6 => "AMLAccountClosed",
+        Hrc                   =  7 => "HRC",
+        Underage              =  8 => "Underage",
+        Deceased              =  9 => "Deceased",
+        Aml                   = 10 => "AML",
+        AmlReview             = 11 => "AMLreview",
+        OffMarketAbuse        = 12 => "OffMarketAbuse",
+        Overpayment           = 13 => "Overpayment",
+        RiskCheck             = 14 => "RiskCheck",
+        ThirdParty            = 15 => "ThirdParty",
+        PayPalInvestigation   = 16 => "PayPalInvestigation",
+        NocNofRfi             = 17 => "NOC_NOF_RFI",
+        WchMatch              = 18 => "WCHMatch",
+        Other                 = 19 => "Other",
+        RightToBeForgotten    = 20 => "RightToBeForgotten",
+        SelfService           = 21 => "SelfService",
+        ByRequest             = 22 => "ByRequest",
+        AchChargeback         = 23 => "ACHChargeback",
+        PwmbChargeback        = 24 => "PWMBChargeback",
+        Abuse                 = 25 => "Abuse",
+        AffiliateAccount      = 26 => "AffiliateAccount",
+        PendingDocs           = 27 => "PendingDocs",
+        EmployeeAccount       = 28 => "EmployeeAccount",
+        PiAccount             = 29 => "PIAccount",
+        CheckoutChargeback    = 30 => "CheckoutChargeback",
+        CheckoutRetrievel     = 31 => "CheckoutRetrievel",
+        CheckoutCaptureDecline= 32 => "CheckoutCaptureDecline",
+        EToroMoneyRestriction = 33 => "EToroMoneyRestriction",
+        AbusiveTrading        = 34 => "AbusiveTrading",
+        HackedAccount         = 35 => "HackedAccount",
+        PartnersAndPis        = 36 => "PartnersAndPIs",
+        CsManagementDecision  = 37 => "CS_ManagementDecision",
+        Deposits              = 38 => "Deposits",
+        Kyc                   = 39 => "KYC",
+        AccountClosed         = 40 => "AccountClosed",
+        Tax                   = 41 => "Tax",
+        Corporate             = 42 => "Corporate",
+    }
+}
+
 int_or_string_enum! {
     pub enum UserRole {
         Regular       =  0 => "Regular",

@@ -360,7 +360,12 @@
     "x-enumNames": [
       "Open",
       "Closed"
-    ]
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::PublicAggregatedInfoAccountStatus"
+    }
   },
   "PublicAggregatedInfoPlayerStatus": {
     "type": "integer",
@@ -398,7 +403,12 @@
       "PendingVerification",
       "BlockedFailedVerification",
       "BlockTrading"
-    ]
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::PublicAggregatedInfoPlayerStatus"
+    }
   },
   "PublicAggregatedInfoPlayerStatusReason": {
     "type": "integer",
@@ -492,6 +502,11 @@
       "AccountClosed",
       "Tax",
       "Corporate"
-    ]
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::PublicAggregatedInfoPlayerStatusReason"
+    }
   }
 }
