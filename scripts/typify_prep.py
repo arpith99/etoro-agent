@@ -103,6 +103,39 @@ NUMERIC_X_RUST_TYPE = {
     "path": "etoro_agent::types::manual::Numeric",
 }
 
+# Cross-domain types: each appears in 2+ schema files. To avoid generating
+# distinct-but-identical Rust structs in each module (so e.g. trading::Market
+# != feeds_posts::Market for type-checking), pick one owner module per type.
+# Non-owning modules redirect to the owner via x-rust-type.
+SHARED_TYPE_OWNERS = {
+    "Market":              "market_data",
+    "Avatar":              "market_data",
+    "Svg":                 "market_data",
+    "MarketEventMetadata": "market_data",
+    "Mirror":              "trading",
+    "Order":               "trading",
+    "OrderForOpen":        "trading",
+    "OrderForClose":       "trading",
+    "OrderForCloseMultiple":"trading",
+    "OrderMetadata":       "trading",
+    "Position":            "trading",
+    "TradeMetadata":       "trading",
+    "User":                "identity",
+}
+
+
+def redirect_shared_types_in_place(defs: dict, current_domain: str) -> None:
+    """Stamp x-rust-type on shared types when this module is NOT the owner,
+    so typify references the owner module's struct instead of generating a
+    duplicate one here."""
+    for name, owner in SHARED_TYPE_OWNERS.items():
+        if name in defs and current_domain != owner and "x-rust-type" not in defs[name]:
+            defs[name]["x-rust-type"] = {
+                "crate": "etoro-agent",
+                "version": "0.1.0",
+                "path": f"etoro_agent::types::{owner}::{name}",
+            }
+
 
 def annotate_numeric_in_place(node) -> None:
     """
@@ -194,6 +227,7 @@ for f in domain_files:
     # (which may rename a kept extension); then normalize nullability so the
     # nullable handling sees the latest type/enum shape.
     rewrite_refs_in_place(defs)
+    redirect_shared_types_in_place(defs, domain)
     normalize_enums_in_place(defs)
     annotate_numeric_in_place(defs)
     normalize_nullable_in_place(defs)

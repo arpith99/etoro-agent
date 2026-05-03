@@ -29,62 +29,6 @@ pub mod error {
         }
     }
 }
-#[doc = "`Avatar`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"large\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"medium\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"small\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"svg\": {"]
-#[doc = "      \"$ref\": \"#/$defs/Svg\""]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct Avatar {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub large: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub medium: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub small: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub svg: ::std::option::Option<Svg>,
-}
-impl ::std::default::Default for Avatar {
-    fn default() -> Self {
-        Self {
-            large: Default::default(),
-            medium: Default::default(),
-            small: Default::default(),
-            svg: Default::default(),
-        }
-    }
-}
 #[doc = "`CreateExitOrderRequest`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -1829,144 +1773,6 @@ impl ::std::convert::TryFrom<::std::string::String> for GetOrderResponseOrderTyp
         value.parse()
     }
 }
-#[doc = "`Market`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"application\": {"]
-#[doc = "      \"$ref\": \"#/$defs/ApplicationSource\""]
-#[doc = "    },"]
-#[doc = "    \"assetType\": {"]
-#[doc = "      \"$ref\": \"#/$defs/MarketAssetType\""]
-#[doc = "    },"]
-#[doc = "    \"assetTypeId\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"integer\","]
-#[doc = "        \"null\""]
-#[doc = "      ],"]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"assetTypeSubCategoryId\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"integer\","]
-#[doc = "        \"null\""]
-#[doc = "      ],"]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"avatar\": {"]
-#[doc = "      \"$ref\": \"#/$defs/Avatar\""]
-#[doc = "    },"]
-#[doc = "    \"displayName\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"id\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"internalId\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"metadata\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"symbolName\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"updated\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ],"]
-#[doc = "      \"format\": \"date-time\""]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct Market {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub application: ::std::option::Option<::etoro_agent::types::manual::ApplicationSource>,
-    #[serde(
-        rename = "assetType",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub asset_type: ::std::option::Option<::etoro_agent::types::manual::MarketAssetType>,
-    #[serde(
-        rename = "assetTypeId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub asset_type_id: ::std::option::Option<i32>,
-    #[serde(
-        rename = "assetTypeSubCategoryId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub asset_type_sub_category_id: ::std::option::Option<i32>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub avatar: ::std::option::Option<Avatar>,
-    #[serde(
-        rename = "displayName",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub display_name: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub id: ::std::option::Option<::std::string::String>,
-    #[serde(
-        rename = "internalId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub internal_id: ::std::option::Option<i32>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub metadata: ::std::option::Option<::std::string::String>,
-    #[serde(
-        rename = "symbolName",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub symbol_name: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub updated: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-}
-impl ::std::default::Default for Market {
-    fn default() -> Self {
-        Self {
-            application: Default::default(),
-            asset_type: Default::default(),
-            asset_type_id: Default::default(),
-            asset_type_sub_category_id: Default::default(),
-            avatar: Default::default(),
-            display_name: Default::default(),
-            id: Default::default(),
-            internal_id: Default::default(),
-            metadata: Default::default(),
-            symbol_name: Default::default(),
-            updated: Default::default(),
-        }
-    }
-}
 #[doc = "Copy-trading configuration. Many fields obsolete or internal — see descriptions."]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -3395,7 +3201,7 @@ pub struct OrderMetadata {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub direction: ::std::option::Option<::etoro_agent::types::manual::TradeDirection>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub market: ::std::option::Option<Market>,
+    pub market: ::std::option::Option<::etoro_agent::types::market_data::Market>,
     #[serde(
         rename = "orderId",
         default,
@@ -3997,64 +3803,6 @@ impl ::std::default::Default for PutTradeRequest {
         }
     }
 }
-#[doc = "`Svg`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"backgroundColor\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"textColor\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"url\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct Svg {
-    #[serde(
-        rename = "backgroundColor",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub background_color: ::std::option::Option<::std::string::String>,
-    #[serde(
-        rename = "textColor",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub text_color: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub url: ::std::option::Option<::std::string::String>,
-}
-impl ::std::default::Default for Svg {
-    fn default() -> Self {
-        Self {
-            background_color: Default::default(),
-            text_color: Default::default(),
-            url: Default::default(),
-        }
-    }
-}
 #[doc = "`TradeMetadata`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -4107,7 +3855,7 @@ pub struct TradeMetadata {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub gain: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub market: ::std::option::Option<Market>,
+    pub market: ::std::option::Option<::etoro_agent::types::market_data::Market>,
     #[serde(
         rename = "positionId",
         default,

@@ -1102,62 +1102,6 @@ impl ::std::convert::TryFrom<::std::string::String> for AttachmentsItemMediaVide
         value.parse()
     }
 }
-#[doc = "`Avatar`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"large\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"medium\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"small\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"svg\": {"]
-#[doc = "      \"$ref\": \"#/$defs/Svg\""]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct Avatar {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub large: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub medium: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub small: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub svg: ::std::option::Option<Svg>,
-}
-impl ::std::default::Default for Avatar {
-    fn default() -> Self {
-        Self {
-            large: Default::default(),
-            medium: Default::default(),
-            small: Default::default(),
-            svg: Default::default(),
-        }
-    }
-}
 #[doc = "`Comment`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -1675,7 +1619,7 @@ pub struct CommentEntity {
     )]
     pub obsolete_id: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub owner: ::std::option::Option<User>,
+    pub owner: ::std::option::Option<::etoro_agent::types::identity::User>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub parent: ::std::option::Option<CommentEntityParent>,
 }
@@ -2085,7 +2029,7 @@ pub struct CopyMetadata {
     )]
     pub type_: ::std::option::Option<::etoro_agent::types::manual::CopyType>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub user: ::std::option::Option<User>,
+    pub user: ::std::option::Option<::etoro_agent::types::identity::User>,
 }
 impl ::std::default::Default for CopyMetadata {
     fn default() -> Self {
@@ -2969,7 +2913,7 @@ pub struct DiscussionsPost {
     )]
     pub obsolete_id: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub owner: ::std::option::Option<User>,
+    pub owner: ::std::option::Option<::etoro_agent::types::identity::User>,
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
     pub tags: ::std::vec::Vec<DiscussionsPostTagsItem>,
     #[serde(
@@ -3102,7 +3046,7 @@ pub struct DiscussionsPostMentionsItem {
     )]
     pub is_direct: ::std::option::Option<bool>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub user: ::std::option::Option<User>,
+    pub user: ::std::option::Option<::etoro_agent::types::identity::User>,
 }
 impl ::std::default::Default for DiscussionsPostMentionsItem {
     fn default() -> Self {
@@ -3949,7 +3893,7 @@ pub struct Emotion {
     )]
     pub obsolete_id: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub owner: ::std::option::Option<User>,
+    pub owner: ::std::option::Option<::etoro_agent::types::identity::User>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub parent: ::std::option::Option<EmotionParent>,
     #[serde(
@@ -4349,313 +4293,6 @@ impl ::std::default::Default for ImageMetadata {
         }
     }
 }
-#[doc = "`Market`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"application\": {"]
-#[doc = "      \"$ref\": \"#/$defs/ApplicationSource\""]
-#[doc = "    },"]
-#[doc = "    \"assetType\": {"]
-#[doc = "      \"$ref\": \"#/$defs/MarketAssetType\""]
-#[doc = "    },"]
-#[doc = "    \"assetTypeId\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"integer\","]
-#[doc = "        \"null\""]
-#[doc = "      ],"]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"assetTypeSubCategoryId\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"integer\","]
-#[doc = "        \"null\""]
-#[doc = "      ],"]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"avatar\": {"]
-#[doc = "      \"$ref\": \"#/$defs/Avatar\""]
-#[doc = "    },"]
-#[doc = "    \"displayName\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"id\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"internalId\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"metadata\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"symbolName\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"updated\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ],"]
-#[doc = "      \"format\": \"date-time\""]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct Market {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub application: ::std::option::Option<::etoro_agent::types::manual::ApplicationSource>,
-    #[serde(
-        rename = "assetType",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub asset_type: ::std::option::Option<::etoro_agent::types::manual::MarketAssetType>,
-    #[serde(
-        rename = "assetTypeId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub asset_type_id: ::std::option::Option<i32>,
-    #[serde(
-        rename = "assetTypeSubCategoryId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub asset_type_sub_category_id: ::std::option::Option<i32>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub avatar: ::std::option::Option<Avatar>,
-    #[serde(
-        rename = "displayName",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub display_name: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub id: ::std::option::Option<::std::string::String>,
-    #[serde(
-        rename = "internalId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub internal_id: ::std::option::Option<i32>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub metadata: ::std::option::Option<::std::string::String>,
-    #[serde(
-        rename = "symbolName",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub symbol_name: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub updated: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-}
-impl ::std::default::Default for Market {
-    fn default() -> Self {
-        Self {
-            application: Default::default(),
-            asset_type: Default::default(),
-            asset_type_id: Default::default(),
-            asset_type_sub_category_id: Default::default(),
-            avatar: Default::default(),
-            display_name: Default::default(),
-            id: Default::default(),
-            internal_id: Default::default(),
-            metadata: Default::default(),
-            symbol_name: Default::default(),
-            updated: Default::default(),
-        }
-    }
-}
-#[doc = "`MarketEventMetadata`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"earningReportId\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"earningsDate\": {"]
-#[doc = "      \"type\": \"string\","]
-#[doc = "      \"format\": \"date-time\""]
-#[doc = "    },"]
-#[doc = "    \"earningsQuarter\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"earningsYear\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"estimatedEps\": {"]
-#[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\","]
-#[doc = "      \"x-rust-type\": {"]
-#[doc = "        \"crate\": \"etoro-agent\","]
-#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
-#[doc = "        \"version\": \"0.1.0\""]
-#[doc = "      }"]
-#[doc = "    },"]
-#[doc = "    \"estimatedSales\": {"]
-#[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\","]
-#[doc = "      \"x-rust-type\": {"]
-#[doc = "        \"crate\": \"etoro-agent\","]
-#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
-#[doc = "        \"version\": \"0.1.0\""]
-#[doc = "      }"]
-#[doc = "    },"]
-#[doc = "    \"isBeforeMarketOpen\": {"]
-#[doc = "      \"type\": \"boolean\""]
-#[doc = "    },"]
-#[doc = "    \"market\": {"]
-#[doc = "      \"$ref\": \"#/$defs/Market\""]
-#[doc = "    },"]
-#[doc = "    \"marketCap\": {"]
-#[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\","]
-#[doc = "      \"x-rust-type\": {"]
-#[doc = "        \"crate\": \"etoro-agent\","]
-#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
-#[doc = "        \"version\": \"0.1.0\""]
-#[doc = "      }"]
-#[doc = "    },"]
-#[doc = "    \"stocksIndustryId\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"tagName\": {"]
-#[doc = "      \"$ref\": \"#/$defs/MarketEventTag\""]
-#[doc = "    },"]
-#[doc = "    \"textKey\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int32\""]
-#[doc = "    },"]
-#[doc = "    \"verified\": {"]
-#[doc = "      \"type\": \"boolean\""]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct MarketEventMetadata {
-    #[serde(
-        rename = "earningReportId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub earning_report_id: ::std::option::Option<i32>,
-    #[serde(
-        rename = "earningsDate",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub earnings_date: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-    #[serde(
-        rename = "earningsQuarter",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub earnings_quarter: ::std::option::Option<i32>,
-    #[serde(
-        rename = "earningsYear",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub earnings_year: ::std::option::Option<i32>,
-    #[serde(
-        rename = "estimatedEps",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub estimated_eps: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
-    #[serde(
-        rename = "estimatedSales",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub estimated_sales: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
-    #[serde(
-        rename = "isBeforeMarketOpen",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub is_before_market_open: ::std::option::Option<bool>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub market: ::std::option::Option<Market>,
-    #[serde(
-        rename = "marketCap",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub market_cap: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
-    #[serde(
-        rename = "stocksIndustryId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub stocks_industry_id: ::std::option::Option<i32>,
-    #[serde(
-        rename = "tagName",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub tag_name: ::std::option::Option<::etoro_agent::types::manual::MarketEventTag>,
-    #[serde(
-        rename = "textKey",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub text_key: ::std::option::Option<i32>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub verified: ::std::option::Option<bool>,
-}
-impl ::std::default::Default for MarketEventMetadata {
-    fn default() -> Self {
-        Self {
-            earning_report_id: Default::default(),
-            earnings_date: Default::default(),
-            earnings_quarter: Default::default(),
-            earnings_year: Default::default(),
-            estimated_eps: Default::default(),
-            estimated_sales: Default::default(),
-            is_before_market_open: Default::default(),
-            market: Default::default(),
-            market_cap: Default::default(),
-            stocks_industry_id: Default::default(),
-            tag_name: Default::default(),
-            text_key: Default::default(),
-            verified: Default::default(),
-        }
-    }
-}
 #[doc = "`Media`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -4720,7 +4357,7 @@ pub struct Mention {
     )]
     pub is_direct: ::std::option::Option<bool>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub user: ::std::option::Option<User>,
+    pub user: ::std::option::Option<::etoro_agent::types::identity::User>,
 }
 impl ::std::default::Default for Mention {
     fn default() -> Self {
@@ -4951,74 +4588,6 @@ impl ::std::default::Default for Message {
         Self {
             language_code: Default::default(),
             text: Default::default(),
-        }
-    }
-}
-#[doc = "`OrderMetadata`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"direction\": {"]
-#[doc = "      \"$ref\": \"#/$defs/TradeDirection\""]
-#[doc = "    },"]
-#[doc = "    \"market\": {"]
-#[doc = "      \"$ref\": \"#/$defs/Market\""]
-#[doc = "    },"]
-#[doc = "    \"orderId\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int64\""]
-#[doc = "    },"]
-#[doc = "    \"rate\": {"]
-#[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\","]
-#[doc = "      \"x-rust-type\": {"]
-#[doc = "        \"crate\": \"etoro-agent\","]
-#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
-#[doc = "        \"version\": \"0.1.0\""]
-#[doc = "      }"]
-#[doc = "    },"]
-#[doc = "    \"type\": {"]
-#[doc = "      \"$ref\": \"#/$defs/TradeType\""]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct OrderMetadata {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub direction: ::std::option::Option<::etoro_agent::types::manual::TradeDirection>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub market: ::std::option::Option<Market>,
-    #[serde(
-        rename = "orderId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub order_id: ::std::option::Option<i64>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
-    #[serde(
-        rename = "type",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub type_: ::std::option::Option<::etoro_agent::types::manual::TradeType>,
-}
-impl ::std::default::Default for OrderMetadata {
-    fn default() -> Self {
-        Self {
-            direction: Default::default(),
-            market: Default::default(),
-            order_id: Default::default(),
-            rate: Default::default(),
-            type_: Default::default(),
         }
     }
 }
@@ -5353,7 +4922,7 @@ pub struct Post {
     )]
     pub obsolete_id: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub owner: ::std::option::Option<User>,
+    pub owner: ::std::option::Option<::etoro_agent::types::identity::User>,
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
     pub tags: ::std::vec::Vec<PostTagsItem>,
     #[serde(
@@ -5486,7 +5055,7 @@ pub struct PostMentionsItem {
     )]
     pub is_direct: ::std::option::Option<bool>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub user: ::std::option::Option<User>,
+    pub user: ::std::option::Option<::etoro_agent::types::identity::User>,
 }
 impl ::std::default::Default for PostMentionsItem {
     fn default() -> Self {
@@ -5579,15 +5148,15 @@ pub struct PostMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub market_event: ::std::option::Option<MarketEventMetadata>,
+    pub market_event: ::std::option::Option<::etoro_agent::types::market_data::MarketEventMetadata>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub order: ::std::option::Option<OrderMetadata>,
+    pub order: ::std::option::Option<::etoro_agent::types::trading::OrderMetadata>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub poll: ::std::option::Option<PollMetadata>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub share: ::std::option::Option<ShareMetadata>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub trade: ::std::option::Option<TradeMetadata>,
+    pub trade: ::std::option::Option<::etoro_agent::types::trading::TradeMetadata>,
 }
 impl ::std::default::Default for PostMetadata {
     fn default() -> Self {
@@ -5620,7 +5189,7 @@ impl ::std::default::Default for PostMetadata {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
 pub struct PostTagsItem {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub market: ::std::option::Option<Market>,
+    pub market: ::std::option::Option<::etoro_agent::types::market_data::Market>,
 }
 impl ::std::default::Default for PostTagsItem {
     fn default() -> Self {
@@ -5714,7 +5283,7 @@ impl ::std::default::Default for ReactionPagingResponse {
 #[serde(deny_unknown_fields)]
 pub struct Reason {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub owner: ::std::option::Option<User>,
+    pub owner: ::std::option::Option<::etoro_agent::types::identity::User>,
     #[serde(
         rename = "sourceId",
         default,
@@ -5994,64 +5563,6 @@ impl ::std::default::Default for SummaryResponse {
         }
     }
 }
-#[doc = "`Svg`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"backgroundColor\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"textColor\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    },"]
-#[doc = "    \"url\": {"]
-#[doc = "      \"type\": ["]
-#[doc = "        \"string\","]
-#[doc = "        \"null\""]
-#[doc = "      ]"]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct Svg {
-    #[serde(
-        rename = "backgroundColor",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub background_color: ::std::option::Option<::std::string::String>,
-    #[serde(
-        rename = "textColor",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub text_color: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub url: ::std::option::Option<::std::string::String>,
-}
-impl ::std::default::Default for Svg {
-    fn default() -> Self {
-        Self {
-            background_color: Default::default(),
-            text_color: Default::default(),
-            url: Default::default(),
-        }
-    }
-}
 #[doc = "`Tag`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -6072,7 +5583,7 @@ impl ::std::default::Default for Svg {
 #[serde(deny_unknown_fields)]
 pub struct Tag {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub market: ::std::option::Option<Market>,
+    pub market: ::std::option::Option<::etoro_agent::types::market_data::Market>,
 }
 impl ::std::default::Default for Tag {
     fn default() -> Self {
@@ -6226,250 +5737,6 @@ impl ::std::default::Default for TagsTagsItem {
         Self {
             id: Default::default(),
             name: Default::default(),
-        }
-    }
-}
-#[doc = "`TradeMetadata`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"direction\": {"]
-#[doc = "      \"$ref\": \"#/$defs/TradeDirection\""]
-#[doc = "    },"]
-#[doc = "    \"gain\": {"]
-#[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\","]
-#[doc = "      \"x-rust-type\": {"]
-#[doc = "        \"crate\": \"etoro-agent\","]
-#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
-#[doc = "        \"version\": \"0.1.0\""]
-#[doc = "      }"]
-#[doc = "    },"]
-#[doc = "    \"market\": {"]
-#[doc = "      \"$ref\": \"#/$defs/Market\""]
-#[doc = "    },"]
-#[doc = "    \"positionId\": {"]
-#[doc = "      \"type\": \"integer\","]
-#[doc = "      \"format\": \"int64\""]
-#[doc = "    },"]
-#[doc = "    \"rate\": {"]
-#[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\","]
-#[doc = "      \"x-rust-type\": {"]
-#[doc = "        \"crate\": \"etoro-agent\","]
-#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
-#[doc = "        \"version\": \"0.1.0\""]
-#[doc = "      }"]
-#[doc = "    },"]
-#[doc = "    \"type\": {"]
-#[doc = "      \"$ref\": \"#/$defs/TradeType\""]
-#[doc = "    }"]
-#[doc = "  },"]
-#[doc = "  \"additionalProperties\": false"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct TradeMetadata {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub direction: ::std::option::Option<::etoro_agent::types::manual::TradeDirection>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub gain: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub market: ::std::option::Option<Market>,
-    #[serde(
-        rename = "positionId",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub position_id: ::std::option::Option<i64>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
-    #[serde(
-        rename = "type",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub type_: ::std::option::Option<::etoro_agent::types::manual::TradeType>,
-}
-impl ::std::default::Default for TradeMetadata {
-    fn default() -> Self {
-        Self {
-            direction: Default::default(),
-            gain: Default::default(),
-            market: Default::default(),
-            position_id: Default::default(),
-            rate: Default::default(),
-            type_: Default::default(),
-        }
-    }
-}
-#[doc = "`User`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"avatar\": {"]
-#[doc = "      \"type\": \"object\","]
-#[doc = "      \"properties\": {"]
-#[doc = "        \"large\": {"]
-#[doc = "          \"type\": \"string\","]
-#[doc = "          \"format\": \"uri\""]
-#[doc = "        },"]
-#[doc = "        \"medium\": {"]
-#[doc = "          \"type\": \"string\","]
-#[doc = "          \"format\": \"uri\""]
-#[doc = "        },"]
-#[doc = "        \"small\": {"]
-#[doc = "          \"type\": \"string\","]
-#[doc = "          \"format\": \"uri\""]
-#[doc = "        }"]
-#[doc = "      }"]
-#[doc = "    },"]
-#[doc = "    \"countryCode\": {"]
-#[doc = "      \"type\": \"integer\""]
-#[doc = "    },"]
-#[doc = "    \"firstName\": {"]
-#[doc = "      \"type\": \"string\""]
-#[doc = "    },"]
-#[doc = "    \"id\": {"]
-#[doc = "      \"type\": \"string\""]
-#[doc = "    },"]
-#[doc = "    \"isBlocked\": {"]
-#[doc = "      \"type\": \"boolean\""]
-#[doc = "    },"]
-#[doc = "    \"isPrivate\": {"]
-#[doc = "      \"type\": \"boolean\""]
-#[doc = "    },"]
-#[doc = "    \"lastName\": {"]
-#[doc = "      \"type\": \"string\""]
-#[doc = "    },"]
-#[doc = "    \"piLevel\": {"]
-#[doc = "      \"type\": \"integer\""]
-#[doc = "    },"]
-#[doc = "    \"roles\": {"]
-#[doc = "      \"type\": \"array\","]
-#[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"string\""]
-#[doc = "      }"]
-#[doc = "    },"]
-#[doc = "    \"username\": {"]
-#[doc = "      \"type\": \"string\""]
-#[doc = "    }"]
-#[doc = "  }"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-pub struct User {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub avatar: ::std::option::Option<UserAvatar>,
-    #[serde(
-        rename = "countryCode",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub country_code: ::std::option::Option<i64>,
-    #[serde(
-        rename = "firstName",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub first_name: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub id: ::std::option::Option<::std::string::String>,
-    #[serde(
-        rename = "isBlocked",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub is_blocked: ::std::option::Option<bool>,
-    #[serde(
-        rename = "isPrivate",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub is_private: ::std::option::Option<bool>,
-    #[serde(
-        rename = "lastName",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub last_name: ::std::option::Option<::std::string::String>,
-    #[serde(
-        rename = "piLevel",
-        default,
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
-    pub pi_level: ::std::option::Option<i64>,
-    #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
-    pub roles: ::std::vec::Vec<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub username: ::std::option::Option<::std::string::String>,
-}
-impl ::std::default::Default for User {
-    fn default() -> Self {
-        Self {
-            avatar: Default::default(),
-            country_code: Default::default(),
-            first_name: Default::default(),
-            id: Default::default(),
-            is_blocked: Default::default(),
-            is_private: Default::default(),
-            last_name: Default::default(),
-            pi_level: Default::default(),
-            roles: Default::default(),
-            username: Default::default(),
-        }
-    }
-}
-#[doc = "`UserAvatar`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"object\","]
-#[doc = "  \"properties\": {"]
-#[doc = "    \"large\": {"]
-#[doc = "      \"type\": \"string\","]
-#[doc = "      \"format\": \"uri\""]
-#[doc = "    },"]
-#[doc = "    \"medium\": {"]
-#[doc = "      \"type\": \"string\","]
-#[doc = "      \"format\": \"uri\""]
-#[doc = "    },"]
-#[doc = "    \"small\": {"]
-#[doc = "      \"type\": \"string\","]
-#[doc = "      \"format\": \"uri\""]
-#[doc = "    }"]
-#[doc = "  }"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
-pub struct UserAvatar {
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub large: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub medium: ::std::option::Option<::std::string::String>,
-    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub small: ::std::option::Option<::std::string::String>,
-}
-impl ::std::default::Default for UserAvatar {
-    fn default() -> Self {
-        Self {
-            large: Default::default(),
-            medium: Default::default(),
-            small: Default::default(),
         }
     }
 }
