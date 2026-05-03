@@ -5,18 +5,59 @@
     "etoro_api_version": "v1.158.0",
     "domain": "feeds_posts",
     "extracted_schemas": [
-      "Post", "PostMetadata", "PostType",
-      "Discussion", "DiscussionResponse", "DiscussionsPost", "DiscussionsResponse", "DiscussionCreateRequest",
-      "FeedResponse", "FeedMetadataResponse", "FeedPagingResponse",
-      "Comment", "CommentDataResponse", "CommentRequest", "CommentCreateRequest", "EntityCommentsDataResponse",
-      "Emotion", "EmotionType", "EmotionDataResponse", "EmotionsDataResponse", "ReactionPagingResponse",
-      "RequesterContextResponse", "RequestBase", "Reason", "ReasonType",
-      "Mention", "Mentions", "MentionsRequest", "MentionsDataRequest",
-      "Tag", "Tags", "TagRequest", "TagsDataRequest",
-      "Parents", "ParentType", "Message", "ShareMetadata", "PollMetadata", "PollOption",
-      "Attachment", "Attachments", "Media", "MediaType", "ImageMetadata", "VideoMetadata", "VideoSource",
-      "ArticleMetadata", "ArticleRating", "ArticleStatus", "EditStatus",
-      "SummaryResponse", "CopyMetadata", "CopyType"
+      "Post",
+      "PostMetadata",
+      "PostType",
+      "Discussion",
+      "DiscussionResponse",
+      "DiscussionsPost",
+      "DiscussionsResponse",
+      "DiscussionCreateRequest",
+      "FeedResponse",
+      "FeedMetadataResponse",
+      "FeedPagingResponse",
+      "Comment",
+      "CommentDataResponse",
+      "CommentRequest",
+      "CommentCreateRequest",
+      "EntityCommentsDataResponse",
+      "Emotion",
+      "EmotionType",
+      "EmotionDataResponse",
+      "EmotionsDataResponse",
+      "ReactionPagingResponse",
+      "RequesterContextResponse",
+      "RequestBase",
+      "Reason",
+      "ReasonType",
+      "Mention",
+      "Mentions",
+      "MentionsRequest",
+      "MentionsDataRequest",
+      "Tag",
+      "Tags",
+      "TagRequest",
+      "TagsDataRequest",
+      "Parents",
+      "ParentType",
+      "Message",
+      "ShareMetadata",
+      "PollMetadata",
+      "PollOption",
+      "Attachment",
+      "Attachments",
+      "Media",
+      "MediaType",
+      "ImageMetadata",
+      "VideoMetadata",
+      "VideoSource",
+      "ArticleMetadata",
+      "ArticleRating",
+      "ArticleStatus",
+      "EditStatus",
+      "SummaryResponse",
+      "CopyMetadata",
+      "CopyType"
     ],
     "notes": [
       "53 schemas — biggest domain in the API. Mostly social-feed concerns (posts, comments, likes, mentions, polls, articles).",
@@ -33,27 +74,61 @@
     "type": "object",
     "description": "Represents a feed post with its content and metadata",
     "properties": {
-      "id": { "type": "string" },
-      "owner": { "$ref": "#/components/schemas/User" },
-      "obsoleteId": { "type": "string", "description": "Obsolete identifier for backward compatibility" },
-      "created": { "type": "string", "format": "date-time" },
+      "id": {
+        "type": "string"
+      },
+      "owner": {
+        "$ref": "#/components/schemas/User"
+      },
+      "obsoleteId": {
+        "type": "string",
+        "description": "Obsolete identifier for backward compatibility"
+      },
+      "created": {
+        "type": "string",
+        "format": "date-time"
+      },
       "message": {
         "type": "object",
         "properties": {
-          "text": { "type": "string" },
-          "languageCode": { "type": "string" }
+          "text": {
+            "type": "string"
+          },
+          "languageCode": {
+            "type": "string"
+          }
         }
       },
-      "updated": { "type": "string", "format": "date-time" },
-      "isDeleted": { "type": "boolean" },
-      "type": { "$ref": "#/components/schemas/PostType", "_replaced_inline": "was: { type: string, enum: [Default] }. Replaced with $ref so typify generates a single PostType (8 variants) instead of two colliding ones." },
-      "metadata": { "$ref": "#/components/schemas/PostMetadata", "_replaced_inline": "was: inline object with share/marketEvent/trade/order/copy/poll. Replaced with $ref so typify generates a single PostMetadata (with extra optional 'article' field) instead of two colliding ones. Functionally equivalent for non-Article posts (article will deserialize as None)." },
-      "attachments": { "type": "array", "items": { "$ref": "#/components/schemas/Attachment" } },
+      "updated": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "isDeleted": {
+        "type": "boolean"
+      },
+      "type": {
+        "$ref": "#/components/schemas/PostType",
+        "_replaced_inline": "was: { type: string, enum: [Default] }. Replaced with $ref so typify generates a single PostType (8 variants) instead of two colliding ones."
+      },
+      "metadata": {
+        "$ref": "#/components/schemas/PostMetadata",
+        "_replaced_inline": "was: inline object with share/marketEvent/trade/order/copy/poll. Replaced with $ref so typify generates a single PostMetadata (with extra optional 'article' field) instead of two colliding ones. Functionally equivalent for non-Article posts (article will deserialize as None)."
+      },
+      "attachments": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Attachment"
+        }
+      },
       "tags": {
         "type": "array",
         "items": {
           "type": "object",
-          "properties": { "market": { "$ref": "#/components/schemas/Market" } }
+          "properties": {
+            "market": {
+              "$ref": "#/components/schemas/Market"
+            }
+          }
         }
       },
       "mentions": {
@@ -61,44 +136,101 @@
         "items": {
           "type": "object",
           "properties": {
-            "user": { "$ref": "#/components/schemas/User" },
-            "isDirect": { "type": "boolean" }
+            "user": {
+              "$ref": "#/components/schemas/User"
+            },
+            "isDirect": {
+              "type": "boolean"
+            }
           }
         }
       },
-      "isSpam": { "type": "boolean" },
-      "editStatus": { "type": "string", "enum": ["None", "Edited", "Moderated"] }
+      "isSpam": {
+        "type": "boolean"
+      },
+      "editStatus": {
+        "type": "string",
+        "enum": [
+          "None",
+          "Edited",
+          "Moderated"
+        ]
+      }
     }
   },
   "PostMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "share": { "$ref": "#/components/schemas/ShareMetadata" },
-      "marketEvent": { "$ref": "#/components/schemas/MarketEventMetadata" },
-      "trade": { "$ref": "#/components/schemas/TradeMetadata" },
-      "order": { "$ref": "#/components/schemas/OrderMetadata" },
-      "copy": { "$ref": "#/components/schemas/CopyMetadata" },
-      "poll": { "$ref": "#/components/schemas/PollMetadata" },
-      "article": { "$ref": "#/components/schemas/ArticleMetadata" }
+      "share": {
+        "$ref": "#/components/schemas/ShareMetadata"
+      },
+      "marketEvent": {
+        "$ref": "#/components/schemas/MarketEventMetadata"
+      },
+      "trade": {
+        "$ref": "#/components/schemas/TradeMetadata"
+      },
+      "order": {
+        "$ref": "#/components/schemas/OrderMetadata"
+      },
+      "copy": {
+        "$ref": "#/components/schemas/CopyMetadata"
+      },
+      "poll": {
+        "$ref": "#/components/schemas/PollMetadata"
+      },
+      "article": {
+        "$ref": "#/components/schemas/ArticleMetadata"
+      }
     }
   },
   "PostType": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum (8 variants)",
-    "enum": ["Default", "Share", "MarketEvent", "Trade", "Order", "Copy", "Poll", "Article"]
+    "enum": [
+      "Default",
+      "Share",
+      "MarketEvent",
+      "Trade",
+      "Order",
+      "Copy",
+      "Poll",
+      "Article"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::PostType"
+    }
   },
   "Discussion": {
     "type": "object",
     "properties": {
-      "id": { "type": "string" },
-      "post": { "$ref": "#/components/schemas/DiscussionsPost" },
+      "id": {
+        "type": "string"
+      },
+      "post": {
+        "$ref": "#/components/schemas/DiscussionsPost"
+      },
       "commentsData": {
         "type": "object",
         "properties": {
-          "reactionPaging": { "type": "object", "properties": { "totalCount": { "type": "integer" } } },
-          "comments": { "type": "array", "items": { "$ref": "#/components/schemas/Comment" } }
+          "reactionPaging": {
+            "type": "object",
+            "properties": {
+              "totalCount": {
+                "type": "integer"
+              }
+            }
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
+          }
         }
       },
       "emotionsData": {
@@ -107,8 +239,20 @@
           "like": {
             "type": "object",
             "properties": {
-              "paging": { "type": "object", "properties": { "totalCount": { "type": "integer" } } },
-              "emotions": { "type": "array", "items": { "$ref": "#/components/schemas/Emotion" } }
+              "paging": {
+                "type": "object",
+                "properties": {
+                  "totalCount": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "emotions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Emotion"
+                }
+              }
             }
           }
         }
@@ -116,21 +260,41 @@
       "requesterContext": {
         "type": "object",
         "properties": {
-          "isFlaggingAsSpam": { "type": "boolean" },
-          "isSubscribed": { "type": "boolean" },
-          "isLiking": { "type": "boolean" },
-          "isSaved": { "type": "boolean" },
-          "isPinned": { "type": "boolean" },
-          "isRequesterBlocking": { "type": "boolean" },
-          "isInteractionRestricted": { "type": "boolean" },
-          "isFollowing": { "type": "boolean" }
+          "isFlaggingAsSpam": {
+            "type": "boolean"
+          },
+          "isSubscribed": {
+            "type": "boolean"
+          },
+          "isLiking": {
+            "type": "boolean"
+          },
+          "isSaved": {
+            "type": "boolean"
+          },
+          "isPinned": {
+            "type": "boolean"
+          },
+          "isRequesterBlocking": {
+            "type": "boolean"
+          },
+          "isInteractionRestricted": {
+            "type": "boolean"
+          },
+          "isFollowing": {
+            "type": "boolean"
+          }
         }
       },
       "summary": {
         "type": "object",
         "properties": {
-          "totalCommentsAndReplies": { "type": "integer" },
-          "sharedCount": { "type": "integer" }
+          "totalCommentsAndReplies": {
+            "type": "integer"
+          },
+          "sharedCount": {
+            "type": "integer"
+          }
         }
       },
       "reason": {
@@ -143,34 +307,90 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "id": { "type": "string", "nullable": true },
-      "post": { "$ref": "#/components/schemas/Post" },
-      "reason": { "$ref": "#/components/schemas/Reason" },
-      "commentsData": { "$ref": "#/components/schemas/EntityCommentsDataResponse" },
-      "emotionsData": { "$ref": "#/components/schemas/EmotionsDataResponse" },
-      "requesterContext": { "$ref": "#/components/schemas/RequesterContextResponse" },
-      "summary": { "$ref": "#/components/schemas/SummaryResponse" },
-      "badgedOwnerCountryId": { "type": "integer", "format": "int32", "nullable": true }
+      "id": {
+        "type": "string",
+        "nullable": true
+      },
+      "post": {
+        "$ref": "#/components/schemas/Post"
+      },
+      "reason": {
+        "$ref": "#/components/schemas/Reason"
+      },
+      "commentsData": {
+        "$ref": "#/components/schemas/EntityCommentsDataResponse"
+      },
+      "emotionsData": {
+        "$ref": "#/components/schemas/EmotionsDataResponse"
+      },
+      "requesterContext": {
+        "$ref": "#/components/schemas/RequesterContextResponse"
+      },
+      "summary": {
+        "$ref": "#/components/schemas/SummaryResponse"
+      },
+      "badgedOwnerCountryId": {
+        "type": "integer",
+        "format": "int32",
+        "nullable": true
+      }
     }
   },
   "DiscussionsPost": {
     "type": "object",
     "description": "Older inline post shape used by Discussion (newer is Post)",
     "properties": {
-      "id": { "type": "string" },
-      "owner": { "$ref": "#/components/schemas/User" },
-      "obsoleteId": { "type": "string" },
+      "id": {
+        "type": "string"
+      },
+      "owner": {
+        "$ref": "#/components/schemas/User"
+      },
+      "obsoleteId": {
+        "type": "string"
+      },
       "message": {
         "type": "object",
-        "properties": { "text": { "type": "string" }, "languageCode": { "type": "string" } }
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "languageCode": {
+            "type": "string"
+          }
+        }
       },
-      "created": { "type": "string", "format": "date-time" },
-      "updated": { "type": "string", "format": "date-time" },
-      "type": { "type": "string" },
-      "isDeleted": { "type": "boolean" },
-      "isSpam": { "type": "boolean" },
-      "editStatus": { "type": "string", "enum": ["None", "Edited", "Moderated"] },
-      "attachments": { "type": "array", "items": { "$ref": "#/components/schemas/Attachment" } },
+      "created": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "type": {
+        "type": "string"
+      },
+      "isDeleted": {
+        "type": "boolean"
+      },
+      "isSpam": {
+        "type": "boolean"
+      },
+      "editStatus": {
+        "type": "string",
+        "enum": [
+          "None",
+          "Edited",
+          "Moderated"
+        ]
+      },
+      "attachments": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Attachment"
+        }
+      },
       "tags": {
         "type": "array",
         "items": {
@@ -180,33 +400,65 @@
               "type": "object",
               "description": "Inline Market shape — duplicated from standalone Market schema",
               "properties": {
-                "id": { "type": "string" },
-                "symbolName": { "type": "string" },
-                "displayName": { "type": "string" },
-                "updated": { "type": "string" },
-                "assetType": { "type": "string" },
-                "internalId": { "type": "integer" },
+                "id": {
+                  "type": "string"
+                },
+                "symbolName": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                },
+                "updated": {
+                  "type": "string"
+                },
+                "assetType": {
+                  "type": "string"
+                },
+                "internalId": {
+                  "type": "integer"
+                },
                 "avatar": {
                   "type": "object",
                   "properties": {
-                    "small": { "type": "string" },
-                    "medium": { "type": "string" },
-                    "large": { "type": "string" },
+                    "small": {
+                      "type": "string"
+                    },
+                    "medium": {
+                      "type": "string"
+                    },
+                    "large": {
+                      "type": "string"
+                    },
                     "svg": {
                       "type": "object",
                       "nullable": true,
                       "properties": {
-                        "url": { "type": "string" },
-                        "backgroundColor": { "type": "string" },
-                        "textColor": { "type": "string" }
+                        "url": {
+                          "type": "string"
+                        },
+                        "backgroundColor": {
+                          "type": "string"
+                        },
+                        "textColor": {
+                          "type": "string"
+                        }
                       }
                     }
                   }
                 },
-                "application": { "type": "string" },
-                "metadata": { "type": "string" },
-                "assetTypeId": { "type": "integer" },
-                "assetTypeSubCategoryId": { "type": "integer" }
+                "application": {
+                  "type": "string"
+                },
+                "metadata": {
+                  "type": "string"
+                },
+                "assetTypeId": {
+                  "type": "integer"
+                },
+                "assetTypeSubCategoryId": {
+                  "type": "integer"
+                }
               }
             }
           }
@@ -217,8 +469,12 @@
         "items": {
           "type": "object",
           "properties": {
-            "user": { "$ref": "#/components/schemas/User" },
-            "isDirect": { "type": "boolean" }
+            "user": {
+              "$ref": "#/components/schemas/User"
+            },
+            "isDirect": {
+              "type": "boolean"
+            }
           }
         }
       },
@@ -228,26 +484,46 @@
           "share": {
             "type": "object",
             "properties": {
-              "sharedPost": { "type": "string" },
-              "sharedOriginPost": { "type": "string" }
+              "sharedPost": {
+                "type": "string"
+              },
+              "sharedOriginPost": {
+                "type": "string"
+              }
             }
           },
           "poll": {
             "type": "object",
             "properties": {
-              "id": { "type": "integer" },
-              "title": { "type": "string" },
-              "gcid": { "type": "integer" },
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "gcid": {
+                "type": "integer"
+              },
               "options": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "properties": {
-                    "id": { "type": "integer" },
-                    "index": { "type": "integer" },
-                    "text": { "type": "string" },
-                    "isUserVoted": { "type": "boolean" },
-                    "votesCount": { "type": "integer" }
+                    "id": {
+                      "type": "integer"
+                    },
+                    "index": {
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "isUserVoted": {
+                      "type": "boolean"
+                    },
+                    "votesCount": {
+                      "type": "integer"
+                    }
                   }
                 }
               }
@@ -261,22 +537,41 @@
     "type": "object",
     "description": "Older response shape — newer is FeedResponse",
     "properties": {
-      "discussions": { "type": "array", "items": { "$ref": "#/components/schemas/Discussion" } },
+      "discussions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Discussion"
+        }
+      },
       "paging": {
         "type": "object",
         "properties": {
-          "next": { "type": "string" },
-          "offSet": { "type": "integer" },
-          "take": { "type": "integer" },
-          "version": { "type": "string" }
+          "next": {
+            "type": "string"
+          },
+          "offSet": {
+            "type": "integer"
+          },
+          "take": {
+            "type": "integer"
+          },
+          "version": {
+            "type": "string"
+          }
         }
       },
       "metadata": {
         "type": "object",
         "properties": {
-          "experimentName": { "type": "string" },
-          "streamType": { "type": "string" },
-          "designatedStreamType": { "type": "string" }
+          "experimentName": {
+            "type": "string"
+          },
+          "streamType": {
+            "type": "string"
+          },
+          "designatedStreamType": {
+            "type": "string"
+          }
         }
       }
     }
@@ -285,39 +580,82 @@
     "type": "object",
     "description": "Request model for creating a new discussion post",
     "properties": {
-      "owner": { "type": "integer", "description": "ID of the owner creating the discussion" },
-      "message": { "type": "string" },
-      "tags": { "$ref": "#/components/schemas/Tags" },
-      "mentions": { "$ref": "#/components/schemas/Mentions" },
-      "attachments": { "$ref": "#/components/schemas/Attachments" }
+      "owner": {
+        "type": "integer",
+        "description": "ID of the owner creating the discussion"
+      },
+      "message": {
+        "type": "string"
+      },
+      "tags": {
+        "$ref": "#/components/schemas/Tags"
+      },
+      "mentions": {
+        "$ref": "#/components/schemas/Mentions"
+      },
+      "attachments": {
+        "$ref": "#/components/schemas/Attachments"
+      }
     }
   },
   "FeedResponse": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "discussions": { "type": "array", "items": { "$ref": "#/components/schemas/DiscussionResponse" }, "nullable": true },
-      "paging": { "$ref": "#/components/schemas/FeedPagingResponse" },
-      "metadata": { "$ref": "#/components/schemas/FeedMetadataResponse" }
+      "discussions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/DiscussionResponse"
+        },
+        "nullable": true
+      },
+      "paging": {
+        "$ref": "#/components/schemas/FeedPagingResponse"
+      },
+      "metadata": {
+        "$ref": "#/components/schemas/FeedMetadataResponse"
+      }
     }
   },
   "FeedMetadataResponse": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "experimentName": { "type": "string", "nullable": true },
-      "streamType": { "type": "string", "nullable": true },
-      "designatedStreamType": { "type": "string", "nullable": true }
+      "experimentName": {
+        "type": "string",
+        "nullable": true
+      },
+      "streamType": {
+        "type": "string",
+        "nullable": true
+      },
+      "designatedStreamType": {
+        "type": "string",
+        "nullable": true
+      }
     }
   },
   "FeedPagingResponse": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "next": { "type": "string", "nullable": true },
-      "offSet": { "type": "integer", "format": "int32", "description": "Note 'offSet' (camelCase capital S) — sic" },
-      "take": { "type": "integer", "format": "int32" },
-      "version": { "type": "string", "nullable": true }
+      "next": {
+        "type": "string",
+        "nullable": true
+      },
+      "offSet": {
+        "type": "integer",
+        "format": "int32",
+        "description": "Note 'offSet' (camelCase capital S) — sic"
+      },
+      "take": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "version": {
+        "type": "string",
+        "nullable": true
+      }
     }
   },
   "Comment": {
@@ -329,38 +667,90 @@
           "message": {
             "type": "object",
             "properties": {
-              "text": { "type": "string" },
-              "languageCode": { "type": "string" }
+              "text": {
+                "type": "string"
+              },
+              "languageCode": {
+                "type": "string"
+              }
             }
           },
-          "id": { "type": "string" },
-          "owner": { "$ref": "#/components/schemas/User" },
-          "created": { "type": "string", "format": "date-time" },
-          "obsoleteId": { "type": "string" },
-          "attachments": { "type": "array", "items": { "$ref": "#/components/schemas/Attachment" } },
-          "isSpam": { "type": "boolean" },
-          "editStatus": { "type": "string", "enum": ["None", "Edited", "Moderated"] },
+          "id": {
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/User"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "obsoleteId": {
+            "type": "string"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Attachment"
+            }
+          },
+          "isSpam": {
+            "type": "boolean"
+          },
+          "editStatus": {
+            "type": "string",
+            "enum": [
+              "None",
+              "Edited",
+              "Moderated"
+            ]
+          },
           "parent": {
             "type": "object",
             "description": "Parent post reference",
             "properties": {
-              "id": { "type": "string" },
-              "obsoleteId": { "type": "string" },
-              "type": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "obsoleteId": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
             }
           }
         }
       },
-      "repliesCount": { "type": "integer" },
-      "replies": { "type": "array", "items": { "type": "object" } },
+      "repliesCount": {
+        "type": "integer"
+      },
+      "replies": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
       "emotionsData": {
         "type": "object",
         "properties": {
           "like": {
             "type": "object",
             "properties": {
-              "paging": { "type": "object", "properties": { "totalCount": { "type": "integer" } } },
-              "emotions": { "type": "array", "items": { "$ref": "#/components/schemas/Emotion" } }
+              "paging": {
+                "type": "object",
+                "properties": {
+                  "totalCount": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "emotions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Emotion"
+                }
+              }
             }
           }
         }
@@ -368,14 +758,30 @@
       "requesterContext": {
         "type": "object",
         "properties": {
-          "isFlaggingAsSpam": { "type": "boolean" },
-          "isSubscribed": { "type": "boolean" },
-          "isLiking": { "type": "boolean" },
-          "isSaved": { "type": "boolean" },
-          "isPinned": { "type": "boolean" },
-          "isRequesterBlocking": { "type": "boolean" },
-          "isInteractionRestricted": { "type": "boolean" },
-          "isFollowing": { "type": "boolean" }
+          "isFlaggingAsSpam": {
+            "type": "boolean"
+          },
+          "isSubscribed": {
+            "type": "boolean"
+          },
+          "isLiking": {
+            "type": "boolean"
+          },
+          "isSaved": {
+            "type": "boolean"
+          },
+          "isPinned": {
+            "type": "boolean"
+          },
+          "isRequesterBlocking": {
+            "type": "boolean"
+          },
+          "isInteractionRestricted": {
+            "type": "boolean"
+          },
+          "isFollowing": {
+            "type": "boolean"
+          }
         }
       }
     }
@@ -385,107 +791,237 @@
     "description": "Recursive: replies is Vec<CommentDataResponse>. Box in Rust to break cycle.",
     "additionalProperties": false,
     "properties": {
-      "entity": { "$ref": "#/components/schemas/Comment" },
-      "repliesCount": { "type": "integer", "format": "int32" },
-      "emotionsData": { "$ref": "#/components/schemas/EmotionsDataResponse" },
-      "requesterContext": { "$ref": "#/components/schemas/RequesterContextResponse" },
-      "badgedOwnerCountryId": { "type": "integer", "format": "int32", "nullable": true },
-      "replies": { "type": "array", "items": { "$ref": "#/components/schemas/CommentDataResponse" }, "nullable": true }
+      "entity": {
+        "$ref": "#/components/schemas/Comment"
+      },
+      "repliesCount": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "emotionsData": {
+        "$ref": "#/components/schemas/EmotionsDataResponse"
+      },
+      "requesterContext": {
+        "$ref": "#/components/schemas/RequesterContextResponse"
+      },
+      "badgedOwnerCountryId": {
+        "type": "integer",
+        "format": "int32",
+        "nullable": true
+      },
+      "replies": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CommentDataResponse"
+        },
+        "nullable": true
+      }
     }
   },
   "CommentRequest": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "owner": { "type": "integer", "format": "int32" },
-      "message": { "type": "string", "nullable": true },
-      "tags": { "$ref": "#/components/schemas/TagsDataRequest" },
-      "mentions": { "$ref": "#/components/schemas/MentionsDataRequest" },
-      "attachments": { "type": "array", "items": { "$ref": "#/components/schemas/Attachment" }, "nullable": true },
-      "postId": { "type": "string", "nullable": true },
-      "commentId": { "type": "string", "nullable": true },
-      "replyId": { "type": "string", "nullable": true }
+      "owner": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "message": {
+        "type": "string",
+        "nullable": true
+      },
+      "tags": {
+        "$ref": "#/components/schemas/TagsDataRequest"
+      },
+      "mentions": {
+        "$ref": "#/components/schemas/MentionsDataRequest"
+      },
+      "attachments": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Attachment"
+        },
+        "nullable": true
+      },
+      "postId": {
+        "type": "string",
+        "nullable": true
+      },
+      "commentId": {
+        "type": "string",
+        "nullable": true
+      },
+      "replyId": {
+        "type": "string",
+        "nullable": true
+      }
     }
   },
   "CommentCreateRequest": {
     "type": "object",
     "description": "Request model for creating a new comment",
-    "required": ["owner", "message"],
+    "required": [
+      "owner",
+      "message"
+    ],
     "properties": {
-      "owner": { "type": "integer", "description": "ID of the user creating the comment" },
-      "message": { "type": "string", "description": "The text content of the comment" },
-      "tags": { "$ref": "#/components/schemas/Tags" },
-      "mentions": { "$ref": "#/components/schemas/Mentions" },
-      "attachments": { "$ref": "#/components/schemas/Attachments" }
+      "owner": {
+        "type": "integer",
+        "description": "ID of the user creating the comment"
+      },
+      "message": {
+        "type": "string",
+        "description": "The text content of the comment"
+      },
+      "tags": {
+        "$ref": "#/components/schemas/Tags"
+      },
+      "mentions": {
+        "$ref": "#/components/schemas/Mentions"
+      },
+      "attachments": {
+        "$ref": "#/components/schemas/Attachments"
+      }
     }
   },
   "EntityCommentsDataResponse": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "reactionPaging": { "$ref": "#/components/schemas/ReactionPagingResponse" },
-      "comments": { "type": "array", "items": { "$ref": "#/components/schemas/CommentDataResponse" }, "nullable": true }
+      "reactionPaging": {
+        "$ref": "#/components/schemas/ReactionPagingResponse"
+      },
+      "comments": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/CommentDataResponse"
+        },
+        "nullable": true
+      }
     }
   },
   "Emotion": {
     "type": "object",
     "properties": {
-      "type": { "type": "string" },
-      "id": { "type": "string" },
-      "owner": { "$ref": "#/components/schemas/User" },
-      "obsoleteId": { "type": "string" },
+      "type": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "owner": {
+        "$ref": "#/components/schemas/User"
+      },
+      "obsoleteId": {
+        "type": "string"
+      },
       "parent": {
         "type": "object",
         "properties": {
-          "id": { "type": "string" },
-          "obsoleteId": { "type": "string" },
-          "type": { "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "obsoleteId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
         }
       },
-      "created": { "type": "string", "format": "date-time" }
+      "created": {
+        "type": "string",
+        "format": "date-time"
+      }
     }
   },
   "EmotionType": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum (only one variant currently)",
-    "enum": ["Like"]
+    "enum": [
+      "Like"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::EmotionType"
+    }
   },
   "EmotionDataResponse": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "paging": { "$ref": "#/components/schemas/ReactionPagingResponse" },
-      "emotions": { "type": "array", "items": { "$ref": "#/components/schemas/Emotion" }, "nullable": true }
+      "paging": {
+        "$ref": "#/components/schemas/ReactionPagingResponse"
+      },
+      "emotions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Emotion"
+        },
+        "nullable": true
+      }
     }
   },
   "EmotionsDataResponse": {
     "type": "object",
     "additionalProperties": false,
-    "properties": { "like": { "$ref": "#/components/schemas/EmotionDataResponse" } }
+    "properties": {
+      "like": {
+        "$ref": "#/components/schemas/EmotionDataResponse"
+      }
+    }
   },
   "ReactionPagingResponse": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "offsetEntityId": { "type": "string", "nullable": true },
-      "totalCount": { "type": "integer", "format": "int32" },
-      "next": { "type": "string", "nullable": true }
+      "offsetEntityId": {
+        "type": "string",
+        "nullable": true
+      },
+      "totalCount": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "next": {
+        "type": "string",
+        "nullable": true
+      }
     }
   },
   "RequesterContextResponse": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "isFlaggingAsSpam": { "type": "boolean" },
-      "isSubscribed": { "type": "boolean" },
-      "isLiking": { "type": "boolean" },
-      "isSaved": { "type": "boolean" },
-      "isPinned": { "type": "boolean" },
-      "isRequesterBlocking": { "type": "boolean" },
-      "isInteractionRestricted": { "type": "boolean" },
-      "isFollowing": { "type": "boolean" },
-      "isOwner": { "type": "boolean" }
+      "isFlaggingAsSpam": {
+        "type": "boolean"
+      },
+      "isSubscribed": {
+        "type": "boolean"
+      },
+      "isLiking": {
+        "type": "boolean"
+      },
+      "isSaved": {
+        "type": "boolean"
+      },
+      "isPinned": {
+        "type": "boolean"
+      },
+      "isRequesterBlocking": {
+        "type": "boolean"
+      },
+      "isInteractionRestricted": {
+        "type": "boolean"
+      },
+      "isFollowing": {
+        "type": "boolean"
+      },
+      "isOwner": {
+        "type": "boolean"
+      }
     }
   },
   "RequestBase": {
@@ -493,34 +1029,74 @@
     "description": "Common request shape — CommentRequest and DiscussionCreateRequest extend this conceptually",
     "additionalProperties": false,
     "properties": {
-      "owner": { "type": "integer", "format": "int32" },
-      "message": { "type": "string", "nullable": true },
-      "tags": { "$ref": "#/components/schemas/TagsDataRequest" },
-      "mentions": { "$ref": "#/components/schemas/MentionsDataRequest" },
-      "attachments": { "type": "array", "items": { "$ref": "#/components/schemas/Attachment" }, "nullable": true }
+      "owner": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "message": {
+        "type": "string",
+        "nullable": true
+      },
+      "tags": {
+        "$ref": "#/components/schemas/TagsDataRequest"
+      },
+      "mentions": {
+        "$ref": "#/components/schemas/MentionsDataRequest"
+      },
+      "attachments": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Attachment"
+        },
+        "nullable": true
+      }
     }
   },
   "Reason": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "sourceId": { "type": "string", "nullable": true },
-      "owner": { "$ref": "#/components/schemas/User" },
-      "type": { "$ref": "#/components/schemas/ReasonType" }
+      "sourceId": {
+        "type": "string",
+        "nullable": true
+      },
+      "owner": {
+        "$ref": "#/components/schemas/User"
+      },
+      "type": {
+        "$ref": "#/components/schemas/ReasonType"
+      }
     }
   },
   "ReasonType": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["None", "Owner", "LikedPost", "LikedComment", "TaggedInPost", "TaggedInComment", "Comment"]
+    "enum": [
+      "None",
+      "Owner",
+      "LikedPost",
+      "LikedComment",
+      "TaggedInPost",
+      "TaggedInComment",
+      "Comment"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::ReasonType"
+    }
   },
   "Mention": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "user": { "$ref": "#/components/schemas/User" },
-      "isDirect": { "type": "boolean" }
+      "user": {
+        "$ref": "#/components/schemas/User"
+      },
+      "isDirect": {
+        "type": "boolean"
+      }
     }
   },
   "Mentions": {
@@ -532,9 +1108,15 @@
         "items": {
           "type": "object",
           "properties": {
-            "userName": { "type": "string" },
-            "id": { "type": "string" },
-            "isDirect": { "type": "boolean" }
+            "userName": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "isDirect": {
+              "type": "boolean"
+            }
           }
         }
       }
@@ -544,22 +1126,40 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "userName": { "type": "string", "nullable": true },
-      "id": { "type": "string", "nullable": true },
-      "isDirect": { "type": "boolean" }
+      "userName": {
+        "type": "string",
+        "nullable": true
+      },
+      "id": {
+        "type": "string",
+        "nullable": true
+      },
+      "isDirect": {
+        "type": "boolean"
+      }
     }
   },
   "MentionsDataRequest": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "mentions": { "type": "array", "items": { "$ref": "#/components/schemas/MentionsRequest" }, "nullable": true }
+      "mentions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/MentionsRequest"
+        },
+        "nullable": true
+      }
     }
   },
   "Tag": {
     "type": "object",
     "additionalProperties": false,
-    "properties": { "market": { "$ref": "#/components/schemas/Market" } }
+    "properties": {
+      "market": {
+        "$ref": "#/components/schemas/Market"
+      }
+    }
   },
   "Tags": {
     "type": "object",
@@ -570,8 +1170,12 @@
         "items": {
           "type": "object",
           "properties": {
-            "name": { "type": "string" },
-            "id": { "type": "string" }
+            "name": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            }
           }
         }
       }
@@ -581,15 +1185,27 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "name": { "type": "string", "nullable": true },
-      "id": { "type": "string", "nullable": true }
+      "name": {
+        "type": "string",
+        "nullable": true
+      },
+      "id": {
+        "type": "string",
+        "nullable": true
+      }
     }
   },
   "TagsDataRequest": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "tags": { "type": "array", "items": { "$ref": "#/components/schemas/TagRequest" }, "nullable": true }
+      "tags": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/TagRequest"
+        },
+        "nullable": true
+      }
     }
   },
   "Parents": {
@@ -597,72 +1213,164 @@
     "description": "Recursive: parent is Parents (self). Box in Rust to break cycle.",
     "additionalProperties": false,
     "properties": {
-      "parent": { "$ref": "#/components/schemas/Parents" },
-      "id": { "type": "string", "nullable": true },
-      "obsoleteId": { "type": "string", "nullable": true },
-      "type": { "$ref": "#/components/schemas/ParentType" }
+      "parent": {
+        "$ref": "#/components/schemas/Parents"
+      },
+      "id": {
+        "type": "string",
+        "nullable": true
+      },
+      "obsoleteId": {
+        "type": "string",
+        "nullable": true
+      },
+      "type": {
+        "$ref": "#/components/schemas/ParentType"
+      }
     }
   },
   "ParentType": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["Unknown", "Post", "Comment", "Reply"]
+    "enum": [
+      "Unknown",
+      "Post",
+      "Comment",
+      "Reply"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::ParentType"
+    }
   },
   "Message": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "text": { "type": "string", "nullable": true },
-      "languageCode": { "type": "string", "nullable": true }
+      "text": {
+        "type": "string",
+        "nullable": true
+      },
+      "languageCode": {
+        "type": "string",
+        "nullable": true
+      }
     }
   },
   "ShareMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "sharedPost": { "$ref": "#/components/schemas/Post" },
-      "sharedOriginPost": { "$ref": "#/components/schemas/Post" }
+      "sharedPost": {
+        "$ref": "#/components/schemas/Post"
+      },
+      "sharedOriginPost": {
+        "$ref": "#/components/schemas/Post"
+      }
     }
   },
   "PollMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "id": { "type": "integer", "format": "int32" },
-      "title": { "type": "string", "nullable": true },
-      "gcid": { "type": "integer", "format": "int32" },
-      "options": { "type": "array", "items": { "$ref": "#/components/schemas/PollOption" }, "nullable": true },
-      "totalVotes": { "type": "integer", "format": "int32" }
+      "id": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "title": {
+        "type": "string",
+        "nullable": true
+      },
+      "gcid": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "options": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PollOption"
+        },
+        "nullable": true
+      },
+      "totalVotes": {
+        "type": "integer",
+        "format": "int32"
+      }
     }
   },
   "PollOption": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "id": { "type": "integer", "format": "int32" },
-      "index": { "type": "integer", "format": "int32" },
-      "text": { "type": "string", "nullable": true },
-      "isUserVoted": { "type": "boolean" },
-      "votesCount": { "type": "integer", "format": "int32" }
+      "id": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "index": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "text": {
+        "type": "string",
+        "nullable": true
+      },
+      "isUserVoted": {
+        "type": "boolean"
+      },
+      "votesCount": {
+        "type": "integer",
+        "format": "int32"
+      }
     }
   },
   "Attachment": {
     "type": "object",
     "description": "Represents a media attachment in a post",
     "properties": {
-      "type": { "type": "string", "enum": ["image", "video", "link"] },
-      "url": { "type": "string" },
-      "thumbnailUrl": { "type": "string", "description": "URL of a thumbnail image for video attachments" },
-      "host": { "type": "string" },
-      "mediaType": { "type": "string", "enum": ["None", "Image", "Video"] },
-      "media": { "type": "object" },
+      "type": {
+        "type": "string",
+        "enum": [
+          "image",
+          "video",
+          "link"
+        ]
+      },
+      "url": {
+        "type": "string"
+      },
+      "thumbnailUrl": {
+        "type": "string",
+        "description": "URL of a thumbnail image for video attachments"
+      },
+      "host": {
+        "type": "string"
+      },
+      "mediaType": {
+        "type": "string",
+        "enum": [
+          "None",
+          "Image",
+          "Video"
+        ]
+      },
+      "media": {
+        "type": "object"
+      },
       "metadata": {
         "type": "object",
         "properties": {
-          "width": { "type": "integer" },
-          "height": { "type": "integer" },
-          "duration": { "type": "integer", "description": "Duration in seconds for video attachments" }
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "Duration in seconds for video attachments"
+          }
         }
       }
     }
@@ -673,33 +1381,69 @@
     "items": {
       "type": "object",
       "properties": {
-        "url": { "type": "string" },
-        "title": { "type": "string" },
-        "host": { "type": "string" },
-        "description": { "type": "string" },
-        "mediaType": { "type": "string", "enum": ["None", "Image", "Video"] },
+        "url": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": [
+            "None",
+            "Image",
+            "Video"
+          ]
+        },
         "media": {
           "type": "object",
           "properties": {
             "image": {
               "type": "object",
               "properties": {
-                "width": { "type": "integer" },
-                "height": { "type": "integer" },
-                "url": { "type": "string" }
+                "width": {
+                  "type": "integer"
+                },
+                "height": {
+                  "type": "integer"
+                },
+                "url": {
+                  "type": "string"
+                }
               }
             },
             "video": {
               "type": "object",
               "properties": {
-                "videoSourceId": { "type": "string" },
-                "videoSource": { "type": "string", "enum": ["None", "YouTube", "Vimeo"] },
+                "videoSourceId": {
+                  "type": "string"
+                },
+                "videoSource": {
+                  "type": "string",
+                  "enum": [
+                    "None",
+                    "YouTube",
+                    "Vimeo"
+                  ]
+                },
                 "image": {
                   "type": "object",
                   "properties": {
-                    "width": { "type": "integer" },
-                    "height": { "type": "integer" },
-                    "url": { "type": "string" }
+                    "width": {
+                      "type": "integer"
+                    },
+                    "height": {
+                      "type": "integer"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
                   }
                 }
               }
@@ -713,102 +1457,240 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "image": { "$ref": "#/components/schemas/ImageMetadata" },
-      "video": { "$ref": "#/components/schemas/VideoMetadata" }
+      "image": {
+        "$ref": "#/components/schemas/ImageMetadata"
+      },
+      "video": {
+        "$ref": "#/components/schemas/VideoMetadata"
+      }
     }
   },
   "MediaType": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["None", "Link", "Image", "Video"]
+    "enum": [
+      "None",
+      "Link",
+      "Image",
+      "Video"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::MediaType"
+    }
   },
   "ImageMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "width": { "type": "integer", "format": "int32" },
-      "height": { "type": "integer", "format": "int32" },
-      "url": { "type": "string", "nullable": true }
+      "width": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "height": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "url": {
+        "type": "string",
+        "nullable": true
+      }
     }
   },
   "VideoMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "videoSourceId": { "type": "string", "nullable": true },
-      "videoSource": { "$ref": "#/components/schemas/VideoSource" },
-      "image": { "$ref": "#/components/schemas/ImageMetadata" }
+      "videoSourceId": {
+        "type": "string",
+        "nullable": true
+      },
+      "videoSource": {
+        "$ref": "#/components/schemas/VideoSource"
+      },
+      "image": {
+        "$ref": "#/components/schemas/ImageMetadata"
+      }
     }
   },
   "VideoSource": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["None", "YouTube", "Vimeo"]
+    "enum": [
+      "None",
+      "YouTube",
+      "Vimeo"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::VideoSource"
+    }
   },
   "ArticleMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "id": { "type": "integer", "format": "int32" },
-      "title": { "type": "string", "nullable": true },
-      "url": { "type": "string", "nullable": true },
-      "rating": { "$ref": "#/components/schemas/ArticleRating" },
-      "featuredImage": { "$ref": "#/components/schemas/Attachment" },
-      "body": { "type": "string", "nullable": true },
-      "bodyPreview": { "type": "string", "nullable": true },
-      "aiSummary": { "type": "string", "nullable": true },
-      "languageCode": { "type": "string", "nullable": true },
-      "status": { "$ref": "#/components/schemas/ArticleStatus" },
-      "editStatus": { "$ref": "#/components/schemas/EditStatus" },
-      "ownerId": { "type": "integer", "format": "int32" },
-      "tags": { "type": "array", "items": { "$ref": "#/components/schemas/Tag" }, "nullable": true },
-      "created": { "type": "string", "format": "date-time" },
-      "updated": { "type": "string", "format": "date-time", "nullable": true },
-      "published": { "type": "string", "format": "date-time", "nullable": true },
-      "readingTimeMinutes": { "type": "number", "format": "double" },
-      "wordCount": { "type": "integer", "format": "int32" }
+      "id": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "title": {
+        "type": "string",
+        "nullable": true
+      },
+      "url": {
+        "type": "string",
+        "nullable": true
+      },
+      "rating": {
+        "$ref": "#/components/schemas/ArticleRating"
+      },
+      "featuredImage": {
+        "$ref": "#/components/schemas/Attachment"
+      },
+      "body": {
+        "type": "string",
+        "nullable": true
+      },
+      "bodyPreview": {
+        "type": "string",
+        "nullable": true
+      },
+      "aiSummary": {
+        "type": "string",
+        "nullable": true
+      },
+      "languageCode": {
+        "type": "string",
+        "nullable": true
+      },
+      "status": {
+        "$ref": "#/components/schemas/ArticleStatus"
+      },
+      "editStatus": {
+        "$ref": "#/components/schemas/EditStatus"
+      },
+      "ownerId": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Tag"
+        },
+        "nullable": true
+      },
+      "created": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "updated": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "published": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "readingTimeMinutes": {
+        "type": "number",
+        "format": "double"
+      },
+      "wordCount": {
+        "type": "integer",
+        "format": "int32"
+      }
     }
   },
   "ArticleRating": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["Bearish", "Bullish"]
+    "enum": [
+      "Bearish",
+      "Bullish"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::ArticleRating"
+    }
   },
   "ArticleStatus": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["Draft", "Published", "Deleted"]
+    "enum": [
+      "Draft",
+      "Published",
+      "Deleted"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::ArticleStatus"
+    }
   },
   "EditStatus": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["None", "Edited", "Moderated"]
+    "enum": [
+      "None",
+      "Edited",
+      "Moderated"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::EditStatus"
+    }
   },
   "SummaryResponse": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "totalCommentsAndReplies": { "type": "integer", "format": "int32" },
-      "sharedCount": { "type": "integer", "format": "int32" }
+      "totalCommentsAndReplies": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "sharedCount": {
+        "type": "integer",
+        "format": "int32"
+      }
     }
   },
   "CopyMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "type": { "$ref": "#/components/schemas/CopyType" },
-      "user": { "$ref": "#/components/schemas/User" }
+      "type": {
+        "$ref": "#/components/schemas/CopyType"
+      },
+      "user": {
+        "$ref": "#/components/schemas/User"
+      }
     }
   },
   "CopyType": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["Start", "Stop"]
+    "enum": [
+      "Start",
+      "Stop"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::CopyType"
+    }
   }
 }

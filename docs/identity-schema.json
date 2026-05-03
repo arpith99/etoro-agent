@@ -29,85 +29,244 @@
   "meResponse": {
     "type": "object",
     "properties": {
-      "gcid": { "type": "integer", "description": "Global Customer ID - the unique identifier for the user across all eToro systems." },
-      "realCid": { "type": "integer", "description": "Real account Customer ID - the identifier for the user's real trading account." },
-      "demoCid": { "type": "integer", "description": "Demo account Customer ID - the identifier for the user's virtual/demo trading account." }
+      "gcid": {
+        "type": "integer",
+        "description": "Global Customer ID - the unique identifier for the user across all eToro systems."
+      },
+      "realCid": {
+        "type": "integer",
+        "description": "Real account Customer ID - the identifier for the user's real trading account."
+      },
+      "demoCid": {
+        "type": "integer",
+        "description": "Demo account Customer ID - the identifier for the user's virtual/demo trading account."
+      }
     }
   },
   "User": {
     "type": "object",
     "properties": {
-      "id": { "type": "string" },
-      "username": { "type": "string" },
-      "firstName": { "type": "string" },
-      "lastName": { "type": "string" },
+      "id": {
+        "type": "string"
+      },
+      "username": {
+        "type": "string"
+      },
+      "firstName": {
+        "type": "string"
+      },
+      "lastName": {
+        "type": "string"
+      },
       "avatar": {
         "type": "object",
         "properties": {
-          "small": { "type": "string", "format": "uri" },
-          "medium": { "type": "string", "format": "uri" },
-          "large": { "type": "string", "format": "uri" }
+          "small": {
+            "type": "string",
+            "format": "uri"
+          },
+          "medium": {
+            "type": "string",
+            "format": "uri"
+          },
+          "large": {
+            "type": "string",
+            "format": "uri"
+          }
         }
       },
-      "roles": { "type": "array", "items": { "type": "string" } },
-      "isBlocked": { "type": "boolean" },
-      "isPrivate": { "type": "boolean" },
-      "countryCode": { "type": "integer" },
-      "piLevel": { "type": "integer" }
+      "roles": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "isBlocked": {
+        "type": "boolean"
+      },
+      "isPrivate": {
+        "type": "boolean"
+      },
+      "countryCode": {
+        "type": "integer"
+      },
+      "piLevel": {
+        "type": "integer"
+      }
     }
   },
   "UserRole": {
-    "enum": ["Regular", "PI", "Moderator", "Anonymous", "eToroTeam", "eTorian", "CopyPortfolio", "Depositor", "Admin", "Verified", "Analyst"],
+    "enum": [
+      "Regular",
+      "PI",
+      "Moderator",
+      "Anonymous",
+      "eToroTeam",
+      "eTorian",
+      "CopyPortfolio",
+      "Depositor",
+      "Admin",
+      "Verified",
+      "Analyst"
+    ],
     "type": "integer",
-    "format": "int32"
+    "format": "int32",
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::UserRole"
+    }
   },
   "PublicAggregatedInfoResponse": {
     "type": "object",
     "description": "Container for the aggregated user information response",
     "properties": {
-      "users": { "type": "array", "items": { "$ref": "#/components/schemas/PublicAggregatedInfoUser" } }
+      "users": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PublicAggregatedInfoUser"
+        }
+      }
     }
   },
   "PublicAggregatedInfoUser": {
     "type": "object",
     "description": "Comprehensive user profile information including account details, verification status, and preferences",
     "properties": {
-      "gcid": { "type": "integer", "description": "Global Customer ID - Unique identifier across all systems" },
-      "realCID": { "type": "integer", "description": "Customer ID for real trading account" },
-      "demoCID": { "type": "integer", "nullable": true, "description": "Customer ID for demo/practice account if available" },
-      "username": { "type": "string", "description": "Unique username identifier for the user" },
-      "language": { "type": "integer", "nullable": true, "description": "User's preferred language ID based on system language codes" },
-      "languageIsoCode": { "type": "string", "description": "ISO 639-1 language code for user's preferred language" },
-      "country": { "type": "integer", "nullable": true, "description": "User's registered country ID based on system country codes" },
-      "allowDisplayFullName": { "type": "boolean", "description": "Indicates whether the user has consented to displaying their full name publicly" },
-      "userBio": { "$ref": "#/components/schemas/PublicAggregatedInfoUiUserBio", "description": "Structured biographical information including trading strategy" },
-      "whiteLabel": { "type": "integer", "nullable": true, "description": "White label partner identifier if user belongs to a partner program" },
-      "optOut": { "type": "boolean", "description": "Indicates if user has opted out of public profile features" },
-      "homepage": { "type": "integer", "nullable": true },
-      "playerStatus": { "type": "integer", "nullable": true },
-      "piLevel": { "type": "integer", "nullable": true },
-      "isPi": { "type": "boolean", "description": "Indicates if user is a Professional Investor with special privileges" },
-      "avatars": { "type": "array", "items": { "$ref": "#/components/schemas/PublicAggregatedInfoUiUserAvatar" } },
-      "masterAccountCid": { "type": "integer", "nullable": true },
-      "accountType": { "type": "integer", "nullable": true },
-      "fundType": { "type": "string", "nullable": true },
-      "isVerified": { "type": "boolean" },
-      "verificationLevel": { "type": "integer", "description": "User's current verification level (0-3, where 3 is fully verified)" },
-      "accountStatus": { "type": "integer", "nullable": true, "description": "Current account status code indicating active, suspended, or other states" },
+      "gcid": {
+        "type": "integer",
+        "description": "Global Customer ID - Unique identifier across all systems"
+      },
+      "realCID": {
+        "type": "integer",
+        "description": "Customer ID for real trading account"
+      },
+      "demoCID": {
+        "type": "integer",
+        "nullable": true,
+        "description": "Customer ID for demo/practice account if available"
+      },
+      "username": {
+        "type": "string",
+        "description": "Unique username identifier for the user"
+      },
+      "language": {
+        "type": "integer",
+        "nullable": true,
+        "description": "User's preferred language ID based on system language codes"
+      },
+      "languageIsoCode": {
+        "type": "string",
+        "description": "ISO 639-1 language code for user's preferred language"
+      },
+      "country": {
+        "type": "integer",
+        "nullable": true,
+        "description": "User's registered country ID based on system country codes"
+      },
+      "allowDisplayFullName": {
+        "type": "boolean",
+        "description": "Indicates whether the user has consented to displaying their full name publicly"
+      },
+      "userBio": {
+        "$ref": "#/components/schemas/PublicAggregatedInfoUiUserBio",
+        "description": "Structured biographical information including trading strategy"
+      },
+      "whiteLabel": {
+        "type": "integer",
+        "nullable": true,
+        "description": "White label partner identifier if user belongs to a partner program"
+      },
+      "optOut": {
+        "type": "boolean",
+        "description": "Indicates if user has opted out of public profile features"
+      },
+      "homepage": {
+        "type": "integer",
+        "nullable": true
+      },
+      "playerStatus": {
+        "type": "integer",
+        "nullable": true
+      },
+      "piLevel": {
+        "type": "integer",
+        "nullable": true
+      },
+      "isPi": {
+        "type": "boolean",
+        "description": "Indicates if user is a Professional Investor with special privileges"
+      },
+      "avatars": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/PublicAggregatedInfoUiUserAvatar"
+        }
+      },
+      "masterAccountCid": {
+        "type": "integer",
+        "nullable": true
+      },
+      "accountType": {
+        "type": "integer",
+        "nullable": true
+      },
+      "fundType": {
+        "type": "string",
+        "nullable": true
+      },
+      "isVerified": {
+        "type": "boolean"
+      },
+      "verificationLevel": {
+        "type": "integer",
+        "description": "User's current verification level (0-3, where 3 is fully verified)"
+      },
+      "accountStatus": {
+        "type": "integer",
+        "nullable": true,
+        "description": "Current account status code indicating active, suspended, or other states"
+      },
       "gdprInfo": {
         "type": "object",
         "nullable": true,
         "properties": {
-          "accountStatus": { "$ref": "#/components/schemas/PublicAggregatedInfoAccountStatus" },
-          "playerStatus": { "$ref": "#/components/schemas/PublicAggregatedInfoPlayerStatus" },
-          "playerStatusReason": { "$ref": "#/components/schemas/PublicAggregatedInfoPlayerStatusReason" }
+          "accountStatus": {
+            "$ref": "#/components/schemas/PublicAggregatedInfoAccountStatus"
+          },
+          "playerStatus": {
+            "$ref": "#/components/schemas/PublicAggregatedInfoPlayerStatus"
+          },
+          "playerStatusReason": {
+            "$ref": "#/components/schemas/PublicAggregatedInfoPlayerStatusReason"
+          }
         }
       },
-      "firstName": { "type": "string", "nullable": true, "description": "User's first name (visible if allowDisplayFullName is true)" },
-      "middleName": { "type": "string", "nullable": true, "description": "User's middle name" },
-      "lastName": { "type": "string", "nullable": true, "description": "User's last name (visible if allowDisplayFullName is true)" },
-      "aboutMe": { "type": "string", "nullable": true, "description": "User's full about me text" },
-      "aboutMeShort": { "type": "string", "nullable": true, "description": "Short summary of user's about me text" },
+      "firstName": {
+        "type": "string",
+        "nullable": true,
+        "description": "User's first name (visible if allowDisplayFullName is true)"
+      },
+      "middleName": {
+        "type": "string",
+        "nullable": true,
+        "description": "User's middle name"
+      },
+      "lastName": {
+        "type": "string",
+        "nullable": true,
+        "description": "User's last name (visible if allowDisplayFullName is true)"
+      },
+      "aboutMe": {
+        "type": "string",
+        "nullable": true,
+        "description": "User's full about me text"
+      },
+      "aboutMeShort": {
+        "type": "string",
+        "nullable": true,
+        "description": "Short summary of user's about me text"
+      },
       "customerRestrictions": {
         "type": "array",
         "nullable": true,
@@ -115,66 +274,224 @@
         "items": {
           "type": "object",
           "properties": {
-            "CID": { "type": "integer", "description": "Customer ID" },
-            "restrictionTypeID": { "type": "integer", "description": "Type of restriction" },
-            "reasonID": { "type": "integer", "description": "Reason for restriction" },
-            "occured": { "type": "string", "format": "date-time", "description": "When the restriction occurred (note: spec field name is 'occured', sic — typo for 'occurred')" }
+            "CID": {
+              "type": "integer",
+              "description": "Customer ID"
+            },
+            "restrictionTypeID": {
+              "type": "integer",
+              "description": "Type of restriction"
+            },
+            "reasonID": {
+              "type": "integer",
+              "description": "Reason for restriction"
+            },
+            "occured": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the restriction occurred (note: spec field name is 'occured', sic — typo for 'occurred')"
+            }
           }
         }
       },
-      "userFlowSignature": { "type": "string" }
+      "userFlowSignature": {
+        "type": "string"
+      }
     }
   },
   "PublicAggregatedInfoUiUserAvatar": {
     "type": "object",
     "properties": {
-      "url": { "type": "string" },
-      "width": { "type": "integer" },
-      "height": { "type": "integer" },
-      "type": { "type": "string", "enum": ["Original", "OriginalCropped", "Resized", "Retouched"], "description": "Type of avatar image" }
+      "url": {
+        "type": "string"
+      },
+      "width": {
+        "type": "integer"
+      },
+      "height": {
+        "type": "integer"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "Original",
+          "OriginalCropped",
+          "Resized",
+          "Retouched"
+        ],
+        "description": "Type of avatar image"
+      }
     }
   },
   "PublicAggregatedInfoUiUserBio": {
     "type": "object",
     "properties": {
-      "gcid": { "type": "integer" },
-      "languageCode": { "type": "string", "nullable": true },
-      "aboutMe": { "type": "string", "nullable": true, "description": "User's full about me text" },
-      "aboutMeShort": { "type": "string", "nullable": true, "description": "Short summary of user's about me text" },
-      "strategyID": { "type": "integer", "nullable": true, "description": "ID of the user's trading strategy" }
+      "gcid": {
+        "type": "integer"
+      },
+      "languageCode": {
+        "type": "string",
+        "nullable": true
+      },
+      "aboutMe": {
+        "type": "string",
+        "nullable": true,
+        "description": "User's full about me text"
+      },
+      "aboutMeShort": {
+        "type": "string",
+        "nullable": true,
+        "description": "Short summary of user's about me text"
+      },
+      "strategyID": {
+        "type": "integer",
+        "nullable": true,
+        "description": "ID of the user's trading strategy"
+      }
     }
   },
   "PublicAggregatedInfoAccountStatus": {
     "type": "integer",
     "nullable": true,
-    "enum": [1, 2],
-    "x-enumNames": ["Open", "Closed"]
+    "enum": [
+      1,
+      2
+    ],
+    "x-enumNames": [
+      "Open",
+      "Closed"
+    ]
   },
   "PublicAggregatedInfoPlayerStatus": {
     "type": "integer",
     "nullable": true,
-    "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    "enum": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
     "x-enumNames": [
-      "Normal", "Blocked", "ChatBlocked", "BlockedUponRequest", "Warning",
-      "BlockedUnderInvestigation", "ScalpersBlock", "BlockedPayPalInvestigation",
-      "TradeBlock", "DepositBlocked", "SocialIndex", "CopyBlock",
-      "PendingVerification", "BlockedFailedVerification", "BlockTrading"
+      "Normal",
+      "Blocked",
+      "ChatBlocked",
+      "BlockedUponRequest",
+      "Warning",
+      "BlockedUnderInvestigation",
+      "ScalpersBlock",
+      "BlockedPayPalInvestigation",
+      "TradeBlock",
+      "DepositBlocked",
+      "SocialIndex",
+      "CopyBlock",
+      "PendingVerification",
+      "BlockedFailedVerification",
+      "BlockTrading"
     ]
   },
   "PublicAggregatedInfoPlayerStatusReason": {
     "type": "integer",
     "nullable": true,
-    "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42],
+    "enum": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42
+    ],
     "x-enumNames": [
-      "None", "FailedVerification", "ExpiredDocument", "CloseAccountByUser", "Risk",
-      "Chargeback", "AMLAccountClosed", "HRC", "Underage", "Deceased",
-      "AML", "AMLreview", "OffMarketAbuse", "Overpayment", "RiskCheck",
-      "ThirdParty", "PayPalInvestigation", "NOC_NOF_RFI", "WCHMatch", "Other",
-      "RightToBeForgotten", "SelfService", "ByRequest", "ACHChargeback", "PWMBChargeback",
-      "Abuse", "AffiliateAccount", "PendingDocs", "EmployeeAccount", "PIAccount",
-      "CheckoutChargeback", "CheckoutRetrievel", "CheckoutCaptureDecline", "EToroMoneyRestriction", "AbusiveTrading",
-      "HackedAccount", "PartnersAndPIs", "CS_ManagementDecision", "Deposits", "KYC",
-      "AccountClosed", "Tax", "Corporate"
+      "None",
+      "FailedVerification",
+      "ExpiredDocument",
+      "CloseAccountByUser",
+      "Risk",
+      "Chargeback",
+      "AMLAccountClosed",
+      "HRC",
+      "Underage",
+      "Deceased",
+      "AML",
+      "AMLreview",
+      "OffMarketAbuse",
+      "Overpayment",
+      "RiskCheck",
+      "ThirdParty",
+      "PayPalInvestigation",
+      "NOC_NOF_RFI",
+      "WCHMatch",
+      "Other",
+      "RightToBeForgotten",
+      "SelfService",
+      "ByRequest",
+      "ACHChargeback",
+      "PWMBChargeback",
+      "Abuse",
+      "AffiliateAccount",
+      "PendingDocs",
+      "EmployeeAccount",
+      "PIAccount",
+      "CheckoutChargeback",
+      "CheckoutRetrievel",
+      "CheckoutCaptureDecline",
+      "EToroMoneyRestriction",
+      "AbusiveTrading",
+      "HackedAccount",
+      "PartnersAndPIs",
+      "CS_ManagementDecision",
+      "Deposits",
+      "KYC",
+      "AccountClosed",
+      "Tax",
+      "Corporate"
     ]
   }
 }

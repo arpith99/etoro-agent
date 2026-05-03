@@ -29,82 +29,6 @@ pub mod error {
         }
     }
 }
-#[doc = "`ApplicationSource`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"eToro\","]
-#[doc = "    \"Delta\","]
-#[doc = "    \"Gatsby\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum ApplicationSource {
-    #[serde(rename = "eToro")]
-    EToro,
-    Delta,
-    Gatsby,
-}
-impl ::std::fmt::Display for ApplicationSource {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::EToro => f.write_str("eToro"),
-            Self::Delta => f.write_str("Delta"),
-            Self::Gatsby => f.write_str("Gatsby"),
-        }
-    }
-}
-impl ::std::str::FromStr for ApplicationSource {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "eToro" => Ok(Self::EToro),
-            "Delta" => Ok(Self::Delta),
-            "Gatsby" => Ok(Self::Gatsby),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for ApplicationSource {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for ApplicationSource {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for ApplicationSource {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
 #[doc = "`Avatar`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -2388,13 +2312,13 @@ impl ::std::default::Default for LiveRatesResponseRatesItem {
 #[serde(deny_unknown_fields)]
 pub struct Market {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub application: ::std::option::Option<ApplicationSource>,
+    pub application: ::std::option::Option<::etoro_agent::types::manual::ApplicationSource>,
     #[serde(
         rename = "assetType",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub asset_type: ::std::option::Option<MarketAssetType>,
+    pub asset_type: ::std::option::Option<::etoro_agent::types::manual::MarketAssetType>,
     #[serde(
         rename = "assetTypeId",
         default,
@@ -2449,131 +2373,6 @@ impl ::std::default::Default for Market {
             symbol_name: Default::default(),
             updated: Default::default(),
         }
-    }
-}
-#[doc = "Enum encoded as integer index; values listed below"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Enum encoded as integer index; values listed below\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Stocks\","]
-#[doc = "    \"Bonds\","]
-#[doc = "    \"ETF\","]
-#[doc = "    \"Index\","]
-#[doc = "    \"Warrants\","]
-#[doc = "    \"Options\","]
-#[doc = "    \"Futures\","]
-#[doc = "    \"CFD\","]
-#[doc = "    \"TRS\","]
-#[doc = "    \"FOREX\","]
-#[doc = "    \"CommodityMetals\","]
-#[doc = "    \"CommodityEnergyAgriculture\","]
-#[doc = "    \"CryptoCoin\","]
-#[doc = "    \"NFT\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum MarketAssetType {
-    Stocks,
-    Bonds,
-    #[serde(rename = "ETF")]
-    Etf,
-    Index,
-    Warrants,
-    Options,
-    Futures,
-    #[serde(rename = "CFD")]
-    Cfd,
-    #[serde(rename = "TRS")]
-    Trs,
-    #[serde(rename = "FOREX")]
-    Forex,
-    CommodityMetals,
-    CommodityEnergyAgriculture,
-    CryptoCoin,
-    #[serde(rename = "NFT")]
-    Nft,
-}
-impl ::std::fmt::Display for MarketAssetType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Stocks => f.write_str("Stocks"),
-            Self::Bonds => f.write_str("Bonds"),
-            Self::Etf => f.write_str("ETF"),
-            Self::Index => f.write_str("Index"),
-            Self::Warrants => f.write_str("Warrants"),
-            Self::Options => f.write_str("Options"),
-            Self::Futures => f.write_str("Futures"),
-            Self::Cfd => f.write_str("CFD"),
-            Self::Trs => f.write_str("TRS"),
-            Self::Forex => f.write_str("FOREX"),
-            Self::CommodityMetals => f.write_str("CommodityMetals"),
-            Self::CommodityEnergyAgriculture => f.write_str("CommodityEnergyAgriculture"),
-            Self::CryptoCoin => f.write_str("CryptoCoin"),
-            Self::Nft => f.write_str("NFT"),
-        }
-    }
-}
-impl ::std::str::FromStr for MarketAssetType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Stocks" => Ok(Self::Stocks),
-            "Bonds" => Ok(Self::Bonds),
-            "ETF" => Ok(Self::Etf),
-            "Index" => Ok(Self::Index),
-            "Warrants" => Ok(Self::Warrants),
-            "Options" => Ok(Self::Options),
-            "Futures" => Ok(Self::Futures),
-            "CFD" => Ok(Self::Cfd),
-            "TRS" => Ok(Self::Trs),
-            "FOREX" => Ok(Self::Forex),
-            "CommodityMetals" => Ok(Self::CommodityMetals),
-            "CommodityEnergyAgriculture" => Ok(Self::CommodityEnergyAgriculture),
-            "CryptoCoin" => Ok(Self::CryptoCoin),
-            "NFT" => Ok(Self::Nft),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for MarketAssetType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for MarketAssetType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for MarketAssetType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "`MarketEventMetadata`"]
@@ -2701,7 +2500,7 @@ pub struct MarketEventMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub tag_name: ::std::option::Option<MarketEventTag>,
+    pub tag_name: ::std::option::Option<::etoro_agent::types::manual::MarketEventTag>,
     #[serde(
         rename = "textKey",
         default,
@@ -2728,86 +2527,6 @@ impl ::std::default::Default for MarketEventMetadata {
             text_key: Default::default(),
             verified: Default::default(),
         }
-    }
-}
-#[doc = "Enum encoded as integer index"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Enum encoded as integer index\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Reports\","]
-#[doc = "    \"Dividends\","]
-#[doc = "    \"Split\","]
-#[doc = "    \"ReverseSplit\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum MarketEventTag {
-    Reports,
-    Dividends,
-    Split,
-    ReverseSplit,
-}
-impl ::std::fmt::Display for MarketEventTag {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Reports => f.write_str("Reports"),
-            Self::Dividends => f.write_str("Dividends"),
-            Self::Split => f.write_str("Split"),
-            Self::ReverseSplit => f.write_str("ReverseSplit"),
-        }
-    }
-}
-impl ::std::str::FromStr for MarketEventTag {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Reports" => Ok(Self::Reports),
-            "Dividends" => Ok(Self::Dividends),
-            "Split" => Ok(Self::Split),
-            "ReverseSplit" => Ok(Self::ReverseSplit),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for MarketEventTag {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for MarketEventTag {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for MarketEventTag {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "Response containing market recommendations"]

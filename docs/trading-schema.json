@@ -5,13 +5,27 @@
     "etoro_api_version": "v1.158.0",
     "domain": "trading",
     "extracted_schemas": [
-      "createOrderRequest", "createOrderResponse", "getOrderResponse", "deleteOrderResponse",
-      "createExitOrderRequest", "createExitOrderResponse", "getExitOrderResponse", "deleteExitOrderResponse",
+      "createOrderRequest",
+      "createOrderResponse",
+      "getOrderResponse",
+      "deleteOrderResponse",
+      "createExitOrderRequest",
+      "createExitOrderResponse",
+      "getExitOrderResponse",
+      "deleteExitOrderResponse",
       "putTradeRequest",
-      "Order", "OrderForOpen", "OrderForOpenInfoResponse", "OrderForOpenPositionInfo",
-      "OrderForClose", "OrderForCloseMultiple", "OrderMetadata",
-      "Position", "Mirror",
-      "TradeDirection", "TradeMetadata", "TradeType",
+      "Order",
+      "OrderForOpen",
+      "OrderForOpenInfoResponse",
+      "OrderForOpenPositionInfo",
+      "OrderForClose",
+      "OrderForCloseMultiple",
+      "OrderMetadata",
+      "Position",
+      "Mirror",
+      "TradeDirection",
+      "TradeMetadata",
+      "TradeType",
       "eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.OrderForClose.OrderForCloseDetailsRequest",
       "eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.OrderForOpen.OrderForOpenRequest",
       "eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Orders.OrderOpenRequest",
@@ -31,364 +45,1110 @@
   "createOrderRequest": {
     "type": "object",
     "properties": {
-      "instrumentId": { "type": "integer", "description": "The ID of the instrument to trade." },
-      "isBuy": { "type": "boolean", "description": "Indicates if the order is a buy (true) or sell (false)." },
-      "leverage": { "type": "integer", "description": "The leverage level for the trade." },
-      "investment": { "type": "number", "description": "The amount of money invested in the trade." },
-      "units": { "type": "number", "description": "The number of units being traded." },
-      "orderType": { "type": "string", "enum": ["MKT", "LMT"], "description": "The type of order (Market or Limit)." },
-      "executionType": { "type": "string", "enum": ["GTC", "IOC"], "description": "The execution type (Good-Till-Canceled or Immediate-Or-Cancel)." },
-      "stopLossRate": { "type": "number" },
-      "stopLossPct": { "type": "number" },
-      "takeProfitRate": { "type": "number" },
-      "takeProfitPct": { "type": "number" },
-      "limitRate": { "type": "number", "description": "The limit price for limit orders." },
-      "isTrailingStopLoss": { "type": "boolean" }
+      "instrumentId": {
+        "type": "integer",
+        "description": "The ID of the instrument to trade."
+      },
+      "isBuy": {
+        "type": "boolean",
+        "description": "Indicates if the order is a buy (true) or sell (false)."
+      },
+      "leverage": {
+        "type": "integer",
+        "description": "The leverage level for the trade."
+      },
+      "investment": {
+        "type": "number",
+        "description": "The amount of money invested in the trade."
+      },
+      "units": {
+        "type": "number",
+        "description": "The number of units being traded."
+      },
+      "orderType": {
+        "type": "string",
+        "enum": [
+          "MKT",
+          "LMT"
+        ],
+        "description": "The type of order (Market or Limit)."
+      },
+      "executionType": {
+        "type": "string",
+        "enum": [
+          "GTC",
+          "IOC"
+        ],
+        "description": "The execution type (Good-Till-Canceled or Immediate-Or-Cancel)."
+      },
+      "stopLossRate": {
+        "type": "number"
+      },
+      "stopLossPct": {
+        "type": "number"
+      },
+      "takeProfitRate": {
+        "type": "number"
+      },
+      "takeProfitPct": {
+        "type": "number"
+      },
+      "limitRate": {
+        "type": "number",
+        "description": "The limit price for limit orders."
+      },
+      "isTrailingStopLoss": {
+        "type": "boolean"
+      }
     }
   },
   "createOrderResponse": {
     "type": "object",
     "properties": {
-      "token": { "type": "string", "description": "Unique identifier for the operation." }
+      "token": {
+        "type": "string",
+        "description": "Unique identifier for the operation."
+      }
     }
   },
   "getOrderResponse": {
     "type": "object",
     "properties": {
-      "orderId": { "type": "integer" },
-      "instrumentId": { "type": "integer" },
-      "isBuy": { "type": "boolean" },
-      "leverage": { "type": "integer" },
-      "investment": { "type": "number" },
-      "openTimestamp": { "type": "string", "format": "date-time" },
-      "isEntry": { "type": "boolean", "description": "Indicates if the order is an entry or exit order." },
-      "orderType": { "type": "string", "enum": ["MKT", "LMT"] },
-      "executionType": { "type": "string", "enum": ["GTC", "IOC"] },
-      "stopLossRate": { "type": "number" },
-      "takeProfitRate": { "type": "number" },
-      "limitRate": { "type": "number" }
+      "orderId": {
+        "type": "integer"
+      },
+      "instrumentId": {
+        "type": "integer"
+      },
+      "isBuy": {
+        "type": "boolean"
+      },
+      "leverage": {
+        "type": "integer"
+      },
+      "investment": {
+        "type": "number"
+      },
+      "openTimestamp": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "isEntry": {
+        "type": "boolean",
+        "description": "Indicates if the order is an entry or exit order."
+      },
+      "orderType": {
+        "type": "string",
+        "enum": [
+          "MKT",
+          "LMT"
+        ]
+      },
+      "executionType": {
+        "type": "string",
+        "enum": [
+          "GTC",
+          "IOC"
+        ]
+      },
+      "stopLossRate": {
+        "type": "number"
+      },
+      "takeProfitRate": {
+        "type": "number"
+      },
+      "limitRate": {
+        "type": "number"
+      }
     }
   },
   "deleteOrderResponse": {
     "type": "object",
     "properties": {
-      "token": { "type": "string", "description": "Unique identifier for the operation." }
+      "token": {
+        "type": "string",
+        "description": "Unique identifier for the operation."
+      }
     }
   },
   "createExitOrderRequest": {
     "type": "object",
     "properties": {
-      "instrumentId": { "type": "integer" },
-      "units": { "type": "number" },
-      "executionType": { "type": "string", "enum": ["GTC", "IOC"] },
-      "positionId": { "type": "integer", "description": "The ID of the position to close." }
+      "instrumentId": {
+        "type": "integer"
+      },
+      "units": {
+        "type": "number"
+      },
+      "executionType": {
+        "type": "string",
+        "enum": [
+          "GTC",
+          "IOC"
+        ]
+      },
+      "positionId": {
+        "type": "integer",
+        "description": "The ID of the position to close."
+      }
     }
   },
   "createExitOrderResponse": {
     "type": "object",
-    "properties": { "token": { "type": "string" } }
+    "properties": {
+      "token": {
+        "type": "string"
+      }
+    }
   },
   "getExitOrderResponse": {
     "type": "object",
     "properties": {
-      "positionId": { "type": "integer" },
-      "orderID": { "type": "integer", "description": "Note CAPITAL ID — different from orderId on getOrderResponse" },
-      "openDateTime": { "type": "string", "format": "date-time" },
-      "socialTradeId": { "type": "integer" }
+      "positionId": {
+        "type": "integer"
+      },
+      "orderID": {
+        "type": "integer",
+        "description": "Note CAPITAL ID — different from orderId on getOrderResponse"
+      },
+      "openDateTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "socialTradeId": {
+        "type": "integer"
+      }
     }
   },
   "deleteExitOrderResponse": {
     "type": "object",
-    "properties": { "token": { "type": "string" } }
+    "properties": {
+      "token": {
+        "type": "string"
+      }
+    }
   },
   "putTradeRequest": {
     "type": "object",
     "properties": {
-      "positionId": { "type": "number" },
-      "stopLossRate": { "type": "number" },
-      "takeProfitRate": { "type": "number" },
-      "isTrailingStopLoss": { "type": "boolean" }
+      "positionId": {
+        "type": "number"
+      },
+      "stopLossRate": {
+        "type": "number"
+      },
+      "takeProfitRate": {
+        "type": "number"
+      },
+      "isTrailingStopLoss": {
+        "type": "boolean"
+      }
     }
   },
   "Order": {
     "type": "object",
     "properties": {
-      "orderId": { "type": "integer" },
-      "cid": { "type": "integer", "description": "Customer ID — note lowercase here, but Position uses CID (capital)" },
-      "openDateTime": { "type": "string", "format": "date-time" },
-      "instrumentId": { "type": "integer" },
-      "isBuy": { "type": "boolean", "description": "true=Long, false=Short" },
-      "takeProfitRate": { "type": "number", "format": "float" },
-      "stopLossRate": { "type": "number", "format": "float" },
-      "rate": { "type": "number", "format": "float", "description": "Asset rate at which to send market order" },
-      "amount": { "type": "number", "format": "float", "description": "USD amount" },
-      "leverage": { "type": "integer" },
-      "units": { "type": "number", "format": "float", "description": "Units to open. If > 0, position opens on units, not amount" },
-      "isTslEnabled": { "type": "boolean" },
-      "executionType": { "type": "integer", "description": "Integer-encoded here (vs string enum on createOrderRequest)" },
-      "isDiscounted": { "type": "boolean", "description": "Obsolete" },
-      "isNoTakeProfit": { "type": "boolean", "description": "false = enabled, true = disabled" },
-      "isNoStopLoss": { "type": "boolean", "description": "false = enabled, true = disabled" }
+      "orderId": {
+        "type": "integer"
+      },
+      "cid": {
+        "type": "integer",
+        "description": "Customer ID — note lowercase here, but Position uses CID (capital)"
+      },
+      "openDateTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "instrumentId": {
+        "type": "integer"
+      },
+      "isBuy": {
+        "type": "boolean",
+        "description": "true=Long, false=Short"
+      },
+      "takeProfitRate": {
+        "type": "number",
+        "format": "float"
+      },
+      "stopLossRate": {
+        "type": "number",
+        "format": "float"
+      },
+      "rate": {
+        "type": "number",
+        "format": "float",
+        "description": "Asset rate at which to send market order"
+      },
+      "amount": {
+        "type": "number",
+        "format": "float",
+        "description": "USD amount"
+      },
+      "leverage": {
+        "type": "integer"
+      },
+      "units": {
+        "type": "number",
+        "format": "float",
+        "description": "Units to open. If > 0, position opens on units, not amount"
+      },
+      "isTslEnabled": {
+        "type": "boolean"
+      },
+      "executionType": {
+        "type": "integer",
+        "description": "Integer-encoded here (vs string enum on createOrderRequest)"
+      },
+      "isDiscounted": {
+        "type": "boolean",
+        "description": "Obsolete"
+      },
+      "isNoTakeProfit": {
+        "type": "boolean",
+        "description": "false = enabled, true = disabled"
+      },
+      "isNoStopLoss": {
+        "type": "boolean",
+        "description": "false = enabled, true = disabled"
+      }
     }
   },
   "OrderForOpen": {
     "type": "object",
     "properties": {
-      "orderId": { "type": "integer" },
-      "orderType": { "type": "integer" },
-      "statusId": { "type": "integer" },
-      "cid": { "type": "integer" },
-      "openDateTime": { "type": "string", "format": "date-time" },
-      "lastUpdate": { "type": "string", "format": "date-time" },
-      "instrumentId": { "type": "integer" },
-      "amount": { "type": "number", "format": "float" },
-      "amountInUnits": { "type": "number", "format": "float" },
-      "isBuy": { "type": "boolean" },
-      "leverage": { "type": "integer" },
-      "stopLossRate": { "type": "number", "format": "float" },
-      "takeProfitRate": { "type": "number", "format": "float" },
-      "isTslEnabled": { "type": "boolean" },
-      "isDiscounted": { "type": "boolean" },
-      "mirrorId": { "type": "integer", "description": "ID for mirrored trades, if applicable" },
-      "frozenAmount": { "type": "number", "format": "float" },
-      "totalExternalCosts": { "type": "number", "format": "float" },
-      "isNoTakeProfit": { "type": "boolean" },
-      "isNoStopLoss": { "type": "boolean" },
-      "lotCount": { "type": "number", "format": "float" },
-      "openPositionActionType": { "type": "integer", "description": "Position open reason" },
-      "externalOperation": { "type": "object", "nullable": true }
+      "orderId": {
+        "type": "integer"
+      },
+      "orderType": {
+        "type": "integer"
+      },
+      "statusId": {
+        "type": "integer"
+      },
+      "cid": {
+        "type": "integer"
+      },
+      "openDateTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "lastUpdate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "instrumentId": {
+        "type": "integer"
+      },
+      "amount": {
+        "type": "number",
+        "format": "float"
+      },
+      "amountInUnits": {
+        "type": "number",
+        "format": "float"
+      },
+      "isBuy": {
+        "type": "boolean"
+      },
+      "leverage": {
+        "type": "integer"
+      },
+      "stopLossRate": {
+        "type": "number",
+        "format": "float"
+      },
+      "takeProfitRate": {
+        "type": "number",
+        "format": "float"
+      },
+      "isTslEnabled": {
+        "type": "boolean"
+      },
+      "isDiscounted": {
+        "type": "boolean"
+      },
+      "mirrorId": {
+        "type": "integer",
+        "description": "ID for mirrored trades, if applicable"
+      },
+      "frozenAmount": {
+        "type": "number",
+        "format": "float"
+      },
+      "totalExternalCosts": {
+        "type": "number",
+        "format": "float"
+      },
+      "isNoTakeProfit": {
+        "type": "boolean"
+      },
+      "isNoStopLoss": {
+        "type": "boolean"
+      },
+      "lotCount": {
+        "type": "number",
+        "format": "float"
+      },
+      "openPositionActionType": {
+        "type": "integer",
+        "description": "Position open reason"
+      },
+      "externalOperation": {
+        "type": "object",
+        "nullable": true
+      }
     }
   },
   "OrderForOpenInfoResponse": {
     "type": "object",
     "description": "Comprehensive order info containing details and all positions opened from this order",
-    "required": ["orderID", "CID", "statusID", "orderType", "instrumentID", "requestOccurred"],
+    "required": [
+      "orderID",
+      "CID",
+      "statusID",
+      "orderType",
+      "instrumentID",
+      "requestOccurred"
+    ],
     "properties": {
-      "token": { "type": "string", "description": "Tracking token for the request, used for correlation" },
-      "orderID": { "type": "integer", "format": "int64" },
-      "CID": { "type": "integer", "format": "int64" },
-      "referenceID": { "type": "string" },
-      "statusID": { "type": "integer", "description": "0=Pending, 1=Executed, 2=Cancelled, 3=Rejected, 4=Partially Executed (system-specific)" },
-      "orderType": { "type": "integer", "description": "1=Market, 2=Limit, 3=Stop (system-specific)" },
-      "openActionType": { "type": "integer", "description": "Reason/context for opening (manual, copy, automated, etc.)" },
-      "errorCode": { "type": "integer", "description": "Null on success" },
-      "errorMessage": { "type": "string", "description": "Null on success" },
-      "instrumentID": { "type": "integer" },
-      "amount": { "type": "number", "description": "USD amount requested" },
-      "units": { "type": "number" },
-      "requestOccurred": { "type": "string", "format": "date-time" },
-      "positions": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpenPositionInfo" }, "description": "Empty if order not yet executed or execution failed" }
+      "token": {
+        "type": "string",
+        "description": "Tracking token for the request, used for correlation"
+      },
+      "orderID": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "CID": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "referenceID": {
+        "type": "string"
+      },
+      "statusID": {
+        "type": "integer",
+        "description": "0=Pending, 1=Executed, 2=Cancelled, 3=Rejected, 4=Partially Executed (system-specific)"
+      },
+      "orderType": {
+        "type": "integer",
+        "description": "1=Market, 2=Limit, 3=Stop (system-specific)"
+      },
+      "openActionType": {
+        "type": "integer",
+        "description": "Reason/context for opening (manual, copy, automated, etc.)"
+      },
+      "errorCode": {
+        "type": "integer",
+        "description": "Null on success"
+      },
+      "errorMessage": {
+        "type": "string",
+        "description": "Null on success"
+      },
+      "instrumentID": {
+        "type": "integer"
+      },
+      "amount": {
+        "type": "number",
+        "description": "USD amount requested"
+      },
+      "units": {
+        "type": "number"
+      },
+      "requestOccurred": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "positions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/OrderForOpenPositionInfo"
+        },
+        "description": "Empty if order not yet executed or execution failed"
+      }
     }
   },
   "OrderForOpenPositionInfo": {
     "type": "object",
     "description": "Detailed information about a position opened from an order",
-    "required": ["positionID", "orderType", "occurred", "rate", "units", "amount", "isOpen"],
+    "required": [
+      "positionID",
+      "orderType",
+      "occurred",
+      "rate",
+      "units",
+      "amount",
+      "isOpen"
+    ],
     "properties": {
-      "positionID": { "type": "integer", "format": "int64", "description": "Primary identifier for the position in the trading system" },
-      "orderType": { "type": "integer" },
-      "occurred": { "type": "string", "format": "date-time", "description": "Exact timestamp when this position was opened (ISO 8601 UTC)" },
-      "rate": { "type": "number", "description": "Execution rate (price) — may differ from requested rate" },
-      "units": { "type": "number" },
-      "conversionRate": { "type": "number", "description": "Currency conversion rate at execution (instrument's base → account currency, typically USD)" },
-      "amount": { "type": "number", "description": "USD amount invested in this position" },
-      "isOpen": { "type": "boolean" }
+      "positionID": {
+        "type": "integer",
+        "format": "int64",
+        "description": "Primary identifier for the position in the trading system"
+      },
+      "orderType": {
+        "type": "integer"
+      },
+      "occurred": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Exact timestamp when this position was opened (ISO 8601 UTC)"
+      },
+      "rate": {
+        "type": "number",
+        "description": "Execution rate (price) — may differ from requested rate"
+      },
+      "units": {
+        "type": "number"
+      },
+      "conversionRate": {
+        "type": "number",
+        "description": "Currency conversion rate at execution (instrument's base → account currency, typically USD)"
+      },
+      "amount": {
+        "type": "number",
+        "description": "USD amount invested in this position"
+      },
+      "isOpen": {
+        "type": "boolean"
+      }
     }
   },
   "OrderForClose": {
     "type": "object",
     "properties": {
-      "orderId": { "type": "integer" },
-      "orderType": { "type": "integer" },
-      "statusId": { "type": "integer" },
-      "cid": { "type": "integer" },
-      "openDateTime": { "type": "string", "format": "date-time" },
-      "lastUpdate": { "type": "string", "format": "date-time" },
-      "instrumentId": { "type": "integer" },
-      "unitsToDeduct": { "type": "number", "format": "float" },
-      "lotsToDeduct": { "type": "number", "format": "float" },
-      "positionId": { "type": "integer" }
+      "orderId": {
+        "type": "integer"
+      },
+      "orderType": {
+        "type": "integer"
+      },
+      "statusId": {
+        "type": "integer"
+      },
+      "cid": {
+        "type": "integer"
+      },
+      "openDateTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "lastUpdate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "instrumentId": {
+        "type": "integer"
+      },
+      "unitsToDeduct": {
+        "type": "number",
+        "format": "float"
+      },
+      "lotsToDeduct": {
+        "type": "number",
+        "format": "float"
+      },
+      "positionId": {
+        "type": "integer"
+      }
     }
   },
   "OrderForCloseMultiple": {
     "type": "object",
     "properties": {
-      "orderId": { "type": "integer" },
-      "orderType": { "type": "integer" },
-      "statusId": { "type": "integer" },
-      "cid": { "type": "integer" },
-      "openDateTime": { "type": "string", "format": "date-time" },
-      "lastUpdate": { "type": "string", "format": "date-time" },
-      "instrumentId": { "type": "integer" },
-      "unitsToDeduct": { "type": "number", "format": "float" },
-      "lotsToDeduct": { "type": "number", "format": "float" },
-      "pendingClosePositionIds": { "type": "array", "items": { "type": "integer" } }
+      "orderId": {
+        "type": "integer"
+      },
+      "orderType": {
+        "type": "integer"
+      },
+      "statusId": {
+        "type": "integer"
+      },
+      "cid": {
+        "type": "integer"
+      },
+      "openDateTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "lastUpdate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "instrumentId": {
+        "type": "integer"
+      },
+      "unitsToDeduct": {
+        "type": "number",
+        "format": "float"
+      },
+      "lotsToDeduct": {
+        "type": "number",
+        "format": "float"
+      },
+      "pendingClosePositionIds": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      }
     }
   },
   "OrderMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "type": { "$ref": "#/components/schemas/TradeType" },
-      "orderId": { "type": "integer", "format": "int64" },
-      "market": { "$ref": "#/components/schemas/Market" },
-      "rate": { "type": "number", "format": "float" },
-      "direction": { "$ref": "#/components/schemas/TradeDirection" }
+      "type": {
+        "$ref": "#/components/schemas/TradeType"
+      },
+      "orderId": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "market": {
+        "$ref": "#/components/schemas/Market"
+      },
+      "rate": {
+        "type": "number",
+        "format": "float"
+      },
+      "direction": {
+        "$ref": "#/components/schemas/TradeDirection"
+      }
     }
   },
   "Position": {
     "type": "object",
     "description": "Individual position details",
     "properties": {
-      "positionID": { "type": "integer", "description": "Unique identifier for the position" },
-      "CID": { "type": "integer", "description": "Customer ID — note CAPITAL CID (vs lowercase cid in Order schema)" },
-      "openDateTime": { "type": "string", "format": "date-time" },
-      "openRate": { "type": "number", "format": "float", "description": "Entry price in instrument's currency" },
-      "instrumentID": { "type": "integer", "description": "CAPITAL ID — different from instrumentId in other schemas" },
-      "mirrorID": { "type": "integer", "description": "Mirror ID if part of copy trading, 0 otherwise" },
-      "parentPositionID": { "type": "integer", "description": "Parent position ID for mirrored positions, 0 otherwise" },
-      "isBuy": { "type": "boolean", "description": "true = long (buy), false = short (sell)" },
-      "leverage": { "type": "number", "format": "float" },
-      "takeProfitRate": { "type": "number", "format": "float", "description": "Trigger price; must be better than current price" },
-      "stopLossRate": { "type": "number", "format": "float", "description": "Trigger price; must be worse than current price" },
-      "amount": { "type": "number", "format": "float", "description": "USD allocated (initial investment + additional margin collateral)" },
-      "orderID": { "type": "integer", "description": "Original orderID. Match together with orderType" },
-      "orderType": { "type": "integer", "description": "Original orderType. Match together with orderID" },
-      "units": { "type": "number", "format": "float" },
-      "totalFees": { "type": "number", "format": "float", "description": "Total overnight fees and dividends in USD. Negative = refund" },
-      "initialAmountInDollars": { "type": "number", "format": "float" },
-      "isTslEnabled": { "type": "boolean" },
-      "stopLossVersion": { "type": "integer", "description": "Increments each time StopLossRate is manually updated" },
-      "isSettled": { "type": "boolean", "description": "Obsolete" },
-      "redeemStatusID": { "type": "integer" },
-      "initialUnits": { "type": "number", "format": "float" },
-      "isPartiallyAltered": { "type": "boolean", "description": "Whether this position was partially closed" },
-      "unitsBaseValueDollars": { "type": "number", "format": "float", "description": "Current units invested value in USD" },
-      "isDiscounted": { "type": "boolean", "description": "Obsolete" },
-      "openPositionActionType": { "type": "integer", "description": "Position open reason" },
-      "settlementTypeID": { "type": "integer", "description": "0=CFD, 1=Real Asset, 2=SWAP, 3=Crypto MarginTrade, 4=Future Contract" },
-      "isDetached": { "type": "boolean", "description": "True if originally opened in a mirror and detached from it" },
-      "openConversionRate": { "type": "number", "format": "float" },
-      "pnlVersion": { "type": "integer", "description": "PnL formula used for calculating profit and loss" },
-      "totalExternalFees": { "type": "number", "format": "float", "description": "USD fees (e.g. TicketFee). Excludes overnight fees and dividends" },
-      "totalExternalTaxes": { "type": "number", "format": "float", "description": "USD taxes (e.g. SDRT)" },
-      "isNoTakeProfit": { "type": "boolean", "description": "false=enabled, true=disabled" },
-      "isNoStopLoss": { "type": "boolean", "description": "false=enabled, true=disabled" },
-      "lotCount": { "type": "number", "format": "float", "description": "For FutureContracts = number of contracts acquired" }
+      "positionID": {
+        "type": "integer",
+        "description": "Unique identifier for the position"
+      },
+      "CID": {
+        "type": "integer",
+        "description": "Customer ID — note CAPITAL CID (vs lowercase cid in Order schema)"
+      },
+      "openDateTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "openRate": {
+        "type": "number",
+        "format": "float",
+        "description": "Entry price in instrument's currency"
+      },
+      "instrumentID": {
+        "type": "integer",
+        "description": "CAPITAL ID — different from instrumentId in other schemas"
+      },
+      "mirrorID": {
+        "type": "integer",
+        "description": "Mirror ID if part of copy trading, 0 otherwise"
+      },
+      "parentPositionID": {
+        "type": "integer",
+        "description": "Parent position ID for mirrored positions, 0 otherwise"
+      },
+      "isBuy": {
+        "type": "boolean",
+        "description": "true = long (buy), false = short (sell)"
+      },
+      "leverage": {
+        "type": "number",
+        "format": "float"
+      },
+      "takeProfitRate": {
+        "type": "number",
+        "format": "float",
+        "description": "Trigger price; must be better than current price"
+      },
+      "stopLossRate": {
+        "type": "number",
+        "format": "float",
+        "description": "Trigger price; must be worse than current price"
+      },
+      "amount": {
+        "type": "number",
+        "format": "float",
+        "description": "USD allocated (initial investment + additional margin collateral)"
+      },
+      "orderID": {
+        "type": "integer",
+        "description": "Original orderID. Match together with orderType"
+      },
+      "orderType": {
+        "type": "integer",
+        "description": "Original orderType. Match together with orderID"
+      },
+      "units": {
+        "type": "number",
+        "format": "float"
+      },
+      "totalFees": {
+        "type": "number",
+        "format": "float",
+        "description": "Total overnight fees and dividends in USD. Negative = refund"
+      },
+      "initialAmountInDollars": {
+        "type": "number",
+        "format": "float"
+      },
+      "isTslEnabled": {
+        "type": "boolean"
+      },
+      "stopLossVersion": {
+        "type": "integer",
+        "description": "Increments each time StopLossRate is manually updated"
+      },
+      "isSettled": {
+        "type": "boolean",
+        "description": "Obsolete"
+      },
+      "redeemStatusID": {
+        "type": "integer"
+      },
+      "initialUnits": {
+        "type": "number",
+        "format": "float"
+      },
+      "isPartiallyAltered": {
+        "type": "boolean",
+        "description": "Whether this position was partially closed"
+      },
+      "unitsBaseValueDollars": {
+        "type": "number",
+        "format": "float",
+        "description": "Current units invested value in USD"
+      },
+      "isDiscounted": {
+        "type": "boolean",
+        "description": "Obsolete"
+      },
+      "openPositionActionType": {
+        "type": "integer",
+        "description": "Position open reason"
+      },
+      "settlementTypeID": {
+        "type": "integer",
+        "description": "0=CFD, 1=Real Asset, 2=SWAP, 3=Crypto MarginTrade, 4=Future Contract"
+      },
+      "isDetached": {
+        "type": "boolean",
+        "description": "True if originally opened in a mirror and detached from it"
+      },
+      "openConversionRate": {
+        "type": "number",
+        "format": "float"
+      },
+      "pnlVersion": {
+        "type": "integer",
+        "description": "PnL formula used for calculating profit and loss"
+      },
+      "totalExternalFees": {
+        "type": "number",
+        "format": "float",
+        "description": "USD fees (e.g. TicketFee). Excludes overnight fees and dividends"
+      },
+      "totalExternalTaxes": {
+        "type": "number",
+        "format": "float",
+        "description": "USD taxes (e.g. SDRT)"
+      },
+      "isNoTakeProfit": {
+        "type": "boolean",
+        "description": "false=enabled, true=disabled"
+      },
+      "isNoStopLoss": {
+        "type": "boolean",
+        "description": "false=enabled, true=disabled"
+      },
+      "lotCount": {
+        "type": "number",
+        "format": "float",
+        "description": "For FutureContracts = number of contracts acquired"
+      }
     }
   },
   "Mirror": {
     "type": "object",
     "description": "Copy-trading configuration. Many fields obsolete or internal — see descriptions.",
     "properties": {
-      "mirrorID": { "type": "integer" },
-      "CID": { "type": "integer" },
-      "parentCID": { "type": "integer", "description": "Customer ID of the trader being copied" },
-      "stopLossPercentage": { "type": "number", "format": "float", "description": "% of mirror value that StopLossAmount represented at last edit" },
-      "isPaused": { "type": "boolean", "description": "If true, restricts opening additional positions in mirror" },
-      "copyExistingPositions": { "type": "boolean", "description": "Whether mirror copied parent's existing positions on registration" },
-      "availableAmount": { "type": "number", "format": "float", "description": "Available USD balance reserved for mirror operations" },
-      "stopLossAmount": { "type": "number", "format": "float", "description": "USD value at which MirrorStopLoss triggers liquidation" },
-      "initialInvestment": { "type": "number", "format": "float" },
-      "depositSummary": { "type": "number", "format": "float", "description": "Total USD deposited after initial investment" },
-      "withdrawalSummary": { "type": "number", "format": "float", "description": "Total USD withdrawn from the mirror" },
-      "positions": { "type": "array", "items": { "$ref": "#/components/schemas/Position" } },
-      "parentUsername": { "type": "string", "description": "Username of the trader being copied" },
-      "closedPositionsNetProfit": { "type": "number", "format": "float" },
-      "startedCopyDate": { "type": "string", "format": "date-time" },
-      "pendingForClosure": { "type": "boolean" },
-      "parentMirrors": { "type": "array", "items": { "type": "object" } },
-      "mirrorCalculationType": { "type": "integer", "description": "(Obsolete) Position weights calculation methodology" },
-      "ordersForOpen": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpen" } },
-      "ordersForClose": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForClose" } },
-      "ordersForCloseMultiple": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForCloseMultiple" } },
-      "mirrorStatusID": { "type": "integer", "description": "0=Active, 1=Paused, 2=Pending Closure, 3=In Alignment Process" },
-      "delayedOrderForClose": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
-      "delayedOrderForOpen": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
-      "entryOrders": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
-      "exitOrders": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" }
+      "mirrorID": {
+        "type": "integer"
+      },
+      "CID": {
+        "type": "integer"
+      },
+      "parentCID": {
+        "type": "integer",
+        "description": "Customer ID of the trader being copied"
+      },
+      "stopLossPercentage": {
+        "type": "number",
+        "format": "float",
+        "description": "% of mirror value that StopLossAmount represented at last edit"
+      },
+      "isPaused": {
+        "type": "boolean",
+        "description": "If true, restricts opening additional positions in mirror"
+      },
+      "copyExistingPositions": {
+        "type": "boolean",
+        "description": "Whether mirror copied parent's existing positions on registration"
+      },
+      "availableAmount": {
+        "type": "number",
+        "format": "float",
+        "description": "Available USD balance reserved for mirror operations"
+      },
+      "stopLossAmount": {
+        "type": "number",
+        "format": "float",
+        "description": "USD value at which MirrorStopLoss triggers liquidation"
+      },
+      "initialInvestment": {
+        "type": "number",
+        "format": "float"
+      },
+      "depositSummary": {
+        "type": "number",
+        "format": "float",
+        "description": "Total USD deposited after initial investment"
+      },
+      "withdrawalSummary": {
+        "type": "number",
+        "format": "float",
+        "description": "Total USD withdrawn from the mirror"
+      },
+      "positions": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Position"
+        }
+      },
+      "parentUsername": {
+        "type": "string",
+        "description": "Username of the trader being copied"
+      },
+      "closedPositionsNetProfit": {
+        "type": "number",
+        "format": "float"
+      },
+      "startedCopyDate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "pendingForClosure": {
+        "type": "boolean"
+      },
+      "parentMirrors": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      },
+      "mirrorCalculationType": {
+        "type": "integer",
+        "description": "(Obsolete) Position weights calculation methodology"
+      },
+      "ordersForOpen": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/OrderForOpen"
+        }
+      },
+      "ordersForClose": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/OrderForClose"
+        }
+      },
+      "ordersForCloseMultiple": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/OrderForCloseMultiple"
+        }
+      },
+      "mirrorStatusID": {
+        "type": "integer",
+        "description": "0=Active, 1=Paused, 2=Pending Closure, 3=In Alignment Process"
+      },
+      "delayedOrderForClose": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "Obsolete"
+      },
+      "delayedOrderForOpen": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "Obsolete"
+      },
+      "entryOrders": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "Obsolete"
+      },
+      "exitOrders": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        },
+        "description": "Obsolete"
+      }
     }
   },
   "TradeDirection": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["Long", "Short"]
+    "enum": [
+      "Long",
+      "Short"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::TradeDirection"
+    }
   },
   "TradeMetadata": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "type": { "$ref": "#/components/schemas/TradeType" },
-      "positionId": { "type": "integer", "format": "int64" },
-      "market": { "$ref": "#/components/schemas/Market" },
-      "gain": { "type": "number", "format": "float" },
-      "rate": { "type": "number", "format": "float" },
-      "direction": { "$ref": "#/components/schemas/TradeDirection" }
+      "type": {
+        "$ref": "#/components/schemas/TradeType"
+      },
+      "positionId": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "market": {
+        "$ref": "#/components/schemas/Market"
+      },
+      "gain": {
+        "type": "number",
+        "format": "float"
+      },
+      "rate": {
+        "type": "number",
+        "format": "float"
+      },
+      "direction": {
+        "$ref": "#/components/schemas/TradeDirection"
+      }
     }
   },
   "TradeType": {
     "type": "integer",
     "format": "int32",
     "description": "Integer-encoded enum",
-    "enum": ["Open", "Close"]
+    "enum": [
+      "Open",
+      "Close"
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::TradeType"
+    }
   },
   "eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.OrderForClose.OrderForCloseDetailsRequest": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "InstrumentId": { "type": "integer", "format": "int32" },
-      "UnitsToDeduct": { "type": "number", "format": "double", "nullable": true },
-      "LotsToDeduct": { "type": "number", "format": "double", "nullable": true },
-      "ViewRateContext": { "$ref": "#/components/schemas/eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Rates.ViewRateContextDto" },
-      "ExternalOperationType": { "type": "integer", "format": "int32" },
-      "ExternalOperationData": { "type": "string", "nullable": true },
-      "ReferenceID": { "type": "string", "nullable": true }
+      "InstrumentId": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "UnitsToDeduct": {
+        "type": "number",
+        "format": "double",
+        "nullable": true
+      },
+      "LotsToDeduct": {
+        "type": "number",
+        "format": "double",
+        "nullable": true
+      },
+      "ViewRateContext": {
+        "$ref": "#/components/schemas/eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Rates.ViewRateContextDto"
+      },
+      "ExternalOperationType": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "ExternalOperationData": {
+        "type": "string",
+        "nullable": true
+      },
+      "ReferenceID": {
+        "type": "string",
+        "nullable": true
+      }
     }
   },
   "eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.OrderForOpen.OrderForOpenRequest": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "InstrumentID": { "type": "integer", "format": "int32" },
-      "IsBuy": { "type": "boolean", "description": "true=buy, false=sell" },
-      "Leverage": { "type": "integer", "format": "int32" },
-      "Amount": { "type": "number", "format": "double", "nullable": true, "description": "USD invested" },
-      "AmountInUnits": { "type": "number", "format": "double", "nullable": true },
-      "StopLossRate": { "type": "number", "format": "double", "description": "Exact rate to close for a loss" },
-      "TakeProfitRate": { "type": "number", "format": "double", "description": "Exact rate to close for a profit" },
-      "IsTslEnabled": { "type": "boolean", "nullable": true },
-      "IsDiscounted": { "type": "boolean", "nullable": true },
-      "ViewRateContext": { "$ref": "#/components/schemas/eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Rates.ViewRateContextDto" },
-      "ExternalOperationType": { "type": "integer", "format": "int32" },
-      "ExternalOperationData": { "type": "string", "nullable": true },
-      "IsNoStopLoss": { "type": "boolean", "nullable": true },
-      "IsNoTakeProfit": { "type": "boolean", "nullable": true },
-      "ReferenceID": { "type": "string", "nullable": true },
-      "TotalExternalCosts": { "type": "number", "format": "double" },
-      "LotCount": { "type": "number", "format": "double", "nullable": true, "description": "Number of contracts for Futures" },
-      "RequestedSettlementTypeID": { "type": "integer", "format": "int32", "nullable": true, "description": "Type of settlement" },
-      "AdditionalMargin": { "type": "number", "format": "double", "nullable": true, "description": "Additional Margin for Futures SQF" },
-      "CID": { "type": "integer", "format": "int32" }
+      "InstrumentID": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "IsBuy": {
+        "type": "boolean",
+        "description": "true=buy, false=sell"
+      },
+      "Leverage": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "Amount": {
+        "type": "number",
+        "format": "double",
+        "nullable": true,
+        "description": "USD invested"
+      },
+      "AmountInUnits": {
+        "type": "number",
+        "format": "double",
+        "nullable": true
+      },
+      "StopLossRate": {
+        "type": "number",
+        "format": "double",
+        "description": "Exact rate to close for a loss"
+      },
+      "TakeProfitRate": {
+        "type": "number",
+        "format": "double",
+        "description": "Exact rate to close for a profit"
+      },
+      "IsTslEnabled": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "IsDiscounted": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "ViewRateContext": {
+        "$ref": "#/components/schemas/eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Rates.ViewRateContextDto"
+      },
+      "ExternalOperationType": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "ExternalOperationData": {
+        "type": "string",
+        "nullable": true
+      },
+      "IsNoStopLoss": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "IsNoTakeProfit": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "ReferenceID": {
+        "type": "string",
+        "nullable": true
+      },
+      "TotalExternalCosts": {
+        "type": "number",
+        "format": "double"
+      },
+      "LotCount": {
+        "type": "number",
+        "format": "double",
+        "nullable": true,
+        "description": "Number of contracts for Futures"
+      },
+      "RequestedSettlementTypeID": {
+        "type": "integer",
+        "format": "int32",
+        "nullable": true,
+        "description": "Type of settlement"
+      },
+      "AdditionalMargin": {
+        "type": "number",
+        "format": "double",
+        "nullable": true,
+        "description": "Additional Margin for Futures SQF"
+      },
+      "CID": {
+        "type": "integer",
+        "format": "int32"
+      }
     }
   },
   "eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Orders.OrderOpenRequest": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "InstrumentID": { "type": "integer", "format": "int32" },
-      "IsBuy": { "type": "boolean" },
-      "Leverage": { "type": "integer", "format": "int32" },
-      "Amount": { "type": "number", "format": "double", "nullable": true },
-      "AmountInUnits": { "type": "number", "format": "double", "nullable": true },
-      "StopLossRate": { "type": "number", "format": "double" },
-      "TakeProfitRate": { "type": "number", "format": "double" },
-      "Rate": { "type": "number", "format": "double" },
-      "IsTslEnabled": { "type": "boolean", "nullable": true },
-      "IsDiscounted": { "type": "boolean", "nullable": true },
-      "IsNoStopLoss": { "type": "boolean", "nullable": true },
-      "IsNoTakeProfit": { "type": "boolean", "nullable": true },
-      "CID": { "type": "integer", "format": "int32" }
+      "InstrumentID": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "IsBuy": {
+        "type": "boolean"
+      },
+      "Leverage": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "Amount": {
+        "type": "number",
+        "format": "double",
+        "nullable": true
+      },
+      "AmountInUnits": {
+        "type": "number",
+        "format": "double",
+        "nullable": true
+      },
+      "StopLossRate": {
+        "type": "number",
+        "format": "double"
+      },
+      "TakeProfitRate": {
+        "type": "number",
+        "format": "double"
+      },
+      "Rate": {
+        "type": "number",
+        "format": "double"
+      },
+      "IsTslEnabled": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "IsDiscounted": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "IsNoStopLoss": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "IsNoTakeProfit": {
+        "type": "boolean",
+        "nullable": true
+      },
+      "CID": {
+        "type": "integer",
+        "format": "int32"
+      }
     }
   },
   "eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Rates.ViewRateContextDto": {
@@ -396,12 +1156,39 @@
     "description": "Used to bypass view rates from client",
     "additionalProperties": false,
     "properties": {
-      "ClientViewRate": { "type": "number", "format": "double", "description": "Default client view rate" },
-      "ClientViewRateID": { "type": "integer", "format": "int64", "nullable": true, "description": "View rate id from rates" },
-      "ClientRateForCalc": { "type": "number", "format": "double", "nullable": true, "description": "Calculated rate passed from client" },
-      "ClientRateForCalcID": { "type": "integer", "format": "int64", "nullable": true },
-      "SnapshotTimestamp": { "type": "string", "format": "date-time", "nullable": true },
-      "PriceType": { "type": "integer", "format": "int32", "nullable": true, "description": "Snapshot or real-time" }
+      "ClientViewRate": {
+        "type": "number",
+        "format": "double",
+        "description": "Default client view rate"
+      },
+      "ClientViewRateID": {
+        "type": "integer",
+        "format": "int64",
+        "nullable": true,
+        "description": "View rate id from rates"
+      },
+      "ClientRateForCalc": {
+        "type": "number",
+        "format": "double",
+        "nullable": true,
+        "description": "Calculated rate passed from client"
+      },
+      "ClientRateForCalcID": {
+        "type": "integer",
+        "format": "int64",
+        "nullable": true
+      },
+      "SnapshotTimestamp": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "PriceType": {
+        "type": "integer",
+        "format": "int32",
+        "nullable": true,
+        "description": "Snapshot or real-time"
+      }
     }
   }
 }

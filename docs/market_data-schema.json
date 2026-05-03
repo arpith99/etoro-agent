@@ -446,7 +446,12 @@
       "CommodityEnergyAgriculture",
       "CryptoCoin",
       "NFT"
-    ]
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::MarketAssetType"
+    }
   },
   "MarketEventMetadata": {
     "type": "object",
@@ -511,7 +516,12 @@
       "Dividends",
       "Split",
       "ReverseSplit"
-    ]
+    ],
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::MarketEventTag"
+    }
   },
   "MarketRecommendationsResponse": {
     "type": "object",
@@ -816,6 +826,11 @@
       "Gatsby"
     ],
     "type": "integer",
-    "format": "int32"
+    "format": "int32",
+    "x-rust-type": {
+      "crate": "etoro-agent",
+      "version": "0.1.0",
+      "path": "etoro_agent::types::manual::ApplicationSource"
+    }
   }
 }

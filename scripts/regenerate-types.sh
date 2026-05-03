@@ -34,7 +34,7 @@ for d in "${DOMAINS[@]}"; do
         echo "  ✗ $d: missing preprocessed input ($input)" >&2
         exit 1
     fi
-    if cargo typify --no-builder "$input" --output "$output" 2> /tmp/typify-err-${d}.log; then
+    if cargo typify --no-builder --crate etoro-agent@0.1.0 "$input" --output "$output" 2> /tmp/typify-err-${d}.log; then
         lines=$(wc -l < "$output")
         echo "  ✓ $d: $lines lines"
     else

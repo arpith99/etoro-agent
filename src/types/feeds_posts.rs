@@ -29,82 +29,6 @@ pub mod error {
         }
     }
 }
-#[doc = "`ApplicationSource`"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"eToro\","]
-#[doc = "    \"Delta\","]
-#[doc = "    \"Gatsby\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum ApplicationSource {
-    #[serde(rename = "eToro")]
-    EToro,
-    Delta,
-    Gatsby,
-}
-impl ::std::fmt::Display for ApplicationSource {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::EToro => f.write_str("eToro"),
-            Self::Delta => f.write_str("Delta"),
-            Self::Gatsby => f.write_str("Gatsby"),
-        }
-    }
-}
-impl ::std::str::FromStr for ApplicationSource {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "eToro" => Ok(Self::EToro),
-            "Delta" => Ok(Self::Delta),
-            "Gatsby" => Ok(Self::Gatsby),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for ApplicationSource {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for ApplicationSource {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for ApplicationSource {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
 #[doc = "`ArticleMetadata`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -233,7 +157,7 @@ pub struct ArticleMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub edit_status: ::std::option::Option<EditStatus>,
+    pub edit_status: ::std::option::Option<::etoro_agent::types::manual::EditStatus>,
     #[serde(
         rename = "featuredImage",
         default,
@@ -257,7 +181,7 @@ pub struct ArticleMetadata {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub published: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub rating: ::std::option::Option<ArticleRating>,
+    pub rating: ::std::option::Option<::etoro_agent::types::manual::ArticleRating>,
     #[serde(
         rename = "readingTimeMinutes",
         default,
@@ -265,7 +189,7 @@ pub struct ArticleMetadata {
     )]
     pub reading_time_minutes: ::std::option::Option<f64>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub status: ::std::option::Option<ArticleStatus>,
+    pub status: ::std::option::Option<::etoro_agent::types::manual::ArticleStatus>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub tags: ::std::option::Option<::std::vec::Vec<Tag>>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -303,154 +227,6 @@ impl ::std::default::Default for ArticleMetadata {
             url: Default::default(),
             word_count: Default::default(),
         }
-    }
-}
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Bearish\","]
-#[doc = "    \"Bullish\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum ArticleRating {
-    Bearish,
-    Bullish,
-}
-impl ::std::fmt::Display for ArticleRating {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Bearish => f.write_str("Bearish"),
-            Self::Bullish => f.write_str("Bullish"),
-        }
-    }
-}
-impl ::std::str::FromStr for ArticleRating {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Bearish" => Ok(Self::Bearish),
-            "Bullish" => Ok(Self::Bullish),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for ArticleRating {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for ArticleRating {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for ArticleRating {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Draft\","]
-#[doc = "    \"Published\","]
-#[doc = "    \"Deleted\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum ArticleStatus {
-    Draft,
-    Published,
-    Deleted,
-}
-impl ::std::fmt::Display for ArticleStatus {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Draft => f.write_str("Draft"),
-            Self::Published => f.write_str("Published"),
-            Self::Deleted => f.write_str("Deleted"),
-        }
-    }
-}
-impl ::std::str::FromStr for ArticleStatus {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Draft" => Ok(Self::Draft),
-            "Published" => Ok(Self::Published),
-            "Deleted" => Ok(Self::Deleted),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for ArticleStatus {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for ArticleStatus {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for ArticleStatus {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "Represents a media attachment in a post"]
@@ -2302,7 +2078,7 @@ pub struct CopyMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub type_: ::std::option::Option<CopyType>,
+    pub type_: ::std::option::Option<::etoro_agent::types::manual::CopyType>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub user: ::std::option::Option<User>,
 }
@@ -2312,78 +2088,6 @@ impl ::std::default::Default for CopyMetadata {
             type_: Default::default(),
             user: Default::default(),
         }
-    }
-}
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Start\","]
-#[doc = "    \"Stop\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum CopyType {
-    Start,
-    Stop,
-}
-impl ::std::fmt::Display for CopyType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Start => f.write_str("Start"),
-            Self::Stop => f.write_str("Stop"),
-        }
-    }
-}
-impl ::std::str::FromStr for CopyType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Start" => Ok(Self::Start),
-            "Stop" => Ok(Self::Stop),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for CopyType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for CopyType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for CopyType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "`Discussion`"]
@@ -4185,82 +3889,6 @@ impl ::std::default::Default for DiscussionsResponsePaging {
         }
     }
 }
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"None\","]
-#[doc = "    \"Edited\","]
-#[doc = "    \"Moderated\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum EditStatus {
-    None,
-    Edited,
-    Moderated,
-}
-impl ::std::fmt::Display for EditStatus {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::None => f.write_str("None"),
-            Self::Edited => f.write_str("Edited"),
-            Self::Moderated => f.write_str("Moderated"),
-        }
-    }
-}
-impl ::std::str::FromStr for EditStatus {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "None" => Ok(Self::None),
-            "Edited" => Ok(Self::Edited),
-            "Moderated" => Ok(Self::Moderated),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for EditStatus {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for EditStatus {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for EditStatus {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
 #[doc = "`Emotion`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -4424,74 +4052,6 @@ impl ::std::default::Default for EmotionParent {
             obsolete_id: Default::default(),
             type_: Default::default(),
         }
-    }
-}
-#[doc = "Integer-encoded enum (only one variant currently)"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum (only one variant currently)\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Like\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum EmotionType {
-    Like,
-}
-impl ::std::fmt::Display for EmotionType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Like => f.write_str("Like"),
-        }
-    }
-}
-impl ::std::str::FromStr for EmotionType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Like" => Ok(Self::Like),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for EmotionType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for EmotionType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for EmotionType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "`EmotionsDataResponse`"]
@@ -4859,13 +4419,13 @@ impl ::std::default::Default for ImageMetadata {
 #[serde(deny_unknown_fields)]
 pub struct Market {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub application: ::std::option::Option<ApplicationSource>,
+    pub application: ::std::option::Option<::etoro_agent::types::manual::ApplicationSource>,
     #[serde(
         rename = "assetType",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub asset_type: ::std::option::Option<MarketAssetType>,
+    pub asset_type: ::std::option::Option<::etoro_agent::types::manual::MarketAssetType>,
     #[serde(
         rename = "assetTypeId",
         default,
@@ -4920,131 +4480,6 @@ impl ::std::default::Default for Market {
             symbol_name: Default::default(),
             updated: Default::default(),
         }
-    }
-}
-#[doc = "Enum encoded as integer index; values listed below"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Enum encoded as integer index; values listed below\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Stocks\","]
-#[doc = "    \"Bonds\","]
-#[doc = "    \"ETF\","]
-#[doc = "    \"Index\","]
-#[doc = "    \"Warrants\","]
-#[doc = "    \"Options\","]
-#[doc = "    \"Futures\","]
-#[doc = "    \"CFD\","]
-#[doc = "    \"TRS\","]
-#[doc = "    \"FOREX\","]
-#[doc = "    \"CommodityMetals\","]
-#[doc = "    \"CommodityEnergyAgriculture\","]
-#[doc = "    \"CryptoCoin\","]
-#[doc = "    \"NFT\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum MarketAssetType {
-    Stocks,
-    Bonds,
-    #[serde(rename = "ETF")]
-    Etf,
-    Index,
-    Warrants,
-    Options,
-    Futures,
-    #[serde(rename = "CFD")]
-    Cfd,
-    #[serde(rename = "TRS")]
-    Trs,
-    #[serde(rename = "FOREX")]
-    Forex,
-    CommodityMetals,
-    CommodityEnergyAgriculture,
-    CryptoCoin,
-    #[serde(rename = "NFT")]
-    Nft,
-}
-impl ::std::fmt::Display for MarketAssetType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Stocks => f.write_str("Stocks"),
-            Self::Bonds => f.write_str("Bonds"),
-            Self::Etf => f.write_str("ETF"),
-            Self::Index => f.write_str("Index"),
-            Self::Warrants => f.write_str("Warrants"),
-            Self::Options => f.write_str("Options"),
-            Self::Futures => f.write_str("Futures"),
-            Self::Cfd => f.write_str("CFD"),
-            Self::Trs => f.write_str("TRS"),
-            Self::Forex => f.write_str("FOREX"),
-            Self::CommodityMetals => f.write_str("CommodityMetals"),
-            Self::CommodityEnergyAgriculture => f.write_str("CommodityEnergyAgriculture"),
-            Self::CryptoCoin => f.write_str("CryptoCoin"),
-            Self::Nft => f.write_str("NFT"),
-        }
-    }
-}
-impl ::std::str::FromStr for MarketAssetType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Stocks" => Ok(Self::Stocks),
-            "Bonds" => Ok(Self::Bonds),
-            "ETF" => Ok(Self::Etf),
-            "Index" => Ok(Self::Index),
-            "Warrants" => Ok(Self::Warrants),
-            "Options" => Ok(Self::Options),
-            "Futures" => Ok(Self::Futures),
-            "CFD" => Ok(Self::Cfd),
-            "TRS" => Ok(Self::Trs),
-            "FOREX" => Ok(Self::Forex),
-            "CommodityMetals" => Ok(Self::CommodityMetals),
-            "CommodityEnergyAgriculture" => Ok(Self::CommodityEnergyAgriculture),
-            "CryptoCoin" => Ok(Self::CryptoCoin),
-            "NFT" => Ok(Self::Nft),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for MarketAssetType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for MarketAssetType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for MarketAssetType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "`MarketEventMetadata`"]
@@ -5172,7 +4607,7 @@ pub struct MarketEventMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub tag_name: ::std::option::Option<MarketEventTag>,
+    pub tag_name: ::std::option::Option<::etoro_agent::types::manual::MarketEventTag>,
     #[serde(
         rename = "textKey",
         default,
@@ -5199,86 +4634,6 @@ impl ::std::default::Default for MarketEventMetadata {
             text_key: Default::default(),
             verified: Default::default(),
         }
-    }
-}
-#[doc = "Enum encoded as integer index"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Enum encoded as integer index\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Reports\","]
-#[doc = "    \"Dividends\","]
-#[doc = "    \"Split\","]
-#[doc = "    \"ReverseSplit\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum MarketEventTag {
-    Reports,
-    Dividends,
-    Split,
-    ReverseSplit,
-}
-impl ::std::fmt::Display for MarketEventTag {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Reports => f.write_str("Reports"),
-            Self::Dividends => f.write_str("Dividends"),
-            Self::Split => f.write_str("Split"),
-            Self::ReverseSplit => f.write_str("ReverseSplit"),
-        }
-    }
-}
-impl ::std::str::FromStr for MarketEventTag {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Reports" => Ok(Self::Reports),
-            "Dividends" => Ok(Self::Dividends),
-            "Split" => Ok(Self::Split),
-            "ReverseSplit" => Ok(Self::ReverseSplit),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for MarketEventTag {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for MarketEventTag {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for MarketEventTag {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "`Media`"]
@@ -5314,86 +4669,6 @@ impl ::std::default::Default for Media {
             image: Default::default(),
             video: Default::default(),
         }
-    }
-}
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"None\","]
-#[doc = "    \"Link\","]
-#[doc = "    \"Image\","]
-#[doc = "    \"Video\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum MediaType {
-    None,
-    Link,
-    Image,
-    Video,
-}
-impl ::std::fmt::Display for MediaType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::None => f.write_str("None"),
-            Self::Link => f.write_str("Link"),
-            Self::Image => f.write_str("Image"),
-            Self::Video => f.write_str("Video"),
-        }
-    }
-}
-impl ::std::str::FromStr for MediaType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "None" => Ok(Self::None),
-            "Link" => Ok(Self::Link),
-            "Image" => Ok(Self::Image),
-            "Video" => Ok(Self::Video),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for MediaType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for MediaType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for MediaType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "`Mention`"]
@@ -5693,7 +4968,7 @@ impl ::std::default::Default for Message {
 #[serde(deny_unknown_fields)]
 pub struct OrderMetadata {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub direction: ::std::option::Option<TradeDirection>,
+    pub direction: ::std::option::Option<::etoro_agent::types::manual::TradeDirection>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub market: ::std::option::Option<Market>,
     #[serde(
@@ -5709,7 +4984,7 @@ pub struct OrderMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub type_: ::std::option::Option<TradeType>,
+    pub type_: ::std::option::Option<::etoro_agent::types::manual::TradeType>,
 }
 impl ::std::default::Default for OrderMetadata {
     fn default() -> Self {
@@ -5720,86 +4995,6 @@ impl ::std::default::Default for OrderMetadata {
             rate: Default::default(),
             type_: Default::default(),
         }
-    }
-}
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Unknown\","]
-#[doc = "    \"Post\","]
-#[doc = "    \"Comment\","]
-#[doc = "    \"Reply\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum ParentType {
-    Unknown,
-    Post,
-    Comment,
-    Reply,
-}
-impl ::std::fmt::Display for ParentType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Unknown => f.write_str("Unknown"),
-            Self::Post => f.write_str("Post"),
-            Self::Comment => f.write_str("Comment"),
-            Self::Reply => f.write_str("Reply"),
-        }
-    }
-}
-impl ::std::str::FromStr for ParentType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Unknown" => Ok(Self::Unknown),
-            "Post" => Ok(Self::Post),
-            "Comment" => Ok(Self::Comment),
-            "Reply" => Ok(Self::Reply),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for ParentType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for ParentType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for ParentType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "Recursive: parent is Parents (self). Box in Rust to break cycle."]
@@ -5852,7 +5047,7 @@ pub struct Parents {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub type_: ::std::option::Option<ParentType>,
+    pub type_: ::std::option::Option<::etoro_agent::types::manual::ParentType>,
 }
 impl ::std::default::Default for Parents {
     fn default() -> Self {
@@ -6141,7 +5336,7 @@ pub struct Post {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub type_: ::std::option::Option<PostType>,
+    pub type_: ::std::option::Option<::etoro_agent::types::manual::PostType>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub updated: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
 }
@@ -6409,102 +5604,6 @@ impl ::std::default::Default for PostTagsItem {
         }
     }
 }
-#[doc = "Integer-encoded enum (8 variants)"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum (8 variants)\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Default\","]
-#[doc = "    \"Share\","]
-#[doc = "    \"MarketEvent\","]
-#[doc = "    \"Trade\","]
-#[doc = "    \"Order\","]
-#[doc = "    \"Copy\","]
-#[doc = "    \"Poll\","]
-#[doc = "    \"Article\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum PostType {
-    Default,
-    Share,
-    MarketEvent,
-    Trade,
-    Order,
-    Copy,
-    Poll,
-    Article,
-}
-impl ::std::fmt::Display for PostType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Default => f.write_str("Default"),
-            Self::Share => f.write_str("Share"),
-            Self::MarketEvent => f.write_str("MarketEvent"),
-            Self::Trade => f.write_str("Trade"),
-            Self::Order => f.write_str("Order"),
-            Self::Copy => f.write_str("Copy"),
-            Self::Poll => f.write_str("Poll"),
-            Self::Article => f.write_str("Article"),
-        }
-    }
-}
-impl ::std::str::FromStr for PostType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Default" => Ok(Self::Default),
-            "Share" => Ok(Self::Share),
-            "MarketEvent" => Ok(Self::MarketEvent),
-            "Trade" => Ok(Self::Trade),
-            "Order" => Ok(Self::Order),
-            "Copy" => Ok(Self::Copy),
-            "Poll" => Ok(Self::Poll),
-            "Article" => Ok(Self::Article),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for PostType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for PostType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for PostType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
 #[doc = "`ReactionPagingResponse`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -6602,7 +5701,7 @@ pub struct Reason {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub type_: ::std::option::Option<ReasonType>,
+    pub type_: ::std::option::Option<::etoro_agent::types::manual::ReasonType>,
 }
 impl ::std::default::Default for Reason {
     fn default() -> Self {
@@ -6611,98 +5710,6 @@ impl ::std::default::Default for Reason {
             source_id: Default::default(),
             type_: Default::default(),
         }
-    }
-}
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"None\","]
-#[doc = "    \"Owner\","]
-#[doc = "    \"LikedPost\","]
-#[doc = "    \"LikedComment\","]
-#[doc = "    \"TaggedInPost\","]
-#[doc = "    \"TaggedInComment\","]
-#[doc = "    \"Comment\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum ReasonType {
-    None,
-    Owner,
-    LikedPost,
-    LikedComment,
-    TaggedInPost,
-    TaggedInComment,
-    Comment,
-}
-impl ::std::fmt::Display for ReasonType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::None => f.write_str("None"),
-            Self::Owner => f.write_str("Owner"),
-            Self::LikedPost => f.write_str("LikedPost"),
-            Self::LikedComment => f.write_str("LikedComment"),
-            Self::TaggedInPost => f.write_str("TaggedInPost"),
-            Self::TaggedInComment => f.write_str("TaggedInComment"),
-            Self::Comment => f.write_str("Comment"),
-        }
-    }
-}
-impl ::std::str::FromStr for ReasonType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "None" => Ok(Self::None),
-            "Owner" => Ok(Self::Owner),
-            "LikedPost" => Ok(Self::LikedPost),
-            "LikedComment" => Ok(Self::LikedComment),
-            "TaggedInPost" => Ok(Self::TaggedInPost),
-            "TaggedInComment" => Ok(Self::TaggedInComment),
-            "Comment" => Ok(Self::Comment),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for ReasonType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for ReasonType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for ReasonType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "Common request shape — CommentRequest and DiscussionCreateRequest extend this conceptually"]
@@ -7197,78 +6204,6 @@ impl ::std::default::Default for TagsTagsItem {
         }
     }
 }
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Long\","]
-#[doc = "    \"Short\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum TradeDirection {
-    Long,
-    Short,
-}
-impl ::std::fmt::Display for TradeDirection {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Long => f.write_str("Long"),
-            Self::Short => f.write_str("Short"),
-        }
-    }
-}
-impl ::std::str::FromStr for TradeDirection {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Long" => Ok(Self::Long),
-            "Short" => Ok(Self::Short),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for TradeDirection {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for TradeDirection {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for TradeDirection {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
 #[doc = "`TradeMetadata`"]
 #[doc = r""]
 #[doc = r" <details><summary>JSON schema</summary>"]
@@ -7307,7 +6242,7 @@ impl ::std::convert::TryFrom<::std::string::String> for TradeDirection {
 #[serde(deny_unknown_fields)]
 pub struct TradeMetadata {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub direction: ::std::option::Option<TradeDirection>,
+    pub direction: ::std::option::Option<::etoro_agent::types::manual::TradeDirection>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub gain: ::std::option::Option<f32>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -7325,7 +6260,7 @@ pub struct TradeMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub type_: ::std::option::Option<TradeType>,
+    pub type_: ::std::option::Option<::etoro_agent::types::manual::TradeType>,
 }
 impl ::std::default::Default for TradeMetadata {
     fn default() -> Self {
@@ -7337,78 +6272,6 @@ impl ::std::default::Default for TradeMetadata {
             rate: Default::default(),
             type_: Default::default(),
         }
-    }
-}
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"Open\","]
-#[doc = "    \"Close\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum TradeType {
-    Open,
-    Close,
-}
-impl ::std::fmt::Display for TradeType {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::Open => f.write_str("Open"),
-            Self::Close => f.write_str("Close"),
-        }
-    }
-}
-impl ::std::str::FromStr for TradeType {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "Open" => Ok(Self::Open),
-            "Close" => Ok(Self::Close),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for TradeType {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for TradeType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for TradeType {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }
 #[doc = "`User`"]
@@ -7610,7 +6473,7 @@ pub struct VideoMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub video_source: ::std::option::Option<VideoSource>,
+    pub video_source: ::std::option::Option<::etoro_agent::types::manual::VideoSource>,
     #[serde(
         rename = "videoSourceId",
         default,
@@ -7625,81 +6488,5 @@ impl ::std::default::Default for VideoMetadata {
             video_source: Default::default(),
             video_source_id: Default::default(),
         }
-    }
-}
-#[doc = "Integer-encoded enum"]
-#[doc = r""]
-#[doc = r" <details><summary>JSON schema</summary>"]
-#[doc = r""]
-#[doc = r" ```json"]
-#[doc = "{"]
-#[doc = "  \"description\": \"Integer-encoded enum\","]
-#[doc = "  \"type\": \"string\","]
-#[doc = "  \"format\": \"int32\","]
-#[doc = "  \"enum\": ["]
-#[doc = "    \"None\","]
-#[doc = "    \"YouTube\","]
-#[doc = "    \"Vimeo\""]
-#[doc = "  ]"]
-#[doc = "}"]
-#[doc = r" ```"]
-#[doc = r" </details>"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
-pub enum VideoSource {
-    None,
-    YouTube,
-    Vimeo,
-}
-impl ::std::fmt::Display for VideoSource {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        match *self {
-            Self::None => f.write_str("None"),
-            Self::YouTube => f.write_str("YouTube"),
-            Self::Vimeo => f.write_str("Vimeo"),
-        }
-    }
-}
-impl ::std::str::FromStr for VideoSource {
-    type Err = self::error::ConversionError;
-    fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        match value {
-            "None" => Ok(Self::None),
-            "YouTube" => Ok(Self::YouTube),
-            "Vimeo" => Ok(Self::Vimeo),
-            _ => Err("invalid value".into()),
-        }
-    }
-}
-impl ::std::convert::TryFrom<&str> for VideoSource {
-    type Error = self::error::ConversionError;
-    fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<&::std::string::String> for VideoSource {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: &::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
-    }
-}
-impl ::std::convert::TryFrom<::std::string::String> for VideoSource {
-    type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
-        value.parse()
     }
 }

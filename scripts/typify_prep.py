@@ -116,7 +116,11 @@ def normalize_enums_in_place(node) -> None:
         type_ = node.get("type")
         if isinstance(enum, list) and enum:
             if type_ == "integer" and all(isinstance(v, str) for v in enum):
-                node["type"] = "string"
+                # If the schema is being overridden via x-rust-type, leave it
+                # alone — typify won't generate a Rust type for it. Otherwise
+                # convert to a plain string enum so JSON Schema accepts it.
+                if "x-rust-type" not in node:
+                    node["type"] = "string"
             elif type_ == "integer" and all(isinstance(v, int) or v is None for v in enum):
                 if "x-enumNames" in node and "x-enum-varnames" not in node:
                     node["x-enum-varnames"] = node.pop("x-enumNames")
@@ -133,7 +137,7 @@ def rewrite_refs_in_place(node) -> None:
         for k in [k for k in node if isinstance(k, str) and k.startswith("_")]:
             del node[k]
         # Strip OpenAPI extensions (x-*) except those we deliberately keep
-        KEEP_EXTENSIONS = {"x-enum-varnames"}
+        KEEP_EXTENSIONS = {"x-enum-varnames", "x-rust-type"}
         for k in [k for k in node if isinstance(k, str) and k.startswith("x-") and k not in KEEP_EXTENSIONS]:
             del node[k]
         ref = node.get("$ref")
