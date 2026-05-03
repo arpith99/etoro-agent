@@ -62,13 +62,13 @@ pub mod error {
 #[doc = "    \"entryOrders\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"exitOrders\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"mirrors\": {"]
@@ -112,7 +112,7 @@ pub mod error {
 #[doc = "      \"description\": \"Stock-specific pending orders\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"unrealizedPnL\": {"]
@@ -151,14 +151,13 @@ pub struct ClientPortfolio {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub entry_orders:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub entry_orders: ::std::vec::Vec<::etoro_agent::types::trading::Order>,
     #[serde(
         rename = "exitOrders",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub exit_orders: ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub exit_orders: ::std::vec::Vec<::etoro_agent::types::trading::Order>,
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
     pub mirrors: ::std::vec::Vec<::etoro_agent::types::trading::Mirror>,
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
@@ -191,8 +190,7 @@ pub struct ClientPortfolio {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub stock_orders:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub stock_orders: ::std::vec::Vec<::etoro_agent::types::trading::Order>,
     #[doc = "Total unrealized profit and loss across all open positions in the portfolio"]
     #[serde(
         rename = "unrealizedPnL",
@@ -868,14 +866,14 @@ impl ::std::default::Default for GetUserGainResponse {
 #[doc = "          \"description\": \"Obsolete\","]
 #[doc = "          \"type\": \"array\","]
 #[doc = "          \"items\": {"]
-#[doc = "            \"type\": \"object\""]
+#[doc = "            \"$ref\": \"#/$defs/Order\""]
 #[doc = "          }"]
 #[doc = "        },"]
 #[doc = "        \"exitOrders\": {"]
 #[doc = "          \"description\": \"Obsolete\","]
 #[doc = "          \"type\": \"array\","]
 #[doc = "          \"items\": {"]
-#[doc = "            \"type\": \"object\""]
+#[doc = "            \"$ref\": \"#/$defs/Order\""]
 #[doc = "          }"]
 #[doc = "        },"]
 #[doc = "        \"mirrors\": {"]
@@ -913,14 +911,14 @@ impl ::std::default::Default for GetUserGainResponse {
 #[doc = "                \"description\": \"Obsolete\","]
 #[doc = "                \"type\": \"array\","]
 #[doc = "                \"items\": {"]
-#[doc = "                  \"type\": \"object\""]
+#[doc = "                  \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "                }"]
 #[doc = "              },"]
 #[doc = "              \"delayedOrderForOpen\": {"]
 #[doc = "                \"description\": \"Obsolete\","]
 #[doc = "                \"type\": \"array\","]
 #[doc = "                \"items\": {"]
-#[doc = "                  \"type\": \"object\""]
+#[doc = "                  \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "                }"]
 #[doc = "              },"]
 #[doc = "              \"depositSummary\": {"]
@@ -936,14 +934,14 @@ impl ::std::default::Default for GetUserGainResponse {
 #[doc = "                \"description\": \"Obsolete\","]
 #[doc = "                \"type\": \"array\","]
 #[doc = "                \"items\": {"]
-#[doc = "                  \"type\": \"object\""]
+#[doc = "                  \"$ref\": \"#/$defs/Order\""]
 #[doc = "                }"]
 #[doc = "              },"]
 #[doc = "              \"exitOrders\": {"]
 #[doc = "                \"description\": \"Obsolete\","]
 #[doc = "                \"type\": \"array\","]
 #[doc = "                \"items\": {"]
-#[doc = "                  \"type\": \"object\""]
+#[doc = "                  \"$ref\": \"#/$defs/Order\""]
 #[doc = "                }"]
 #[doc = "              },"]
 #[doc = "              \"initialInvestment\": {"]
@@ -972,19 +970,19 @@ impl ::std::default::Default for GetUserGainResponse {
 #[doc = "              \"ordersForClose\": {"]
 #[doc = "                \"type\": \"array\","]
 #[doc = "                \"items\": {"]
-#[doc = "                  \"type\": \"object\""]
+#[doc = "                  \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "                }"]
 #[doc = "              },"]
 #[doc = "              \"ordersForCloseMultiple\": {"]
 #[doc = "                \"type\": \"array\","]
 #[doc = "                \"items\": {"]
-#[doc = "                  \"type\": \"object\""]
+#[doc = "                  \"$ref\": \"#/$defs/OrderForCloseMultiple\""]
 #[doc = "                }"]
 #[doc = "              },"]
 #[doc = "              \"ordersForOpen\": {"]
 #[doc = "                \"type\": \"array\","]
 #[doc = "                \"items\": {"]
-#[doc = "                  \"type\": \"object\""]
+#[doc = "                  \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "                }"]
 #[doc = "              },"]
 #[doc = "              \"parentCID\": {"]
@@ -993,7 +991,7 @@ impl ::std::default::Default for GetUserGainResponse {
 #[doc = "              \"parentMirrors\": {"]
 #[doc = "                \"type\": \"array\","]
 #[doc = "                \"items\": {"]
-#[doc = "                  \"type\": \"object\""]
+#[doc = "                  \"$ref\": \"#/$defs/Mirror\""]
 #[doc = "                }"]
 #[doc = "              },"]
 #[doc = "              \"parentUsername\": {"]
@@ -1136,19 +1134,19 @@ impl ::std::default::Default for GetUserGainResponse {
 #[doc = "        \"ordersForClose\": {"]
 #[doc = "          \"type\": \"array\","]
 #[doc = "          \"items\": {"]
-#[doc = "            \"type\": \"object\""]
+#[doc = "            \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "          }"]
 #[doc = "        },"]
 #[doc = "        \"ordersForCloseMultiple\": {"]
 #[doc = "          \"type\": \"array\","]
 #[doc = "          \"items\": {"]
-#[doc = "            \"type\": \"object\""]
+#[doc = "            \"$ref\": \"#/$defs/OrderForCloseMultiple\""]
 #[doc = "          }"]
 #[doc = "        },"]
 #[doc = "        \"ordersForOpen\": {"]
 #[doc = "          \"type\": \"array\","]
 #[doc = "          \"items\": {"]
-#[doc = "            \"type\": \"object\""]
+#[doc = "            \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "          }"]
 #[doc = "        },"]
 #[doc = "        \"positions\": {"]
@@ -1162,7 +1160,7 @@ impl ::std::default::Default for GetUserGainResponse {
 #[doc = "          \"description\": \"Obsolete\","]
 #[doc = "          \"type\": \"array\","]
 #[doc = "          \"items\": {"]
-#[doc = "            \"type\": \"object\""]
+#[doc = "            \"$ref\": \"#/$defs/Order\""]
 #[doc = "          }"]
 #[doc = "        }"]
 #[doc = "      }"]
@@ -1219,14 +1217,14 @@ impl ::std::default::Default for PortfolioResponse {
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"exitOrders\": {"]
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"mirrors\": {"]
@@ -1264,14 +1262,14 @@ impl ::std::default::Default for PortfolioResponse {
 #[doc = "            \"description\": \"Obsolete\","]
 #[doc = "            \"type\": \"array\","]
 #[doc = "            \"items\": {"]
-#[doc = "              \"type\": \"object\""]
+#[doc = "              \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "            }"]
 #[doc = "          },"]
 #[doc = "          \"delayedOrderForOpen\": {"]
 #[doc = "            \"description\": \"Obsolete\","]
 #[doc = "            \"type\": \"array\","]
 #[doc = "            \"items\": {"]
-#[doc = "              \"type\": \"object\""]
+#[doc = "              \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "            }"]
 #[doc = "          },"]
 #[doc = "          \"depositSummary\": {"]
@@ -1287,14 +1285,14 @@ impl ::std::default::Default for PortfolioResponse {
 #[doc = "            \"description\": \"Obsolete\","]
 #[doc = "            \"type\": \"array\","]
 #[doc = "            \"items\": {"]
-#[doc = "              \"type\": \"object\""]
+#[doc = "              \"$ref\": \"#/$defs/Order\""]
 #[doc = "            }"]
 #[doc = "          },"]
 #[doc = "          \"exitOrders\": {"]
 #[doc = "            \"description\": \"Obsolete\","]
 #[doc = "            \"type\": \"array\","]
 #[doc = "            \"items\": {"]
-#[doc = "              \"type\": \"object\""]
+#[doc = "              \"$ref\": \"#/$defs/Order\""]
 #[doc = "            }"]
 #[doc = "          },"]
 #[doc = "          \"initialInvestment\": {"]
@@ -1323,19 +1321,19 @@ impl ::std::default::Default for PortfolioResponse {
 #[doc = "          \"ordersForClose\": {"]
 #[doc = "            \"type\": \"array\","]
 #[doc = "            \"items\": {"]
-#[doc = "              \"type\": \"object\""]
+#[doc = "              \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "            }"]
 #[doc = "          },"]
 #[doc = "          \"ordersForCloseMultiple\": {"]
 #[doc = "            \"type\": \"array\","]
 #[doc = "            \"items\": {"]
-#[doc = "              \"type\": \"object\""]
+#[doc = "              \"$ref\": \"#/$defs/OrderForCloseMultiple\""]
 #[doc = "            }"]
 #[doc = "          },"]
 #[doc = "          \"ordersForOpen\": {"]
 #[doc = "            \"type\": \"array\","]
 #[doc = "            \"items\": {"]
-#[doc = "              \"type\": \"object\""]
+#[doc = "              \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "            }"]
 #[doc = "          },"]
 #[doc = "          \"parentCID\": {"]
@@ -1344,7 +1342,7 @@ impl ::std::default::Default for PortfolioResponse {
 #[doc = "          \"parentMirrors\": {"]
 #[doc = "            \"type\": \"array\","]
 #[doc = "            \"items\": {"]
-#[doc = "              \"type\": \"object\""]
+#[doc = "              \"$ref\": \"#/$defs/Mirror\""]
 #[doc = "            }"]
 #[doc = "          },"]
 #[doc = "          \"parentUsername\": {"]
@@ -1487,19 +1485,19 @@ impl ::std::default::Default for PortfolioResponse {
 #[doc = "    \"ordersForClose\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ordersForCloseMultiple\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForCloseMultiple\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ordersForOpen\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"positions\": {"]
@@ -1513,7 +1511,7 @@ impl ::std::default::Default for PortfolioResponse {
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
@@ -1537,15 +1535,14 @@ pub struct PortfolioResponseClientPortfolio {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub entry_orders:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub entry_orders: ::std::vec::Vec<::etoro_agent::types::trading::Order>,
     #[doc = "Obsolete"]
     #[serde(
         rename = "exitOrders",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub exit_orders: ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub exit_orders: ::std::vec::Vec<::etoro_agent::types::trading::Order>,
     #[doc = "Copy trading configurations and positions"]
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
     pub mirrors: ::std::vec::Vec<PortfolioResponseClientPortfolioMirrorsItem>,
@@ -1557,22 +1554,20 @@ pub struct PortfolioResponseClientPortfolio {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub orders_for_close:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub orders_for_close: ::std::vec::Vec<::etoro_agent::types::trading::OrderForClose>,
     #[serde(
         rename = "ordersForCloseMultiple",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
     pub orders_for_close_multiple:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+        ::std::vec::Vec<::etoro_agent::types::trading::OrderForCloseMultiple>,
     #[serde(
         rename = "ordersForOpen",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub orders_for_open:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub orders_for_open: ::std::vec::Vec<::etoro_agent::types::trading::OrderForOpen>,
     #[doc = "List of currently open trading positions"]
     #[serde(default, skip_serializing_if = "::std::vec::Vec::is_empty")]
     pub positions: ::std::vec::Vec<::etoro_agent::types::trading::Position>,
@@ -1582,8 +1577,7 @@ pub struct PortfolioResponseClientPortfolio {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub stock_orders:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub stock_orders: ::std::vec::Vec<::etoro_agent::types::trading::Order>,
 }
 impl ::std::default::Default for PortfolioResponseClientPortfolio {
     fn default() -> Self {
@@ -1639,14 +1633,14 @@ impl ::std::default::Default for PortfolioResponseClientPortfolio {
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"delayedOrderForOpen\": {"]
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"depositSummary\": {"]
@@ -1662,14 +1656,14 @@ impl ::std::default::Default for PortfolioResponseClientPortfolio {
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"exitOrders\": {"]
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"initialInvestment\": {"]
@@ -1698,19 +1692,19 @@ impl ::std::default::Default for PortfolioResponseClientPortfolio {
 #[doc = "    \"ordersForClose\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ordersForCloseMultiple\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForCloseMultiple\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ordersForOpen\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"parentCID\": {"]
@@ -1719,7 +1713,7 @@ impl ::std::default::Default for PortfolioResponseClientPortfolio {
 #[doc = "    \"parentMirrors\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Mirror\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"parentUsername\": {"]
@@ -1801,16 +1795,14 @@ pub struct PortfolioResponseClientPortfolioMirrorsItem {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub delayed_order_for_close:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub delayed_order_for_close: ::std::vec::Vec<::etoro_agent::types::trading::OrderForClose>,
     #[doc = "Obsolete"]
     #[serde(
         rename = "delayedOrderForOpen",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub delayed_order_for_open:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub delayed_order_for_open: ::std::vec::Vec<::etoro_agent::types::trading::OrderForOpen>,
     #[serde(
         rename = "depositSummary",
         default,
@@ -1823,15 +1815,14 @@ pub struct PortfolioResponseClientPortfolioMirrorsItem {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub entry_orders:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub entry_orders: ::std::vec::Vec<::etoro_agent::types::trading::Order>,
     #[doc = "Obsolete"]
     #[serde(
         rename = "exitOrders",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub exit_orders: ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub exit_orders: ::std::vec::Vec<::etoro_agent::types::trading::Order>,
     #[serde(
         rename = "initialInvestment",
         default,
@@ -1869,22 +1860,20 @@ pub struct PortfolioResponseClientPortfolioMirrorsItem {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub orders_for_close:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub orders_for_close: ::std::vec::Vec<::etoro_agent::types::trading::OrderForClose>,
     #[serde(
         rename = "ordersForCloseMultiple",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
     pub orders_for_close_multiple:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+        ::std::vec::Vec<::etoro_agent::types::trading::OrderForCloseMultiple>,
     #[serde(
         rename = "ordersForOpen",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub orders_for_open:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub orders_for_open: ::std::vec::Vec<::etoro_agent::types::trading::OrderForOpen>,
     #[serde(
         rename = "parentCID",
         default,
@@ -1896,8 +1885,7 @@ pub struct PortfolioResponseClientPortfolioMirrorsItem {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub parent_mirrors:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub parent_mirrors: ::std::vec::Vec<::etoro_agent::types::trading::Mirror>,
     #[serde(
         rename = "parentUsername",
         default,

@@ -55,19 +55,19 @@
                 "depositSummary": { "type": "number", "format": "float" },
                 "withdrawalSummary": { "type": "number", "format": "float" },
                 "positions": { "type": "array", "items": { "$ref": "#/components/schemas/Position" } },
-                "entryOrders": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
-                "exitOrders": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
+                "entryOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+                "exitOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
                 "parentUsername": { "type": "string" },
                 "closedPositionsNetProfit": { "type": "number", "format": "float" },
                 "startedCopyDate": { "type": "string", "format": "date-time" },
                 "pendingForClosure": { "type": "boolean" },
-                "parentMirrors": { "type": "array", "items": { "type": "object" } },
+                "parentMirrors": { "type": "array", "items": { "$ref": "#/components/schemas/Mirror" } },
                 "mirrorCalculationType": { "type": "integer", "description": "(Obsolete) Mirror positions weights calculation methodology" },
-                "ordersForOpen": { "type": "array", "items": { "type": "object" } },
-                "ordersForClose": { "type": "array", "items": { "type": "object" } },
-                "ordersForCloseMultiple": { "type": "array", "items": { "type": "object" } },
-                "delayedOrderForClose": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
-                "delayedOrderForOpen": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
+                "ordersForOpen": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpen" } },
+                "ordersForClose": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForClose" } },
+                "ordersForCloseMultiple": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForCloseMultiple" } },
+                "delayedOrderForClose": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForClose" }, "description": "Obsolete" },
+                "delayedOrderForOpen": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpen" }, "description": "Obsolete" },
                 "mirrorStatusID": { "type": "integer", "description": "0 - Active, 1 - Paused, 2 - Pending Closure, 3 - In Alignment Process" }
               }
             }
@@ -96,12 +96,12 @@
               }
             }
           },
-          "stockOrders": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
-          "entryOrders": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
-          "exitOrders": { "type": "array", "items": { "type": "object" }, "description": "Obsolete" },
-          "ordersForOpen": { "type": "array", "items": { "type": "object" } },
-          "ordersForClose": { "type": "array", "items": { "type": "object" } },
-          "ordersForCloseMultiple": { "type": "array", "items": { "type": "object" } },
+          "stockOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+          "entryOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+          "exitOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+          "ordersForOpen": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpen" } },
+          "ordersForClose": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForClose" } },
+          "ordersForCloseMultiple": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForCloseMultiple" } },
           "bonusCredit": { "type": "number", "format": "float" }
         }
       }
@@ -130,9 +130,9 @@
       "bonusCredit": { "type": "number", "format": "float" },
       "unrealizedPnL": { "type": "number", "format": "float", "description": "Total unrealized profit and loss across all open positions in the portfolio" },
       "accountCurrencyId": { "type": "integer", "description": "Currency ID of the account (1 = USD)" },
-      "stockOrders": { "type": "array", "items": { "type": "object" }, "description": "Stock-specific pending orders" },
-      "entryOrders": { "type": "array", "items": { "type": "object" } },
-      "exitOrders": { "type": "array", "items": { "type": "object" } }
+      "stockOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Stock-specific pending orders" },
+      "entryOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } },
+      "exitOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } }
     }
   },
   "GeCopiersResponse": {
