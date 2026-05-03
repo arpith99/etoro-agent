@@ -1,0 +1,52 @@
+// Self-alias so that absolute paths emitted by cargo typify (e.g.
+// `::etoro_agent::types::manual::TradeDirection`, generated from x-rust-type
+// hints in docs/*-schema.json) resolve from within this binary crate.
+extern crate self as etoro_agent;
+
+mod types;
+
+use anyhow::Result;
+use reqwest::header;
+
+use etoro_agent::types::watchlists::WatchlistsResponse;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    dotenvy::dotenv().ok();
+    let api_key = std::env::var("ETORO_API_KEY")?;
+    let user_key = std::env::var("ETORO_USER_KEY")?;
+
+    let mut headers = header::HeaderMap::new();
+
+    let sensitive = |s: &str| -> Result<header::HeaderValue> {
+        let mut hv = header::HeaderValue::from_str(s)?;
+        hv.set_sensitive(true);
+        Ok(hv)
+    };
+    headers.insert("x-api-key", sensitive(&api_key)?);
+    headers.insert("x-user-key", sensitive(&user_key)?);
+
+    let client = reqwest::Client::builder()
+        .default_headers(headers)
+        .build()?;
+
+    let x_request_id = uuid::Uuid::new_v4().to_string();
+
+    let response = client
+        .get("https://public-api.etoro.com/api/v1/watchlists")
+        .header("x-request-id", x_request_id)
+        .send()
+        .await?
+        .error_for_status()?;
+
+    let http_status = response.status();
+    let v: WatchlistsResponse = response.json().await?;
+
+    println!("HTTP {http_status}");
+    println!(
+        "Response:\nStatus: {:?}\nWatchlists: {:#?}",
+        v.status, v.watchlists
+    );
+
+    Ok(())
+}
