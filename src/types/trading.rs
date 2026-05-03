@@ -1812,14 +1812,14 @@ impl ::std::convert::TryFrom<::std::string::String> for GetOrderResponseOrderTyp
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForClose\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"delayedOrderForOpen\": {"]
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/OrderForOpen\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"depositSummary\": {"]
@@ -1836,14 +1836,14 @@ impl ::std::convert::TryFrom<::std::string::String> for GetOrderResponseOrderTyp
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"exitOrders\": {"]
 #[doc = "      \"description\": \"Obsolete\","]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Order\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"initialInvestment\": {"]
@@ -1895,7 +1895,7 @@ impl ::std::convert::TryFrom<::std::string::String> for GetOrderResponseOrderTyp
 #[doc = "    \"parentMirrors\": {"]
 #[doc = "      \"type\": \"array\","]
 #[doc = "      \"items\": {"]
-#[doc = "        \"type\": \"object\""]
+#[doc = "        \"$ref\": \"#/$defs/Mirror\""]
 #[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"parentUsername\": {"]
@@ -1983,16 +1983,14 @@ pub struct Mirror {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub delayed_order_for_close:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub delayed_order_for_close: ::std::vec::Vec<OrderForClose>,
     #[doc = "Obsolete"]
     #[serde(
         rename = "delayedOrderForOpen",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub delayed_order_for_open:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub delayed_order_for_open: ::std::vec::Vec<OrderForOpen>,
     #[doc = "Total USD deposited after initial investment"]
     #[serde(
         rename = "depositSummary",
@@ -2006,15 +2004,14 @@ pub struct Mirror {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub entry_orders:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub entry_orders: ::std::vec::Vec<Order>,
     #[doc = "Obsolete"]
     #[serde(
         rename = "exitOrders",
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub exit_orders: ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub exit_orders: ::std::vec::Vec<Order>,
     #[serde(
         rename = "initialInvestment",
         default,
@@ -2078,8 +2075,7 @@ pub struct Mirror {
         default,
         skip_serializing_if = "::std::vec::Vec::is_empty"
     )]
-    pub parent_mirrors:
-        ::std::vec::Vec<::serde_json::Map<::std::string::String, ::serde_json::Value>>,
+    pub parent_mirrors: ::std::vec::Vec<Mirror>,
     #[doc = "Username of the trader being copied"]
     #[serde(
         rename = "parentUsername",

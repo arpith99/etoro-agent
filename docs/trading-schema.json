@@ -847,7 +847,7 @@
       "parentMirrors": {
         "type": "array",
         "items": {
-          "type": "object"
+          "$ref": "#/components/schemas/Mirror"
         }
       },
       "mirrorCalculationType": {
@@ -879,28 +879,28 @@
       "delayedOrderForClose": {
         "type": "array",
         "items": {
-          "type": "object"
+          "$ref": "#/components/schemas/OrderForClose"
         },
         "description": "Obsolete"
       },
       "delayedOrderForOpen": {
         "type": "array",
         "items": {
-          "type": "object"
+          "$ref": "#/components/schemas/OrderForOpen"
         },
         "description": "Obsolete"
       },
       "entryOrders": {
         "type": "array",
         "items": {
-          "type": "object"
+          "$ref": "#/components/schemas/Order"
         },
         "description": "Obsolete"
       },
       "exitOrders": {
         "type": "array",
         "items": {
-          "type": "object"
+          "$ref": "#/components/schemas/Order"
         },
         "description": "Obsolete"
       }
