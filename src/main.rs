@@ -1,3 +1,5 @@
+mod types;
+
 use anyhow::Result;
 use reqwest::header;
 use serde_json::Value;
