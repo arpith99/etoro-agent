@@ -15,6 +15,58 @@
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+// ---------------------------------------------------------------------------
+// Numeric — a Decimal newtype with float-aware serde
+// ---------------------------------------------------------------------------
+
+/// Drop-in replacement for `f32`/`f64` in fields that represent monetary amounts,
+/// rates, units, leverage, percentages, etc. — anywhere arithmetic precision
+/// matters. Wraps [`rust_decimal::Decimal`] but (de)serializes as a JSON number
+/// to match the eToro wire format, instead of Decimal's default string round-trip.
+///
+/// Wired in by the preprocessor: every JSON Schema with
+/// `{type: "number", format: "float" | "double"}` gets an `x-rust-type` pointing
+/// here.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
+pub struct Numeric(pub rust_decimal::Decimal);
+
+impl Serialize for Numeric {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        rust_decimal::serde::float::serialize(&self.0, s)
+    }
+}
+
+impl<'de> Deserialize<'de> for Numeric {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        rust_decimal::serde::float::deserialize(d).map(Numeric)
+    }
+}
+
+impl From<Numeric> for rust_decimal::Decimal {
+    fn from(n: Numeric) -> Self {
+        n.0
+    }
+}
+
+impl From<rust_decimal::Decimal> for Numeric {
+    fn from(d: rust_decimal::Decimal) -> Self {
+        Numeric(d)
+    }
+}
+
+impl std::ops::Deref for Numeric {
+    type Target = rust_decimal::Decimal;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::fmt::Display for Numeric {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.0, f)
+    }
+}
+
 /// Defines an integer-encoded enum that can deserialize from either the integer
 /// index (per spec) or the string variant name (observed in some responses),
 /// and always serializes as the integer.
@@ -265,6 +317,20 @@ mod tests {
         assert_eq!(s, "1");
         let s = serde_json::to_string(&MarketAssetType::CryptoCoin).unwrap();
         assert_eq!(s, "12");
+    }
+
+    #[test]
+    fn numeric_round_trip_via_float() {
+        let n: Numeric = serde_json::from_str("3.14").unwrap();
+        assert_eq!(n.to_string(), "3.14");
+        let s = serde_json::to_string(&n).unwrap();
+        assert_eq!(s, "3.14");
+    }
+
+    #[test]
+    fn numeric_handles_integer_input() {
+        let n: Numeric = serde_json::from_str("42").unwrap();
+        assert_eq!(n.to_string(), "42");
     }
 
     #[test]
