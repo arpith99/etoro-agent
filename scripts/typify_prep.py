@@ -97,6 +97,38 @@ def normalize_nullable_in_place(node) -> None:
             normalize_nullable_in_place(item)
 
 
+NUMERIC_X_RUST_TYPE = {
+    "crate": "etoro-agent",
+    "version": "0.1.0",
+    "path": "etoro_agent::types::manual::Numeric",
+}
+
+
+def annotate_numeric_in_place(node) -> None:
+    """
+    Bulk-redirect every `{type: "number"}` schema (with any format or none) to
+    our `Numeric` newtype (Decimal under the hood, float-aware serde). Without
+    this every monetary / rate / quantity field would land as f32 / f64 in the
+    generated code, which loses precision well before realistic trading-account
+    sizes.
+
+    A handful of `type: number` fields (e.g. putTradeRequest.positionId) are
+    really integers per usage, but Decimal represents them losslessly too —
+    the cost of the broad rule is minor and the safety upside is large.
+
+    Skips schemas that already carry x-rust-type so callers can pin individual
+    fields to a different type if needed.
+    """
+    if isinstance(node, dict):
+        if node.get("type") == "number" and "x-rust-type" not in node:
+            node["x-rust-type"] = dict(NUMERIC_X_RUST_TYPE)
+        for v in node.values():
+            annotate_numeric_in_place(v)
+    elif isinstance(node, list):
+        for item in node:
+            annotate_numeric_in_place(item)
+
+
 def normalize_enums_in_place(node) -> None:
     """
     Two malformed enum patterns appear in the eToro spec:
@@ -163,6 +195,7 @@ for f in domain_files:
     # nullable handling sees the latest type/enum shape.
     rewrite_refs_in_place(defs)
     normalize_enums_in_place(defs)
+    annotate_numeric_in_place(defs)
     normalize_nullable_in_place(defs)
 
     out_doc = {

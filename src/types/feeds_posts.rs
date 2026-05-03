@@ -91,7 +91,12 @@ pub mod error {
 #[doc = "    },"]
 #[doc = "    \"readingTimeMinutes\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"status\": {"]
 #[doc = "      \"$ref\": \"#/$defs/ArticleStatus\""]
@@ -187,7 +192,7 @@ pub struct ArticleMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub reading_time_minutes: ::std::option::Option<f64>,
+    pub reading_time_minutes: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub status: ::std::option::Option<::etoro_agent::types::manual::ArticleStatus>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -4508,11 +4513,21 @@ impl ::std::default::Default for Market {
 #[doc = "    },"]
 #[doc = "    \"estimatedEps\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"estimatedSales\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"isBeforeMarketOpen\": {"]
 #[doc = "      \"type\": \"boolean\""]
@@ -4522,7 +4537,12 @@ impl ::std::default::Default for Market {
 #[doc = "    },"]
 #[doc = "    \"marketCap\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"stocksIndustryId\": {"]
 #[doc = "      \"type\": \"integer\","]
@@ -4575,13 +4595,13 @@ pub struct MarketEventMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub estimated_eps: ::std::option::Option<f64>,
+    pub estimated_eps: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "estimatedSales",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub estimated_sales: ::std::option::Option<f64>,
+    pub estimated_sales: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "isBeforeMarketOpen",
         default,
@@ -4595,7 +4615,7 @@ pub struct MarketEventMetadata {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub market_cap: ::std::option::Option<f64>,
+    pub market_cap: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "stocksIndustryId",
         default,
@@ -4954,7 +4974,12 @@ impl ::std::default::Default for Message {
 #[doc = "    },"]
 #[doc = "    \"rate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"type\": {"]
 #[doc = "      \"$ref\": \"#/$defs/TradeType\""]
@@ -4978,7 +5003,7 @@ pub struct OrderMetadata {
     )]
     pub order_id: ::std::option::Option<i64>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub rate: ::std::option::Option<f32>,
+    pub rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "type",
         default,
@@ -6217,7 +6242,12 @@ impl ::std::default::Default for TagsTagsItem {
 #[doc = "    },"]
 #[doc = "    \"gain\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"market\": {"]
 #[doc = "      \"$ref\": \"#/$defs/Market\""]
@@ -6228,7 +6258,12 @@ impl ::std::default::Default for TagsTagsItem {
 #[doc = "    },"]
 #[doc = "    \"rate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"type\": {"]
 #[doc = "      \"$ref\": \"#/$defs/TradeType\""]
@@ -6244,7 +6279,7 @@ pub struct TradeMetadata {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub direction: ::std::option::Option<::etoro_agent::types::manual::TradeDirection>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub gain: ::std::option::Option<f32>,
+    pub gain: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub market: ::std::option::Option<Market>,
     #[serde(
@@ -6254,7 +6289,7 @@ pub struct TradeMetadata {
     )]
     pub position_id: ::std::option::Option<i64>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub rate: ::std::option::Option<f32>,
+    pub rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "type",
         default,

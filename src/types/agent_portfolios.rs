@@ -56,7 +56,12 @@ pub mod error {
 #[doc = "    \"agentPortfolioVirtualBalance\": {"]
 #[doc = "      \"description\": \"The fixed virtual balance (in USD) that the agent-portfolio was funded with. The investmentAmountInUsd used to copy is proportional to this balance.\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"example\": 10000"]
+#[doc = "      \"example\": 10000,"]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"createdAt\": {"]
 #[doc = "      \"description\": \"When this agent-portfolio was created.\","]
@@ -109,7 +114,8 @@ pub struct AgentPortfolioItem {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub agent_portfolio_virtual_balance: ::std::option::Option<f64>,
+    pub agent_portfolio_virtual_balance:
+        ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "When this agent-portfolio was created."]
     #[serde(
         rename = "createdAt",
@@ -418,7 +424,12 @@ impl ::std::default::Default for CreateAgentPortfolioPartialResponse {
 #[doc = "    \"investmentAmountInUsd\": {"]
 #[doc = "      \"description\": \"The amount in USD deducted from the CALLER's account balance to copy-trade this agent-portfolio. This is NOT the agent-portfolio's own balance — the agent-portfolio receives a separate fixed virtual balance (returned as agentPortfolioVirtualBalance). Positions are mirrored proportionally: e.g. $2,000 with a $10,000 virtual balance = 20% position sizing.\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"example\": 2000"]
+#[doc = "      \"example\": 2000,"]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ipsWhitelist\": {"]
 #[doc = "      \"description\": \"An optional set of IPv4 addresses allowed to use the provisioned user token.\","]
@@ -471,7 +482,7 @@ pub struct CreateAgentPortfolioRequest {
     pub expires_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
     #[doc = "The amount in USD deducted from the CALLER's account balance to copy-trade this agent-portfolio. This is NOT the agent-portfolio's own balance — the agent-portfolio receives a separate fixed virtual balance (returned as agentPortfolioVirtualBalance). Positions are mirrored proportionally: e.g. $2,000 with a $10,000 virtual balance = 20% position sizing."]
     #[serde(rename = "investmentAmountInUsd")]
-    pub investment_amount_in_usd: f64,
+    pub investment_amount_in_usd: ::etoro_agent::types::manual::Numeric,
     #[doc = "An optional set of IPv4 addresses allowed to use the provisioned user token."]
     #[serde(
         rename = "ipsWhitelist",
@@ -513,7 +524,12 @@ pub struct CreateAgentPortfolioRequest {
 #[doc = "    \"agentPortfolioVirtualBalance\": {"]
 #[doc = "      \"description\": \"The fixed virtual balance (in USD) that the agent-portfolio was funded with. The investmentAmountInUsd used to copy is proportional to this balance.\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"example\": 10000"]
+#[doc = "      \"example\": 10000,"]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"mirrorId\": {"]
 #[doc = "      \"description\": \"The Trading API mirror ID for this agent-portfolio's copy trade.\","]
@@ -560,7 +576,8 @@ pub struct CreateAgentPortfolioResponse {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub agent_portfolio_virtual_balance: ::std::option::Option<f64>,
+    pub agent_portfolio_virtual_balance:
+        ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "The Trading API mirror ID for this agent-portfolio's copy trade."]
     #[serde(
         rename = "mirrorId",

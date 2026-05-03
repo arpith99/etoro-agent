@@ -108,7 +108,12 @@ impl ::std::default::Default for Avatar {
 #[doc = "      \"type\": \"integer\""]
 #[doc = "    },"]
 #[doc = "    \"units\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -136,7 +141,7 @@ pub struct CreateExitOrderRequest {
     )]
     pub position_id: ::std::option::Option<i64>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub units: ::std::option::Option<f64>,
+    pub units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for CreateExitOrderRequest {
     fn default() -> Self {
@@ -269,7 +274,12 @@ impl ::std::default::Default for CreateExitOrderResponse {
 #[doc = "    },"]
 #[doc = "    \"investment\": {"]
 #[doc = "      \"description\": \"The amount of money invested in the trade.\","]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"isBuy\": {"]
 #[doc = "      \"description\": \"Indicates if the order is a buy (true) or sell (false).\","]
@@ -284,7 +294,12 @@ impl ::std::default::Default for CreateExitOrderResponse {
 #[doc = "    },"]
 #[doc = "    \"limitRate\": {"]
 #[doc = "      \"description\": \"The limit price for limit orders.\","]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"orderType\": {"]
 #[doc = "      \"description\": \"The type of order (Market or Limit).\","]
@@ -295,20 +310,45 @@ impl ::std::default::Default for CreateExitOrderResponse {
 #[doc = "      ]"]
 #[doc = "    },"]
 #[doc = "    \"stopLossPct\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"stopLossRate\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"takeProfitPct\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"takeProfitRate\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"units\": {"]
 #[doc = "      \"description\": \"The number of units being traded.\","]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -332,7 +372,7 @@ pub struct CreateOrderRequest {
     pub instrument_id: ::std::option::Option<i64>,
     #[doc = "The amount of money invested in the trade."]
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub investment: ::std::option::Option<f64>,
+    pub investment: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Indicates if the order is a buy (true) or sell (false)."]
     #[serde(
         rename = "isBuy",
@@ -355,7 +395,7 @@ pub struct CreateOrderRequest {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub limit_rate: ::std::option::Option<f64>,
+    pub limit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "The type of order (Market or Limit)."]
     #[serde(
         rename = "orderType",
@@ -368,28 +408,28 @@ pub struct CreateOrderRequest {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_pct: ::std::option::Option<f64>,
+    pub stop_loss_pct: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "stopLossRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_rate: ::std::option::Option<f64>,
+    pub stop_loss_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "takeProfitPct",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_pct: ::std::option::Option<f64>,
+    pub take_profit_pct: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "takeProfitRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_rate: ::std::option::Option<f64>,
+    pub take_profit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "The number of units being traded."]
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub units: ::std::option::Option<f64>,
+    pub units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for CreateOrderRequest {
     fn default() -> Self {
@@ -668,7 +708,12 @@ impl ::std::default::Default for DeleteOrderResponse {
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ReferenceID\": {"]
 #[doc = "      \"type\": ["]
@@ -681,7 +726,12 @@ impl ::std::default::Default for DeleteOrderResponse {
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ViewRateContext\": {"]
 #[doc = "      \"$ref\": \"#/$defs/eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Rates.ViewRateContextDto\""]
@@ -718,7 +768,7 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsOrderForCloseOrder
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub lots_to_deduct: ::std::option::Option<f64>,
+    pub lots_to_deduct: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "ReferenceID",
         default,
@@ -730,7 +780,7 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsOrderForCloseOrder
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub units_to_deduct: ::std::option::Option<f64>,
+    pub units_to_deduct: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "ViewRateContext",
         default,
@@ -769,7 +819,12 @@ impl ::std::default::Default
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"Amount\": {"]
 #[doc = "      \"description\": \"USD invested\","]
@@ -777,14 +832,24 @@ impl ::std::default::Default
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"AmountInUnits\": {"]
 #[doc = "      \"type\": ["]
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"CID\": {"]
 #[doc = "      \"type\": \"integer\","]
@@ -842,7 +907,12 @@ impl ::std::default::Default
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ReferenceID\": {"]
 #[doc = "      \"type\": ["]
@@ -861,16 +931,31 @@ impl ::std::default::Default
 #[doc = "    \"StopLossRate\": {"]
 #[doc = "      \"description\": \"Exact rate to close for a loss\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"TakeProfitRate\": {"]
 #[doc = "      \"description\": \"Exact rate to close for a profit\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"TotalExternalCosts\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ViewRateContext\": {"]
 #[doc = "      \"$ref\": \"#/$defs/eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.Rates.ViewRateContextDto\""]
@@ -889,20 +974,20 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsOrderForOpenOrderF
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub additional_margin: ::std::option::Option<f64>,
+    pub additional_margin: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "USD invested"]
     #[serde(
         rename = "Amount",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub amount: ::std::option::Option<f64>,
+    pub amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "AmountInUnits",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub amount_in_units: ::std::option::Option<f64>,
+    pub amount_in_units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "CID",
         default,
@@ -970,7 +1055,7 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsOrderForOpenOrderF
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub lot_count: ::std::option::Option<f64>,
+    pub lot_count: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "ReferenceID",
         default,
@@ -990,20 +1075,20 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsOrderForOpenOrderF
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_rate: ::std::option::Option<f64>,
+    pub stop_loss_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Exact rate to close for a profit"]
     #[serde(
         rename = "TakeProfitRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_rate: ::std::option::Option<f64>,
+    pub take_profit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "TotalExternalCosts",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub total_external_costs: ::std::option::Option<f64>,
+    pub total_external_costs: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "ViewRateContext",
         default,
@@ -1054,14 +1139,24 @@ impl ::std::default::Default
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"AmountInUnits\": {"]
 #[doc = "      \"type\": ["]
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"CID\": {"]
 #[doc = "      \"type\": \"integer\","]
@@ -1104,15 +1199,30 @@ impl ::std::default::Default
 #[doc = "    },"]
 #[doc = "    \"Rate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"StopLossRate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"TakeProfitRate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  },"]
 #[doc = "  \"additionalProperties\": false"]
@@ -1127,13 +1237,13 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsOrdersOrderOpenReq
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub amount: ::std::option::Option<f64>,
+    pub amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "AmountInUnits",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub amount_in_units: ::std::option::Option<f64>,
+    pub amount_in_units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "CID",
         default,
@@ -1187,19 +1297,19 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsOrdersOrderOpenReq
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub rate: ::std::option::Option<f64>,
+    pub rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "StopLossRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_rate: ::std::option::Option<f64>,
+    pub stop_loss_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "TakeProfitRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_rate: ::std::option::Option<f64>,
+    pub take_profit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default
     for EToroTradingDistributedServicesWebApiApiDtoRequestsOrdersOrderOpenRequest
@@ -1237,7 +1347,12 @@ impl ::std::default::Default
 #[doc = "        \"number\","]
 #[doc = "        \"null\""]
 #[doc = "      ],"]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ClientRateForCalcID\": {"]
 #[doc = "      \"type\": ["]
@@ -1249,7 +1364,12 @@ impl ::std::default::Default
 #[doc = "    \"ClientViewRate\": {"]
 #[doc = "      \"description\": \"Default client view rate\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"double\""]
+#[doc = "      \"format\": \"double\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"ClientViewRateID\": {"]
 #[doc = "      \"description\": \"View rate id from rates\","]
@@ -1288,7 +1408,7 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsRatesViewRateConte
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub client_rate_for_calc: ::std::option::Option<f64>,
+    pub client_rate_for_calc: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "ClientRateForCalcID",
         default,
@@ -1301,7 +1421,7 @@ pub struct EToroTradingDistributedServicesWebApiApiDtoRequestsRatesViewRateConte
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub client_view_rate: ::std::option::Option<f64>,
+    pub client_view_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "View rate id from rates"]
     #[serde(
         rename = "ClientViewRateID",
@@ -1420,7 +1540,12 @@ impl ::std::default::Default for GetExitOrderResponse {
 #[doc = "      \"type\": \"integer\""]
 #[doc = "    },"]
 #[doc = "    \"investment\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"isBuy\": {"]
 #[doc = "      \"type\": \"boolean\""]
@@ -1433,7 +1558,12 @@ impl ::std::default::Default for GetExitOrderResponse {
 #[doc = "      \"type\": \"integer\""]
 #[doc = "    },"]
 #[doc = "    \"limitRate\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"openTimestamp\": {"]
 #[doc = "      \"type\": \"string\","]
@@ -1450,10 +1580,20 @@ impl ::std::default::Default for GetExitOrderResponse {
 #[doc = "      ]"]
 #[doc = "    },"]
 #[doc = "    \"stopLossRate\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"takeProfitRate\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -1474,7 +1614,7 @@ pub struct GetOrderResponse {
     )]
     pub instrument_id: ::std::option::Option<i64>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub investment: ::std::option::Option<f64>,
+    pub investment: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "isBuy",
         default,
@@ -1495,7 +1635,7 @@ pub struct GetOrderResponse {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub limit_rate: ::std::option::Option<f64>,
+    pub limit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "openTimestamp",
         default,
@@ -1519,13 +1659,13 @@ pub struct GetOrderResponse {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_rate: ::std::option::Option<f64>,
+    pub stop_loss_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "takeProfitRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_rate: ::std::option::Option<f64>,
+    pub take_profit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for GetOrderResponse {
     fn default() -> Self {
@@ -1842,11 +1982,21 @@ impl ::std::default::Default for Market {
 #[doc = "    \"availableAmount\": {"]
 #[doc = "      \"description\": \"Available USD balance reserved for mirror operations\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"closedPositionsNetProfit\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"copyExistingPositions\": {"]
 #[doc = "      \"description\": \"Whether mirror copied parent's existing positions on registration\","]
@@ -1869,7 +2019,12 @@ impl ::std::default::Default for Market {
 #[doc = "    \"depositSummary\": {"]
 #[doc = "      \"description\": \"Total USD deposited after initial investment\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"entryOrders\": {"]
 #[doc = "      \"description\": \"Obsolete\","]
@@ -1887,7 +2042,12 @@ impl ::std::default::Default for Market {
 #[doc = "    },"]
 #[doc = "    \"initialInvestment\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"isPaused\": {"]
 #[doc = "      \"description\": \"If true, restricts opening additional positions in mirror\","]
@@ -1952,17 +2112,32 @@ impl ::std::default::Default for Market {
 #[doc = "    \"stopLossAmount\": {"]
 #[doc = "      \"description\": \"USD value at which MirrorStopLoss triggers liquidation\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"stopLossPercentage\": {"]
 #[doc = "      \"description\": \"% of mirror value that StopLossAmount represented at last edit\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"withdrawalSummary\": {"]
 #[doc = "      \"description\": \"Total USD withdrawn from the mirror\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -1976,7 +2151,7 @@ pub struct Mirror {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub available_amount: ::std::option::Option<f32>,
+    pub available_amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "CID",
         default,
@@ -1988,7 +2163,7 @@ pub struct Mirror {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub closed_positions_net_profit: ::std::option::Option<f32>,
+    pub closed_positions_net_profit: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Whether mirror copied parent's existing positions on registration"]
     #[serde(
         rename = "copyExistingPositions",
@@ -2018,7 +2193,7 @@ pub struct Mirror {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub deposit_summary: ::std::option::Option<f32>,
+    pub deposit_summary: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Obsolete"]
     #[serde(
         rename = "entryOrders",
@@ -2039,7 +2214,7 @@ pub struct Mirror {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub initial_investment: ::std::option::Option<f32>,
+    pub initial_investment: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "If true, restricts opening additional positions in mirror"]
     #[serde(
         rename = "isPaused",
@@ -2126,21 +2301,21 @@ pub struct Mirror {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_amount: ::std::option::Option<f32>,
+    pub stop_loss_amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "% of mirror value that StopLossAmount represented at last edit"]
     #[serde(
         rename = "stopLossPercentage",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_percentage: ::std::option::Option<f32>,
+    pub stop_loss_percentage: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Total USD withdrawn from the mirror"]
     #[serde(
         rename = "withdrawalSummary",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub withdrawal_summary: ::std::option::Option<f32>,
+    pub withdrawal_summary: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for Mirror {
     fn default() -> Self {
@@ -2185,7 +2360,12 @@ impl ::std::default::Default for Mirror {
 #[doc = "    \"amount\": {"]
 #[doc = "      \"description\": \"USD amount\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"cid\": {"]
 #[doc = "      \"description\": \"Customer ID — note lowercase here, but Position uses CID (capital)\","]
@@ -2230,20 +2410,40 @@ impl ::std::default::Default for Mirror {
 #[doc = "    \"rate\": {"]
 #[doc = "      \"description\": \"Asset rate at which to send market order\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"stopLossRate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"takeProfitRate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"units\": {"]
 #[doc = "      \"description\": \"Units to open. If > 0, position opens on units, not amount\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -2253,7 +2453,7 @@ impl ::std::default::Default for Mirror {
 pub struct Order {
     #[doc = "USD amount"]
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub amount: ::std::option::Option<f32>,
+    pub amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Customer ID — note lowercase here, but Position uses CID (capital)"]
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub cid: ::std::option::Option<i64>,
@@ -2320,22 +2520,22 @@ pub struct Order {
     pub order_id: ::std::option::Option<i64>,
     #[doc = "Asset rate at which to send market order"]
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub rate: ::std::option::Option<f32>,
+    pub rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "stopLossRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_rate: ::std::option::Option<f32>,
+    pub stop_loss_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "takeProfitRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_rate: ::std::option::Option<f32>,
+    pub take_profit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Units to open. If > 0, position opens on units, not amount"]
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub units: ::std::option::Option<f32>,
+    pub units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for Order {
     fn default() -> Self {
@@ -2379,7 +2579,12 @@ impl ::std::default::Default for Order {
 #[doc = "    },"]
 #[doc = "    \"lotsToDeduct\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"openDateTime\": {"]
 #[doc = "      \"type\": \"string\","]
@@ -2399,7 +2604,12 @@ impl ::std::default::Default for Order {
 #[doc = "    },"]
 #[doc = "    \"unitsToDeduct\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -2426,7 +2636,7 @@ pub struct OrderForClose {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub lots_to_deduct: ::std::option::Option<f32>,
+    pub lots_to_deduct: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "openDateTime",
         default,
@@ -2462,7 +2672,7 @@ pub struct OrderForClose {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub units_to_deduct: ::std::option::Option<f32>,
+    pub units_to_deduct: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for OrderForClose {
     fn default() -> Self {
@@ -2500,7 +2710,12 @@ impl ::std::default::Default for OrderForClose {
 #[doc = "    },"]
 #[doc = "    \"lotsToDeduct\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"openDateTime\": {"]
 #[doc = "      \"type\": \"string\","]
@@ -2523,7 +2738,12 @@ impl ::std::default::Default for OrderForClose {
 #[doc = "    },"]
 #[doc = "    \"unitsToDeduct\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -2550,7 +2770,7 @@ pub struct OrderForCloseMultiple {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub lots_to_deduct: ::std::option::Option<f32>,
+    pub lots_to_deduct: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "openDateTime",
         default,
@@ -2586,7 +2806,7 @@ pub struct OrderForCloseMultiple {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub units_to_deduct: ::std::option::Option<f32>,
+    pub units_to_deduct: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for OrderForCloseMultiple {
     fn default() -> Self {
@@ -2614,11 +2834,21 @@ impl ::std::default::Default for OrderForCloseMultiple {
 #[doc = "  \"properties\": {"]
 #[doc = "    \"amount\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"amountInUnits\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"cid\": {"]
 #[doc = "      \"type\": \"integer\""]
@@ -2631,7 +2861,12 @@ impl ::std::default::Default for OrderForCloseMultiple {
 #[doc = "    },"]
 #[doc = "    \"frozenAmount\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"instrumentId\": {"]
 #[doc = "      \"type\": \"integer\""]
@@ -2660,7 +2895,12 @@ impl ::std::default::Default for OrderForCloseMultiple {
 #[doc = "    },"]
 #[doc = "    \"lotCount\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"mirrorId\": {"]
 #[doc = "      \"description\": \"ID for mirrored trades, if applicable\","]
@@ -2685,15 +2925,30 @@ impl ::std::default::Default for OrderForCloseMultiple {
 #[doc = "    },"]
 #[doc = "    \"stopLossRate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"takeProfitRate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"totalExternalCosts\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -2702,13 +2957,13 @@ impl ::std::default::Default for OrderForCloseMultiple {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
 pub struct OrderForOpen {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub amount: ::std::option::Option<f32>,
+    pub amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "amountInUnits",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub amount_in_units: ::std::option::Option<f32>,
+    pub amount_in_units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub cid: ::std::option::Option<i64>,
     #[serde(
@@ -2723,7 +2978,7 @@ pub struct OrderForOpen {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub frozen_amount: ::std::option::Option<f32>,
+    pub frozen_amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "instrumentId",
         default,
@@ -2773,7 +3028,7 @@ pub struct OrderForOpen {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub lot_count: ::std::option::Option<f32>,
+    pub lot_count: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "ID for mirrored trades, if applicable"]
     #[serde(
         rename = "mirrorId",
@@ -2817,19 +3072,19 @@ pub struct OrderForOpen {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_rate: ::std::option::Option<f32>,
+    pub stop_loss_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "takeProfitRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_rate: ::std::option::Option<f32>,
+    pub take_profit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "totalExternalCosts",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub total_external_costs: ::std::option::Option<f32>,
+    pub total_external_costs: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for OrderForOpen {
     fn default() -> Self {
@@ -2883,7 +3138,12 @@ impl ::std::default::Default for OrderForOpen {
 #[doc = "    },"]
 #[doc = "    \"amount\": {"]
 #[doc = "      \"description\": \"USD amount requested\","]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"errorCode\": {"]
 #[doc = "      \"description\": \"Null on success\","]
@@ -2931,7 +3191,12 @@ impl ::std::default::Default for OrderForOpen {
 #[doc = "      \"type\": \"string\""]
 #[doc = "    },"]
 #[doc = "    \"units\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -2941,7 +3206,7 @@ impl ::std::default::Default for OrderForOpen {
 pub struct OrderForOpenInfoResponse {
     #[doc = "USD amount requested"]
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub amount: ::std::option::Option<f64>,
+    pub amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(rename = "CID")]
     pub cid: i64,
     #[doc = "Null on success"]
@@ -2990,7 +3255,7 @@ pub struct OrderForOpenInfoResponse {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub token: ::std::option::Option<::std::string::String>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub units: ::std::option::Option<f64>,
+    pub units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 #[doc = "Detailed information about a position opened from an order"]
 #[doc = r""]
@@ -3012,11 +3277,21 @@ pub struct OrderForOpenInfoResponse {
 #[doc = "  \"properties\": {"]
 #[doc = "    \"amount\": {"]
 #[doc = "      \"description\": \"USD amount invested in this position\","]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"conversionRate\": {"]
 #[doc = "      \"description\": \"Currency conversion rate at execution (instrument's base → account currency, typically USD)\","]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"isOpen\": {"]
 #[doc = "      \"type\": \"boolean\""]
@@ -3036,10 +3311,20 @@ pub struct OrderForOpenInfoResponse {
 #[doc = "    },"]
 #[doc = "    \"rate\": {"]
 #[doc = "      \"description\": \"Execution rate (price) — may differ from requested rate\","]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"units\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -3048,14 +3333,14 @@ pub struct OrderForOpenInfoResponse {
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug)]
 pub struct OrderForOpenPositionInfo {
     #[doc = "USD amount invested in this position"]
-    pub amount: f64,
+    pub amount: ::etoro_agent::types::manual::Numeric,
     #[doc = "Currency conversion rate at execution (instrument's base → account currency, typically USD)"]
     #[serde(
         rename = "conversionRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub conversion_rate: ::std::option::Option<f64>,
+    pub conversion_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(rename = "isOpen")]
     pub is_open: bool,
     #[doc = "Exact timestamp when this position was opened (ISO 8601 UTC)"]
@@ -3066,8 +3351,8 @@ pub struct OrderForOpenPositionInfo {
     #[serde(rename = "positionID")]
     pub position_id: i64,
     #[doc = "Execution rate (price) — may differ from requested rate"]
-    pub rate: f64,
-    pub units: f64,
+    pub rate: ::etoro_agent::types::manual::Numeric,
+    pub units: ::etoro_agent::types::manual::Numeric,
 }
 #[doc = "`OrderMetadata`"]
 #[doc = r""]
@@ -3089,7 +3374,12 @@ pub struct OrderForOpenPositionInfo {
 #[doc = "    },"]
 #[doc = "    \"rate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"type\": {"]
 #[doc = "      \"$ref\": \"#/$defs/TradeType\""]
@@ -3113,7 +3403,7 @@ pub struct OrderMetadata {
     )]
     pub order_id: ::std::option::Option<i64>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub rate: ::std::option::Option<f32>,
+    pub rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "type",
         default,
@@ -3148,15 +3438,30 @@ impl ::std::default::Default for OrderMetadata {
 #[doc = "    \"amount\": {"]
 #[doc = "      \"description\": \"USD allocated (initial investment + additional margin collateral)\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"initialAmountInDollars\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"initialUnits\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"instrumentID\": {"]
 #[doc = "      \"description\": \"CAPITAL ID — different from instrumentId in other schemas\","]
@@ -3195,12 +3500,22 @@ impl ::std::default::Default for OrderMetadata {
 #[doc = "    },"]
 #[doc = "    \"leverage\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"lotCount\": {"]
 #[doc = "      \"description\": \"For FutureContracts = number of contracts acquired\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"mirrorID\": {"]
 #[doc = "      \"description\": \"Mirror ID if part of copy trading, 0 otherwise\","]
@@ -3208,7 +3523,12 @@ impl ::std::default::Default for OrderMetadata {
 #[doc = "    },"]
 #[doc = "    \"openConversionRate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"openDateTime\": {"]
 #[doc = "      \"type\": \"string\","]
@@ -3221,7 +3541,12 @@ impl ::std::default::Default for OrderMetadata {
 #[doc = "    \"openRate\": {"]
 #[doc = "      \"description\": \"Entry price in instrument's currency\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"orderID\": {"]
 #[doc = "      \"description\": \"Original orderID. Match together with orderType\","]
@@ -3253,7 +3578,12 @@ impl ::std::default::Default for OrderMetadata {
 #[doc = "    \"stopLossRate\": {"]
 #[doc = "      \"description\": \"Trigger price; must be worse than current price\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"stopLossVersion\": {"]
 #[doc = "      \"description\": \"Increments each time StopLossRate is manually updated\","]
@@ -3262,31 +3592,61 @@ impl ::std::default::Default for OrderMetadata {
 #[doc = "    \"takeProfitRate\": {"]
 #[doc = "      \"description\": \"Trigger price; must be better than current price\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"totalExternalFees\": {"]
 #[doc = "      \"description\": \"USD fees (e.g. TicketFee). Excludes overnight fees and dividends\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"totalExternalTaxes\": {"]
 #[doc = "      \"description\": \"USD taxes (e.g. SDRT)\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"totalFees\": {"]
 #[doc = "      \"description\": \"Total overnight fees and dividends in USD. Negative = refund\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"units\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"unitsBaseValueDollars\": {"]
 #[doc = "      \"description\": \"Current units invested value in USD\","]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -3296,7 +3656,7 @@ impl ::std::default::Default for OrderMetadata {
 pub struct Position {
     #[doc = "USD allocated (initial investment + additional margin collateral)"]
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub amount: ::std::option::Option<f32>,
+    pub amount: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Customer ID — note CAPITAL CID (vs lowercase cid in Order schema)"]
     #[serde(
         rename = "CID",
@@ -3309,13 +3669,13 @@ pub struct Position {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub initial_amount_in_dollars: ::std::option::Option<f32>,
+    pub initial_amount_in_dollars: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "initialUnits",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub initial_units: ::std::option::Option<f32>,
+    pub initial_units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "CAPITAL ID — different from instrumentId in other schemas"]
     #[serde(
         rename = "instrumentID",
@@ -3379,14 +3739,14 @@ pub struct Position {
     )]
     pub is_tsl_enabled: ::std::option::Option<bool>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub leverage: ::std::option::Option<f32>,
+    pub leverage: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "For FutureContracts = number of contracts acquired"]
     #[serde(
         rename = "lotCount",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub lot_count: ::std::option::Option<f32>,
+    pub lot_count: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Mirror ID if part of copy trading, 0 otherwise"]
     #[serde(
         rename = "mirrorID",
@@ -3399,7 +3759,7 @@ pub struct Position {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub open_conversion_rate: ::std::option::Option<f32>,
+    pub open_conversion_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "openDateTime",
         default,
@@ -3419,7 +3779,7 @@ pub struct Position {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub open_rate: ::std::option::Option<f32>,
+    pub open_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Original orderID. Match together with orderType"]
     #[serde(
         rename = "orderID",
@@ -3474,7 +3834,7 @@ pub struct Position {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_rate: ::std::option::Option<f32>,
+    pub stop_loss_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Increments each time StopLossRate is manually updated"]
     #[serde(
         rename = "stopLossVersion",
@@ -3488,37 +3848,37 @@ pub struct Position {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_rate: ::std::option::Option<f32>,
+    pub take_profit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "USD fees (e.g. TicketFee). Excludes overnight fees and dividends"]
     #[serde(
         rename = "totalExternalFees",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub total_external_fees: ::std::option::Option<f32>,
+    pub total_external_fees: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "USD taxes (e.g. SDRT)"]
     #[serde(
         rename = "totalExternalTaxes",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub total_external_taxes: ::std::option::Option<f32>,
+    pub total_external_taxes: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Total overnight fees and dividends in USD. Negative = refund"]
     #[serde(
         rename = "totalFees",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub total_fees: ::std::option::Option<f32>,
+    pub total_fees: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub units: ::std::option::Option<f32>,
+    pub units: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[doc = "Current units invested value in USD"]
     #[serde(
         rename = "unitsBaseValueDollars",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub units_base_value_dollars: ::std::option::Option<f32>,
+    pub units_base_value_dollars: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for Position {
     fn default() -> Self {
@@ -3573,13 +3933,28 @@ impl ::std::default::Default for Position {
 #[doc = "      \"type\": \"boolean\""]
 #[doc = "    },"]
 #[doc = "    \"positionId\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"stopLossRate\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"takeProfitRate\": {"]
-#[doc = "      \"type\": \"number\""]
+#[doc = "      \"type\": \"number\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    }"]
 #[doc = "  }"]
 #[doc = "}"]
@@ -3598,19 +3973,19 @@ pub struct PutTradeRequest {
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub position_id: ::std::option::Option<f64>,
+    pub position_id: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "stopLossRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub stop_loss_rate: ::std::option::Option<f64>,
+    pub stop_loss_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "takeProfitRate",
         default,
         skip_serializing_if = "::std::option::Option::is_none"
     )]
-    pub take_profit_rate: ::std::option::Option<f64>,
+    pub take_profit_rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
 }
 impl ::std::default::Default for PutTradeRequest {
     fn default() -> Self {
@@ -3693,7 +4068,12 @@ impl ::std::default::Default for Svg {
 #[doc = "    },"]
 #[doc = "    \"gain\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"market\": {"]
 #[doc = "      \"$ref\": \"#/$defs/Market\""]
@@ -3704,7 +4084,12 @@ impl ::std::default::Default for Svg {
 #[doc = "    },"]
 #[doc = "    \"rate\": {"]
 #[doc = "      \"type\": \"number\","]
-#[doc = "      \"format\": \"float\""]
+#[doc = "      \"format\": \"float\","]
+#[doc = "      \"x-rust-type\": {"]
+#[doc = "        \"crate\": \"etoro-agent\","]
+#[doc = "        \"path\": \"etoro_agent::types::manual::Numeric\","]
+#[doc = "        \"version\": \"0.1.0\""]
+#[doc = "      }"]
 #[doc = "    },"]
 #[doc = "    \"type\": {"]
 #[doc = "      \"$ref\": \"#/$defs/TradeType\""]
@@ -3720,7 +4105,7 @@ pub struct TradeMetadata {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub direction: ::std::option::Option<::etoro_agent::types::manual::TradeDirection>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub gain: ::std::option::Option<f32>,
+    pub gain: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub market: ::std::option::Option<Market>,
     #[serde(
@@ -3730,7 +4115,7 @@ pub struct TradeMetadata {
     )]
     pub position_id: ::std::option::Option<i64>,
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-    pub rate: ::std::option::Option<f32>,
+    pub rate: ::std::option::Option<::etoro_agent::types::manual::Numeric>,
     #[serde(
         rename = "type",
         default,
