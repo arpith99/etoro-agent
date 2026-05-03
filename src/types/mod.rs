@@ -7,6 +7,8 @@
 
 #![allow(dead_code)]
 
+pub mod manual;
+
 pub mod agent_portfolios;
 pub mod feeds_posts;
 pub mod identity;

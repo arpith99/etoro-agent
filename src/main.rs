@@ -1,3 +1,8 @@
+// Self-alias so that absolute paths emitted by cargo typify (e.g.
+// `::etoro_agent::types::manual::TradeDirection`, generated from x-rust-type
+// hints in docs/*-schema.json) resolve from within this binary crate.
+extern crate self as etoro_agent;
+
 mod types;
 
 use anyhow::Result;
