@@ -1,0 +1,184 @@
+{
+  "_meta": {
+    "source": "https://api-portal.etoro.com (extracted via etoro-api-docs MCP)",
+    "openapi_version": "3.0.1",
+    "etoro_api_version": "v1.158.0",
+    "domain": "portfolio",
+    "extracted_schemas": [
+      "PortfolioResponse",
+      "PortfolioResponseWithPnl",
+      "ClientPortfolio",
+      "GeCopiersResponse",
+      "gainEntry",
+      "getUserDailyGainResponse",
+      "getUserGainResponse"
+    ],
+    "notes": [
+      "PortfolioResponse and PortfolioResponseWithPnl both wrap a single clientPortfolio object — the WithPnl variant is for endpoints that include PnL calculations",
+      "ClientPortfolio depends on Position, Mirror, Order, OrderForOpen, OrderForClose, OrderForCloseMultiple — all in trading-schema.json",
+      "getUserDailyGainResponse uses oneOf — it is EITHER a Vec<gainEntry> OR an object {gain: number}. Use #[serde(untagged)] enum in Rust",
+      "GeCopiersResponse name appears to be a typo in the spec (likely meant 'GetCopiersResponse')",
+      "PortfolioResponse inlines the entire shape (positions/orders/mirrors objects), while PortfolioResponseWithPnl uses $refs to ClientPortfolio + Position + Mirror + Order schemas — same data, different definition style",
+      "PortfolioResponse.clientPortfolio.orders fields use 'orderID', 'instrumentID', 'CID' (capital ID) but ClientPortfolio.orders refs the standalone Order schema which uses 'orderId' / 'instrumentId' (lowercase) — pick one shape based on which endpoint you call"
+    ]
+  },
+  "PortfolioResponse": {
+    "type": "object",
+    "description": "Comprehensive portfolio information including positions, orders, and account status",
+    "properties": {
+      "clientPortfolio": {
+        "type": "object",
+        "description": "Container for all portfolio-related information",
+        "properties": {
+          "positions": {
+            "type": "array",
+            "description": "List of currently open trading positions",
+            "items": { "$ref": "#/components/schemas/Position" }
+          },
+          "credit": { "type": "number", "format": "float", "description": "Available trading balance in USD, representing funds available for new positions" },
+          "mirrors": {
+            "type": "array",
+            "description": "Copy trading configurations and positions",
+            "items": {
+              "type": "object",
+              "description": "Individual mirror trading setup (inline shape; see Mirror schema in trading-schema.json for the standalone version)",
+              "properties": {
+                "mirrorID": { "type": "integer" },
+                "CID": { "type": "integer" },
+                "parentCID": { "type": "integer" },
+                "stopLossPercentage": { "type": "number", "format": "float" },
+                "isPaused": { "type": "boolean" },
+                "copyExistingPositions": { "type": "boolean" },
+                "availableAmount": { "type": "number", "format": "float" },
+                "stopLossAmount": { "type": "number", "format": "float" },
+                "initialInvestment": { "type": "number", "format": "float" },
+                "depositSummary": { "type": "number", "format": "float" },
+                "withdrawalSummary": { "type": "number", "format": "float" },
+                "positions": { "type": "array", "items": { "$ref": "#/components/schemas/Position" } },
+                "entryOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+                "exitOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+                "parentUsername": { "type": "string" },
+                "closedPositionsNetProfit": { "type": "number", "format": "float" },
+                "startedCopyDate": { "type": "string", "format": "date-time" },
+                "pendingForClosure": { "type": "boolean" },
+                "parentMirrors": { "type": "array", "items": { "$ref": "#/components/schemas/Mirror" } },
+                "mirrorCalculationType": { "type": "integer", "description": "(Obsolete) Mirror positions weights calculation methodology" },
+                "ordersForOpen": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpen" } },
+                "ordersForClose": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForClose" } },
+                "ordersForCloseMultiple": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForCloseMultiple" } },
+                "delayedOrderForClose": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForClose" }, "description": "Obsolete" },
+                "delayedOrderForOpen": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpen" }, "description": "Obsolete" },
+                "mirrorStatusID": { "type": "integer", "description": "0 - Active, 1 - Paused, 2 - Pending Closure, 3 - In Alignment Process" }
+              }
+            }
+          },
+          "orders": {
+            "type": "array",
+            "description": "List of pending orders",
+            "items": {
+              "type": "object",
+              "description": "Inline order shape — uses capital-ID field names (orderID, instrumentID, CID)",
+              "properties": {
+                "orderID": { "type": "integer" },
+                "CID": { "type": "integer" },
+                "openDateTime": { "type": "string", "format": "date-time" },
+                "instrumentID": { "type": "integer" },
+                "isBuy": { "type": "boolean", "description": "true=Long, false=Short" },
+                "takeProfitRate": { "type": "number", "format": "float" },
+                "stopLossRate": { "type": "number", "format": "float" },
+                "rate": { "type": "number", "format": "float" },
+                "amount": { "type": "number", "format": "float" },
+                "leverage": { "type": "number", "format": "float" },
+                "units": { "type": "number", "format": "float" },
+                "isTslEnabled": { "type": "boolean" },
+                "executionType": { "type": "integer" },
+                "isDiscounted": { "type": "boolean", "description": "Obsolete" }
+              }
+            }
+          },
+          "stockOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+          "entryOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+          "exitOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Obsolete" },
+          "ordersForOpen": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpen" } },
+          "ordersForClose": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForClose" } },
+          "ordersForCloseMultiple": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForCloseMultiple" } },
+          "bonusCredit": { "type": "number", "format": "float" }
+        }
+      }
+    }
+  },
+  "PortfolioResponseWithPnl": {
+    "type": "object",
+    "description": "Comprehensive portfolio information including positions, orders, and account status",
+    "properties": {
+      "clientPortfolio": {
+        "$ref": "#/components/schemas/ClientPortfolio",
+        "description": "Container for all portfolio-related information"
+      }
+    }
+  },
+  "ClientPortfolio": {
+    "type": "object",
+    "properties": {
+      "positions": { "type": "array", "items": { "$ref": "#/components/schemas/Position" }, "description": "List of currently open trading positions" },
+      "credit": { "type": "number", "format": "float" },
+      "mirrors": { "type": "array", "items": { "$ref": "#/components/schemas/Mirror" } },
+      "orders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } },
+      "ordersForOpen": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForOpen" } },
+      "ordersForClose": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForClose" } },
+      "ordersForCloseMultiple": { "type": "array", "items": { "$ref": "#/components/schemas/OrderForCloseMultiple" } },
+      "bonusCredit": { "type": "number", "format": "float" },
+      "unrealizedPnL": { "type": "number", "format": "float", "description": "Total unrealized profit and loss across all open positions in the portfolio" },
+      "accountCurrencyId": { "type": "integer", "description": "Currency ID of the account (1 = USD)" },
+      "stockOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" }, "description": "Stock-specific pending orders" },
+      "entryOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } },
+      "exitOrders": { "type": "array", "items": { "$ref": "#/components/schemas/Order" } }
+    }
+  },
+  "GeCopiersResponse": {
+    "type": "object",
+    "description": "Response object containing a list of portfolio copiers.",
+    "additionalProperties": false,
+    "properties": {
+      "copiers": {
+        "type": "array",
+        "nullable": true,
+        "description": "List of users copying your portfolio, with demographic and financial info.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "Gender": { "type": "string", "example": "M" },
+            "Club": { "type": "string", "example": "Gold" },
+            "Country": { "type": "string", "example": "Germany" },
+            "CopyStartedAtCategory": { "type": "string", "enum": ["less than 1 day", "less than 1 week", "less than 1 month", "less than 1 year", "more than 1 year"] },
+            "AmountCategory": { "type": "string", "enum": ["<100", "100-500", "500-1000", "1000-5000", ">5000"] },
+            "AgeCategory": { "type": "string", "enum": ["Under 18", "18-29", "30-44", "45-59", "60+"] },
+            "CopyRealizedEquity_pnl": { "type": "string", "description": "Total realized equity PnL (string-encoded number)" },
+            "AvailableCopyBalance": { "type": "string", "description": "Available copy balance (string-encoded number)" }
+          }
+        }
+      }
+    }
+  },
+  "gainEntry": {
+    "type": "object",
+    "properties": {
+      "timestamp": { "type": "string", "format": "date-time" },
+      "gain": { "type": "number" }
+    }
+  },
+  "getUserDailyGainResponse": {
+    "oneOf": [
+      { "type": "array", "items": { "$ref": "#/components/schemas/gainEntry" } },
+      { "type": "object", "properties": { "gain": { "type": "number" } } }
+    ]
+  },
+  "getUserGainResponse": {
+    "type": "object",
+    "properties": {
+      "monthly": { "type": "array", "items": { "$ref": "#/components/schemas/gainEntry" } },
+      "yearly": { "type": "array", "items": { "$ref": "#/components/schemas/gainEntry" } }
+    }
+  }
+}
