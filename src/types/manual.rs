@@ -7,6 +7,8 @@
 //!   actually the integer index. Some endpoints (e.g. watchlists) are observed
 //!   to return the string name instead. We deserialize either form and always
 //!   serialize as the integer.
+//! - **Exact JSON numbers.** Monetary values use `Decimal` and serde_json's
+//!   arbitrary-precision number representation, avoiding an intermediate f64.
 //!
 //! Wired in by adding `x-rust-type` to the corresponding schema in
 //! `docs/*-schema.json`; the regen pipeline passes the matching `--crate` flag
@@ -16,29 +18,30 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 // ---------------------------------------------------------------------------
-// Numeric — a Decimal newtype with float-aware serde
+// Numeric — a Decimal newtype with exact JSON-number serde
 // ---------------------------------------------------------------------------
 
 /// Drop-in replacement for `f32`/`f64` in fields that represent monetary amounts,
 /// rates, units, leverage, percentages, etc. — anywhere arithmetic precision
 /// matters. Wraps [`rust_decimal::Decimal`] but (de)serializes as a JSON number
 /// to match the eToro wire format, instead of Decimal's default string round-trip.
+/// The arbitrary-precision serde adapter preserves the JSON number's decimal
+/// representation without converting it through `f64`.
 ///
-/// Wired in by the preprocessor: every JSON Schema with
-/// `{type: "number", format: "float" | "double"}` gets an `x-rust-type` pointing
-/// here.
+/// Wired in by the preprocessor: every JSON Schema with `type: "number"` gets
+/// an `x-rust-type` pointing here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
 pub struct Numeric(pub rust_decimal::Decimal);
 
 impl Serialize for Numeric {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        rust_decimal::serde::float::serialize(&self.0, s)
+        rust_decimal::serde::arbitrary_precision::serialize(&self.0, s)
     }
 }
 
 impl<'de> Deserialize<'de> for Numeric {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        rust_decimal::serde::float::deserialize(d).map(Numeric)
+        rust_decimal::serde::arbitrary_precision::deserialize(d).map(Numeric)
     }
 }
 
@@ -401,7 +404,7 @@ mod tests {
     }
 
     #[test]
-    fn numeric_round_trip_via_float() {
+    fn numeric_round_trip() {
         let n: Numeric = serde_json::from_str("3.14").unwrap();
         assert_eq!(n.to_string(), "3.14");
         let s = serde_json::to_string(&n).unwrap();
@@ -415,10 +418,24 @@ mod tests {
     }
 
     #[test]
+    fn numeric_preserves_more_precision_than_f64() {
+        const PRECISE: &str = "0.1234567890123456789012345678";
+        let n: Numeric = serde_json::from_str(PRECISE).unwrap();
+        assert_eq!(n.to_string(), PRECISE);
+        assert_eq!(serde_json::to_string(&n).unwrap(), PRECISE);
+    }
+
+    #[test]
     fn invalid_value_is_descriptive_error() {
         let err = serde_json::from_str::<TradeDirection>("99").unwrap_err();
-        assert!(err.to_string().contains("invalid integer for TradeDirection"));
+        assert!(
+            err.to_string()
+                .contains("invalid integer for TradeDirection")
+        );
         let err = serde_json::from_str::<TradeDirection>(r#""Sideways""#).unwrap_err();
-        assert!(err.to_string().contains("invalid string for TradeDirection"));
+        assert!(
+            err.to_string()
+                .contains("invalid string for TradeDirection")
+        );
     }
 }

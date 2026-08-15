@@ -140,7 +140,7 @@ def redirect_shared_types_in_place(defs: dict, current_domain: str) -> None:
 def annotate_numeric_in_place(node) -> None:
     """
     Bulk-redirect every `{type: "number"}` schema (with any format or none) to
-    our `Numeric` newtype (Decimal under the hood, float-aware serde). Without
+    our `Numeric` newtype (Decimal with exact JSON-number serde). Without
     this every monetary / rate / quantity field would land as f32 / f64 in the
     generated code, which loses precision well before realistic trading-account
     sizes.
