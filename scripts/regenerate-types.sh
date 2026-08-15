@@ -8,14 +8,23 @@
 #   2. cargo typify (per domain)  — emit Rust into src/types/<domain>.rs.
 #
 # Run from the etoro-agent/ project root.
-# Requires: python3, cargo-typify (install: `cargo install cargo-typify`).
+# Requires: python3, cargo-typify 0.6.2 (see TYPIFY_VERSION below).
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+TYPIFY_VERSION="0.6.2"
+
 if ! command -v cargo-typify > /dev/null; then
-    echo "error: cargo-typify not found. Install with: cargo install cargo-typify" >&2
+    echo "error: cargo-typify not found. Install with: cargo install cargo-typify --version $TYPIFY_VERSION --locked" >&2
+    exit 1
+fi
+
+installed_typify_version=$(cargo typify --version | awk '{print $2}')
+if [[ "$installed_typify_version" != "$TYPIFY_VERSION" ]]; then
+    echo "error: cargo-typify $TYPIFY_VERSION is required (found $installed_typify_version)." >&2
+    echo "Install with: cargo install cargo-typify --version $TYPIFY_VERSION --locked --force" >&2
     exit 1
 fi
 
