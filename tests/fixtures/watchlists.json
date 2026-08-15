@@ -1,0 +1,30 @@
+{
+  "exception": null,
+  "isSucceeded": true,
+  "meta": {
+    "itemsPerPage": 50,
+    "maxItemsInWatchlistLimit": 100,
+    "maxWatchlistsLimit": 10,
+    "pageNumber": 0
+  },
+  "status": 200,
+  "watchlists": [
+    {
+      "Gcid": 123456,
+      "isDefault": true,
+      "items": [
+        {
+          "itemAddedDate": "2026-01-02T03:04:05Z",
+          "itemId": 1001,
+          "itemRank": 1,
+          "itemType": "Instrument"
+        }
+      ],
+      "name": "Sanitized demo watchlist",
+      "totalItems": 1,
+      "watchlistId": "fixture-watchlist",
+      "watchlistRank": 1,
+      "watchlistType": "Static"
+    }
+  ]
+}

@@ -3,3 +3,4 @@
 watchlists
 *.json
 !docs/*.json
+!tests/fixtures/*.json

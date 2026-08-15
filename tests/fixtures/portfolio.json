@@ -1,0 +1,20 @@
+{
+  "clientPortfolio": {
+    "bonusCredit": 0,
+    "credit": 0.1234567890123456789012345678,
+    "mirrors": [],
+    "orders": [],
+    "positions": [
+      {
+        "amount": 100.0000000000000000000001,
+        "CID": 123456,
+        "instrumentID": 1001,
+        "isBuy": true,
+        "openDateTime": "2026-01-02T03:04:05Z",
+        "openRate": 12.345678901234567890123456,
+        "positionID": 9001,
+        "units": 8.100000000000000000000001
+      }
+    ]
+  }
+}
