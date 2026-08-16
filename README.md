@@ -10,7 +10,7 @@ orders or run a trading strategy.
 
 1. Generate API keys at eToro Settings → Trading → API Key Management. Create a Demo + Read key first.
 2. Copy your keys into `.env` (gitignored):
-   ```
+   ```sh
    ETORO_API_KEY=<from "Public Key" at the top of API Key Management>
    ETORO_USER_KEY=<from the row of your generated key>
    ```
@@ -29,8 +29,8 @@ only response summaries.
 | `ETORO_DUMP_RESPONSES` | no | Set to `1`, `true`, or `yes` to write full responses |
 
 Full responses can contain sensitive financial data. They are gitignored and,
-on Unix, created with mode `0600`. Existing files are also reset to `0600`
-before being overwritten.
+on Unix, created with mode `0600`. Anything already at that path (an older
+dump, or a symlink) is removed first and never written through.
 
 ## Library usage
 
@@ -53,10 +53,13 @@ async fn main() -> Result<()> {
 }
 ```
 
-Every request gets a UUID request ID. Transport, HTTP, JSON, and response
+Every request gets a UUID request ID. Transport, HTTP, decoding, and response
 validation errors include that ID where available. HTTP error messages include
-at most the first 512 characters of the response body. The client has a
-30-second request timeout; retry and rate-limit policies are not implemented.
+at most the first 512 characters of the response body; API-level failures
+(`isSucceeded: false`) include the `exception` reason and message. The client
+has a 30-second request timeout; retry and rate-limit policies are not
+implemented. `EtoroClient::with_base_url` refuses plain `http` for anything but
+loopback hosts, so credentials cannot be sent in cleartext by a mistyped URL.
 
 See [Architecture and safety](docs/architecture.md) for component boundaries,
 wire-format invariants, and the constraints to preserve when adding endpoints.
@@ -98,16 +101,22 @@ This:
 1. Preprocesses `docs/*-schema.json` into typify-compatible JSON Schema 2020-12
    documents (`scripts/typify_prep.py`): inlines transitive `$ref` dependencies
    across sibling files, rewrites OpenAPI ref paths to `$defs`, normalizes
-   `nullable: true` → JSON Schema null type union, normalizes integer-encoded
-   string enums.
+   `nullable: true` → JSON Schema null type union, pins every `x-rust-type`
+   annotation to the crate version in `Cargo.toml`, redirects `type: number`
+   to `manual::Numeric`, and turns integer-encoded string enums that have *no*
+   hand-written override into plain string enums.
 2. Runs `cargo typify` per domain → `src/types/<domain>.rs`.
 3. Runs `cargo check` to verify the generated code compiles.
 
 ### Known gotchas in the generated types
 
 - **Integer-encoded enums** (`MarketAssetType`, `PostType`, `UserRole`, etc.)
-  use hand-written overrides in `types/manual.rs`. They accept either the
+  use hand-written overrides in `types/manual.rs`, wired in by `x-rust-type`
+  annotations stamped by hand on the standalone schemas in `docs/*-schema.json`
+  (the preprocessor does not add these automatically). They accept either the
   integer wire value or the string name and serialize as the integer value.
+  Inline copies of the same enums (e.g. `Post.editStatus`) are declared as
+  `type: string` in the spec and therefore stay string-only.
 - **`feeds_posts-schema.json` has two manual edits** (`Post.type` and
   `Post.metadata`): the inline shapes were replaced with `$ref`s to the
   standalone `PostType` / `PostMetadata` schemas to avoid duplicate type
@@ -117,7 +126,8 @@ This:
 - **Numeric price/amount fields use `Numeric`**, a
   [`rust_decimal::Decimal`](https://crates.io/crates/rust_decimal) newtype. Its
   serde adapter and `serde_json` are configured for arbitrary-precision JSON
-  numbers, so values do not pass through `f64`.
+  numbers, so values do not pass through `f64`. `Decimal` holds 28 significant
+  digits (extra digits are rounded) and rejects magnitudes ≥ 2^96 ≈ 7.9e28.
 
 ## Client contract tests
 
@@ -125,22 +135,25 @@ This:
 contract tests. The latter verify endpoint paths, authentication/request-ID
 headers, error context, response validation, and decimal precision against
 sanitized fixtures under `tests/fixtures/`. They never call the live API.
+`cargo test --doc` compiles the snippet in this README (`--all-targets` does
+not include doctests).
 
 Run the complete local quality gate with:
 
 ```sh
 cargo fmt --all -- --check
 cargo test --all-targets
+cargo test --doc
 cargo clippy --all-targets -- -D warnings
 ```
 
 ## Project layout
 
-```
+```text
 docs/                       # JSON schema files (source of truth for types/)
   architecture.md           # runtime boundaries and safety invariants
   *-schema.json             #   per-domain extracts from the eToro OpenAPI spec
-  all-schemas-index.json    #   compact index of all 125 unique schemas
+  all-schemas-index.json    #   compact index of all 128 component schemas
 scripts/
   typify_prep.py            # preprocesses schemas → typify-compatible inputs
   regenerate-types.sh       # full regeneration pipeline
