@@ -9,6 +9,9 @@
 //!   serialize as the integer.
 //! - **Exact JSON numbers.** Monetary values use `Decimal` and serde_json's
 //!   arbitrary-precision number representation, avoiding an intermediate f64.
+//!   "Exact" is bounded by `Decimal` itself: 28 significant digits (more are
+//!   rounded, half-up) and a magnitude below 2^96 ≈ 7.9e28 (larger values are
+//!   a deserialization error, which fails the whole response).
 //!
 //! Wired in by adding `x-rust-type` to the corresponding schema in
 //! `docs/*-schema.json`; the regen pipeline passes the matching `--crate` flag
@@ -26,7 +29,14 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// matters. Wraps [`rust_decimal::Decimal`] but (de)serializes as a JSON number
 /// to match the eToro wire format, instead of Decimal's default string round-trip.
 /// The arbitrary-precision serde adapter preserves the JSON number's decimal
-/// representation without converting it through `f64`.
+/// representation without converting it through `f64`, including scientific
+/// notation such as `5.06e-6`.
+///
+/// Limits (inherited from `Decimal`): more than 28 significant digits are
+/// rounded, and a magnitude of 2^96 (≈ 7.9e28) or above is rejected. Both are
+/// far outside realistic account and price ranges, but a rejected value fails
+/// deserialization of the *entire* response, so keep the limit in mind for
+/// any analytics-style field (market caps, volumes) that may be added later.
 ///
 /// Wired in by the preprocessor: every JSON Schema with `type: "number"` gets
 /// an `x-rust-type` pointing here.
@@ -425,6 +435,28 @@ mod tests {
         assert_eq!(serde_json::to_string(&n).unwrap(), PRECISE);
     }
 
+    #[test]
+    fn numeric_accepts_scientific_notation() {
+        let n: Numeric = serde_json::from_str("5.06e-6").unwrap();
+        assert_eq!(n.to_string(), "0.00000506");
+    }
+
+    // Documents the edge of "exact": Decimal holds 28 significant digits, so a
+    // 29th digit is rounded rather than preserved or rejected. If this test
+    // ever fails, the precision contract in the module docs needs revisiting.
+    #[test]
+    fn numeric_rounds_beyond_28_significant_digits() {
+        let n: Numeric = serde_json::from_str("0.12345678901234567890123456789").unwrap();
+        assert_eq!(n.to_string(), "0.1234567890123456789012345679");
+    }
+
+    // Values at or above 2^96 do not fit in Decimal's mantissa. This must be a
+    // clean error (which aborts the whole response), never a silent wrap.
+    #[test]
+    fn numeric_rejects_out_of_range_magnitude() {
+        assert!(serde_json::from_str::<Numeric>("1e30").is_err());
+        assert!(serde_json::from_str::<Numeric>("123456789012345678901234567890").is_err());
+    }
     #[test]
     fn invalid_value_is_descriptive_error() {
         let err = serde_json::from_str::<TradeDirection>("99").unwrap_err();
