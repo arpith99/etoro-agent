@@ -1,12 +1,11 @@
+use etoro_agent::client::EtoroClient;
 use std::{
     io::{Read, Write},
     net::TcpListener,
     sync::mpsc::{self, Receiver},
     thread::{self, JoinHandle},
-    time::Duration,
+    time::{Duration, Instant},
 };
-
-use etoro_agent::client::EtoroClient;
 
 const WATCHLISTS_FIXTURE: &str = include_str!("fixtures/watchlists.json");
 const PORTFOLIO_FIXTURE: &str = include_str!("fixtures/portfolio.json");
@@ -24,11 +23,25 @@ fn serve_once(status: &str, body: &'static str) -> MockResponse {
     let status = status.to_owned();
 
     let server = thread::spawn(move || {
-        let (mut stream, _) = listener.accept().unwrap();
+        // `TcpListener::accept` has no timeout, so a client that never connects
+        // would park this thread forever and turn a failing test into a hang.
+        // Poll in non-blocking mode against a deadline instead.
+        listener.set_nonblocking(true).unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let mut stream = loop {
+            match listener.accept() {
+                Ok((stream, _)) => break stream,
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                    assert!(Instant::now() < deadline, "no client connected within 5s");
+                    thread::sleep(Duration::from_millis(5));
+                }
+                Err(error) => panic!("accept failed: {error}"),
+            }
+        };
+        stream.set_nonblocking(false).unwrap();
         stream
             .set_read_timeout(Some(Duration::from_secs(5)))
             .unwrap();
-
         let mut bytes = Vec::new();
         let mut buffer = [0_u8; 1024];
         while !bytes.windows(4).any(|window| window == b"\r\n\r\n") {
@@ -118,7 +131,28 @@ async fn http_errors_include_status_body_and_request_id() {
 }
 
 #[tokio::test]
-async fn api_level_failures_are_rejected() {
+async fn api_level_failures_are_rejected_with_reason() {
+    let mock = serve_once(
+        "200 OK",
+        r#"{"isSucceeded":false,"status":200,"watchlists":[],
+            "exception":{"reason":"LimitExceeded","message":"Watchlist limit exceeded","invalidItems":["abc"]}}"#,
+    );
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let error = client.watchlists().await.unwrap_err().to_string();
+    assert!(error.contains("API-level failure"), "{error}");
+    assert!(error.contains("LimitExceeded"), "{error}");
+    assert!(error.contains("Watchlist limit exceeded"), "{error}");
+    assert!(error.contains("abc"), "{error}");
+    assert!(error.contains("request ID"), "{error}");
+
+    mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn api_level_failures_without_exception_still_report() {
     let mock = serve_once(
         "200 OK",
         r#"{"isSucceeded":false,"status":200,"watchlists":[]}"#,
@@ -127,9 +161,58 @@ async fn api_level_failures_are_rejected() {
         EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
 
     let error = client.watchlists().await.unwrap_err().to_string();
-    assert!(error.contains("API-level failure"));
-    assert!(error.contains("request ID"));
+    assert!(error.contains("API-level failure"), "{error}");
+    assert!(error.contains("no exception details"), "{error}");
 
     mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
     mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn schema_mismatch_is_reported_as_decode_failure_not_invalid_json() {
+    // Valid JSON, but `watchlists` must be an array. The message must point at
+    // decoding (with serde's reason and the request ID), not claim bad JSON.
+    let mock = serve_once(
+        "200 OK",
+        r#"{"isSucceeded":true,"status":200,"watchlists":"nope"}"#,
+    );
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let error = format!("{:#}", client.watchlists().await.unwrap_err());
+    assert!(error.contains("could not decode response body"), "{error}");
+    assert!(error.contains("expected a sequence"), "{error}");
+    assert!(error.contains("request ID"), "{error}");
+    assert!(!error.contains("invalid JSON"), "{error}");
+
+    mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    mock.server.join().unwrap();
+}
+
+#[test]
+fn plaintext_http_is_only_allowed_for_loopback_hosts() {
+    for allowed in [
+        "http://127.0.0.1:8080",
+        "http://localhost:8080/prefix",
+        "http://[::1]:8080",
+        "https://public-api.etoro.com",
+        "https://sandbox.example.com/",
+    ] {
+        assert!(
+            EtoroClient::with_base_url("k", "u", allowed).is_ok(),
+            "{allowed} should be accepted"
+        );
+    }
+    for rejected in [
+        "http://public-api.etoro.com",
+        "http://10.0.0.5",
+        "http://example.com",
+        "ftp://127.0.0.1",
+    ] {
+        let error = EtoroClient::with_base_url("k", "u", rejected)
+            .err()
+            .unwrap_or_else(|| panic!("{rejected} should be rejected"))
+            .to_string();
+        assert!(error.contains("non-HTTPS"), "{error}");
+    }
 }
