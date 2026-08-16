@@ -2097,8 +2097,7 @@ impl ::std::default::Default for CopyMetadata {
 #[doc = "      \"$ref\": \"#/$defs/DiscussionsPost\""]
 #[doc = "    },"]
 #[doc = "    \"reason\": {"]
-#[doc = "      \"description\": \"UNTYPED in spec - can be a string OR an object with sourceId/owner/type. Model with #[serde(untagged)] enum\","]
-#[doc = "      \"type\": \"null\""]
+#[doc = "      \"description\": \"UNTYPED in spec - can be a string OR an object with sourceId/owner/type. Model with #[serde(untagged)] enum\""]
 #[doc = "    },"]
 #[doc = "    \"requesterContext\": {"]
 #[doc = "      \"type\": \"object\","]
@@ -2163,8 +2162,8 @@ pub struct Discussion {
     #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
     pub post: ::std::option::Option<DiscussionsPost>,
     #[doc = "UNTYPED in spec - can be a string OR an object with sourceId/owner/type. Model with #[serde(untagged)] enum"]
-    #[serde(default)]
-    pub reason: (),
+    #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+    pub reason: ::std::option::Option<::serde_json::Value>,
     #[serde(
         rename = "requesterContext",
         default,

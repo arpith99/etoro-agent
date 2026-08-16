@@ -11,18 +11,46 @@ For each input docs/<domain>-schema.json:
   3. Rewrite $ref paths from "#/components/schemas/Foo" -> "#/$defs/Foo".
   4. Wrap in {"$schema": ..., "$defs": {...}} so cargo typify can consume it.
 
-Outputs to /tmp/etoro-<domain>-typify.json.
+Usage: typify_prep.py [OUTPUT_DIR]
+
+Writes <OUTPUT_DIR>/etoro-<domain>-typify.json. When OUTPUT_DIR is omitted a
+fresh private temporary directory is created (never a fixed path under /tmp,
+which another local user could pre-create or swap between our write and the
+cargo typify read).
 """
 import copy
 import json
+import re
 import sys
+import tempfile
 from pathlib import Path
 
 DOCS_DIR = Path("docs")
-TMP_DIR = Path("/tmp")
+CARGO_TOML = Path("Cargo.toml")
 
 if not DOCS_DIR.is_dir():
     sys.exit(f"docs/ not found at {DOCS_DIR.resolve()} (run from etoro-agent/)")
+
+if len(sys.argv) > 2:
+    sys.exit(__doc__)
+OUT_DIR = Path(sys.argv[1]) if len(sys.argv) == 2 else Path(tempfile.mkdtemp(prefix="etoro-typify-"))
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def crate_version() -> str:
+    """The [package] version from Cargo.toml — the single source of truth that
+    every x-rust-type annotation must agree with. typify treats the version as
+    a semver *requirement*; if it is not satisfied by the --crate flag passed
+    to cargo typify, the override is silently ignored and typify falls back
+    to generating its own type (f64 for numbers, a fresh enum, ...)."""
+    match = re.search(r'^\[package\]\s*$.*?^version\s*=\s*"([^"]+)"', CARGO_TOML.read_text(), re.M | re.S)
+    if not match:
+        sys.exit("could not find [package] version in Cargo.toml")
+    return match.group(1)
+
+
+CRATE_NAME = "etoro-agent"
+CRATE_VERSION = crate_version()
 
 # 1. Build pool of all schemas from all domain files
 pool: dict = {}
@@ -84,9 +112,13 @@ def normalize_nullable_in_place(node) -> None:
                 # Bare $ref + nullable -> oneOf with null branch
                 ref = node.pop("$ref")
                 node.setdefault("oneOf", []).extend([{"$ref": ref}, {"type": "null"}])
-            else:
-                # No type, no $ref -> just allow null
-                node["type"] = "null"
+            elif not any(k in node for k in ("oneOf", "anyOf", "allOf")):
+                # No type at all: the spec means "anything, or null". Forcing
+                # `type: null` here would turn it into "null only" (typify then
+                # emits `()`, rejecting every real value — Discussion.reason hit
+                # this). Leaving it untyped is already null-inclusive; typify
+                # maps it to serde_json::Value.
+                pass
             # If there's an enum and we made the type nullable, add null to the enum too
             if "enum" in node and isinstance(node["enum"], list) and None not in node["enum"]:
                 node["enum"] = node["enum"] + [None]
@@ -97,11 +129,11 @@ def normalize_nullable_in_place(node) -> None:
             normalize_nullable_in_place(item)
 
 
-NUMERIC_X_RUST_TYPE = {
-    "crate": "etoro-agent",
-    "version": "0.1.0",
-    "path": "etoro_agent::types::manual::Numeric",
-}
+def x_rust_type(path: str) -> dict:
+    return {"crate": CRATE_NAME, "version": CRATE_VERSION, "path": path}
+
+
+NUMERIC_X_RUST_TYPE = x_rust_type("etoro_agent::types::manual::Numeric")
 
 # Cross-domain types: each appears in 2+ schema files. To avoid generating
 # distinct-but-identical Rust structs in each module (so e.g. trading::Market
@@ -130,11 +162,22 @@ def redirect_shared_types_in_place(defs: dict, current_domain: str) -> None:
     duplicate one here."""
     for name, owner in SHARED_TYPE_OWNERS.items():
         if name in defs and current_domain != owner and "x-rust-type" not in defs[name]:
-            defs[name]["x-rust-type"] = {
-                "crate": "etoro-agent",
-                "version": "0.1.0",
-                "path": f"etoro_agent::types::{owner}::{name}",
-            }
+            defs[name]["x-rust-type"] = x_rust_type(f"etoro_agent::types::{owner}::{name}")
+
+
+def pin_x_rust_type_versions_in_place(node) -> None:
+    """Hand-stamped x-rust-type annotations in docs/*-schema.json carry a
+    literal version. Rewrite every one that targets this crate to the current
+    Cargo.toml version so a version bump cannot silently disable overrides."""
+    if isinstance(node, dict):
+        override = node.get("x-rust-type")
+        if isinstance(override, dict) and override.get("crate") == CRATE_NAME:
+            override["version"] = CRATE_VERSION
+        for v in node.values():
+            pin_x_rust_type_versions_in_place(v)
+    elif isinstance(node, list):
+        for item in node:
+            pin_x_rust_type_versions_in_place(item)
 
 
 def annotate_numeric_in_place(node) -> None:
@@ -168,9 +211,12 @@ def normalize_enums_in_place(node) -> None:
 
     1. `{type: "integer", enum: ["Open", "Close"]}` — the enum values are strings
        but the type says integer. The intent is "wire format is integer; these are
-       the variant names". Standard JSON Schema rejects this. Convert to plain
-       string enums; the actual wire format may need a #[serde_repr] hand-fix
-       later.
+       the variant names". Standard JSON Schema rejects this. Schemas that carry
+       an x-rust-type override (hand-stamped in docs/*-schema.json, pointing at
+       an int-or-string enum in src/types/manual.rs) are left alone; anything
+       else is converted to a plain *string* enum so JSON Schema accepts it —
+       and, being string-only, would reject an integer on the wire. Add a
+       manual override when adding such a schema.
     2. `{type: "integer", enum: [1, 2], x-enumNames: ["Open", "Closed"]}` —
        well-formed integer enum with name annotations as an OpenAPI extension.
        typify's known enum-name extension is `x-enum-varnames` (not
@@ -223,12 +269,14 @@ for f in domain_files:
     all_needed = transitive_deps(own_names, pool)
 
     defs = {name: copy.deepcopy(pool[name]) for name in sorted(all_needed) if name in pool}
-    # Order matters: strip annotations & rewrite refs first; then handle enums
-    # (which may rename a kept extension); then normalize nullability so the
-    # nullable handling sees the latest type/enum shape.
+    # Order matters: enums first, because normalize_enums renames the OpenAPI
+    # `x-enumNames` extension to typify's `x-enum-varnames` and rewrite_refs
+    # strips every x-* it does not know (so it must see the renamed key).
+    # Nullability last so it sees the final type/enum shape.
+    normalize_enums_in_place(defs)
     rewrite_refs_in_place(defs)
     redirect_shared_types_in_place(defs, domain)
-    normalize_enums_in_place(defs)
+    pin_x_rust_type_versions_in_place(defs)
     annotate_numeric_in_place(defs)
     normalize_nullable_in_place(defs)
 
@@ -237,7 +285,7 @@ for f in domain_files:
         "$defs": defs,
     }
 
-    out_path = TMP_DIR / f"etoro-{domain}-typify.json"
+    out_path = OUT_DIR / f"etoro-{domain}-typify.json"
     out_path.write_text(json.dumps(out_doc, indent=2))
 
     extra = sorted(all_needed - own_names)
