@@ -1,6 +1,5 @@
 /target
 .env
-watchlists
 *.json
 !docs/*.json
 !tests/fixtures/*.json
