@@ -16,7 +16,9 @@ from build_typify_input import (  # noqa: E402
     build_domains,
     load_overrides,
     normalize_enums,
+    normalize_exclusive_bounds,
     normalize_nullable,
+    rust_type_name,
     slugify,
     transitive_deps,
 )
@@ -47,6 +49,27 @@ class TestSlugify(unittest.TestCase):
         keywords = {"type", "match", "move", "ref", "self", "super", "crate", "mod", "use", "box"}
         for tag in ALL_TAGS:
             self.assertNotIn(slugify(tag), keywords)
+
+
+class TestRustTypeName(unittest.TestCase):
+    """typify renames schemas to UpperCamelCase; the facades must follow."""
+
+    def test_lower_camel_schema_names(self):
+        self.assertEqual(rust_type_name("meResponse"), "MeResponse")
+        self.assertEqual(rust_type_name("candlesResponse"), "CandlesResponse")
+        self.assertEqual(rust_type_name("gainEntry"), "GainEntry")
+        self.assertEqual(rust_type_name("getUserDailyGainResponse"), "GetUserDailyGainResponse")
+
+    def test_underscores_are_dropped(self):
+        self.assertEqual(rust_type_name("AgentPortfolioApi_ErrorResponse"), "AgentPortfolioApiErrorResponse")
+        self.assertEqual(rust_type_name("BalanceAggregatorApi_AccountType"), "BalanceAggregatorApiAccountType")
+
+    def test_already_pascal_names_are_unchanged(self):
+        for name in ("PublicAggregatedInfoAccountStatus", "WatchlistsResponse", "Market", "SvgAvatar"):
+            self.assertEqual(rust_type_name(name), name)
+
+    def test_acronym_runs_are_camelised_like_heck(self):
+        self.assertEqual(rust_type_name("NOC_NOF_RFI"), "NocNofRfi")
 
 
 class TestOverrideMerge(unittest.TestCase):
@@ -153,6 +176,35 @@ class TestTransformOrder(unittest.TestCase):
         node = {"nullable": True, "description": "anything"}
         normalize_nullable(node)
         self.assertNotIn("type", node)
+
+    def test_boolean_exclusive_minimum_becomes_the_2020_12_numeric_form(self):
+        # OpenAPI 3.0 / draft-04 spell this as a boolean modifier on `minimum`;
+        # JSON Schema 2020-12 wants the bound itself. typify parses 2020-12 and
+        # rejects the boolean outright.
+        node = {"type": "number", "minimum": 0, "exclusiveMinimum": True}
+        normalize_exclusive_bounds(node)
+        self.assertEqual(node, {"type": "number", "exclusiveMinimum": 0})
+
+    def test_exclusive_minimum_false_just_leaves_an_inclusive_bound(self):
+        node = {"type": "number", "minimum": 0, "exclusiveMinimum": False}
+        normalize_exclusive_bounds(node)
+        self.assertEqual(node, {"type": "number", "minimum": 0})
+
+    def test_boolean_exclusive_maximum_is_handled_too(self):
+        node = {"type": "number", "maximum": 10, "exclusiveMaximum": True}
+        normalize_exclusive_bounds(node)
+        self.assertEqual(node, {"type": "number", "exclusiveMaximum": 10})
+
+    def test_numeric_exclusive_bound_is_left_alone(self):
+        node = {"type": "number", "exclusiveMinimum": 0}
+        normalize_exclusive_bounds(node)
+        self.assertEqual(node, {"type": "number", "exclusiveMinimum": 0})
+
+    def test_boolean_without_a_paired_bound_is_dropped(self):
+        # Meaningless in either dialect; keeping it would fail typify's parse.
+        node = {"type": "number", "exclusiveMinimum": True}
+        normalize_exclusive_bounds(node)
+        self.assertEqual(node, {"type": "number"})
 
     def test_nullable_ref_becomes_a_oneOf_with_null(self):
         node = {"$ref": "#/components/schemas/X", "nullable": True}

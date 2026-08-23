@@ -11,5 +11,8 @@ serde_json = { version = "1", features = ["arbitrary_precision"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 rust_decimal = { version = "1", features = ["serde-arbitrary-precision"] }
+# Required by cargo-typify output: schemas with a `pattern` keyword (e.g. the
+# ^[A-Z]{3}$ ISO-4217 currency codes) compile to regress::Regex validators.
+regress = "0.10"
 dotenvy = "0.15"
 anyhow = "1"

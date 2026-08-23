@@ -136,6 +136,30 @@ macro_rules! int_or_string_enum {
 }
 
 // ---------------------------------------------------------------------------
+// Integer-encoded enums
+// ---------------------------------------------------------------------------
+//
+// Status as of the eToro API v1.355.0 refresh (2026-08-23):
+//
+// Only the three `PublicAggregatedInfo*` enums below are still wired in. They
+// remain standalone `type: integer` components carrying `x-enumNames`, and
+// their variant lists were re-verified against the snapshot (2, 15 and 43
+// variants respectively — all matching).
+//
+// Every other enum in this file is currently **unreferenced**. Upstream
+// deleted those standalone components and inlined them at each use site as
+// plain `type: string` enums, so there is no schema left to stamp with
+// `x-rust-type` and the declared wire format is no longer the integer index.
+// typify now generates a string enum at each site instead.
+//
+// They are kept rather than deleted because they encode something the spec no
+// longer states: the integer values each variant maps to, and the observation
+// that some endpoints sent integers where others sent names. If a live
+// response ever fails to decode one of these fields as a string, this is the
+// tolerance to reach for — `int_or_string_enum!` accepts both forms. See
+// docs/overrides/*.json `_removed_stamps` for the per-file record.
+
+// ---------------------------------------------------------------------------
 // trading domain
 // ---------------------------------------------------------------------------
 

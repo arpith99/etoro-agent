@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 #
-# Regenerate Rust types from the per-domain JSON schema files in docs/.
+# Regenerate Rust types from the committed OpenAPI snapshot in docs/spec/.
 #
 # Pipeline:
-#   1. scripts/typify_prep.py     — preprocess docs/*-schema.json into typify-
-#                                   compatible JSON Schema docs in a private
-#                                   temporary work directory.
-#   2. cargo typify (per domain)  — emit Rust into src/types/<domain>.rs.
+#   1. scripts/build_typify_input.py  — merge docs/overrides/*.json onto the
+#                                       snapshot, apply the schema transforms,
+#                                       emit a self-contained JSON Schema doc
+#                                       into a private temporary work
+#                                       directory, plus docs/domains.json and
+#                                       the generated src/types/tags.rs.
+#   2. cargo typify                   — emit Rust into src/types/components.rs.
+#
+# Refreshing the snapshot itself is a separate, agent-driven step; see
+# .claude/commands/refresh-spec.md and scripts/README.md.
 #
 # Run from the etoro-agent/ project root.
 # Requires: python3, cargo-typify 0.6.2 (see TYPIFY_VERSION below).
@@ -29,58 +35,60 @@ if [[ "$installed_typify_version" != "$TYPIFY_VERSION" ]]; then
     exit 1
 fi
 
-# The x-rust-type overrides (Numeric, manual enums, shared-type owners) name
-# this crate at a version; typify only honours them if the --crate flag
-# satisfies that version. typify_prep.py pins every annotation to the version
-# in Cargo.toml, so read the same value here rather than hardcoding it.
+# The x-rust-type overrides (Numeric, manual enums) name this crate at a
+# version; typify only honours them if the --crate flag satisfies that version,
+# and silently generates its own type (f64 for numbers) otherwise.
+# build_typify_input.py pins every annotation to the version in Cargo.toml, so
+# read the same value here rather than hardcoding it.
 crate_version=$(sed -nE '/^\[package\]/,/^\[/{s/^version *= *"([^"]+)".*/\1/p}' Cargo.toml | head -n 1)
 if [[ -z "$crate_version" ]]; then
     echo "error: could not read [package] version from Cargo.toml" >&2
     exit 1
 fi
 
-# One module per docs/<domain>-schema.json. Deriving the list from the files
-# (instead of a hardcoded array) means a new domain file cannot be preprocessed
-# but silently never generated; the mod.rs check below keeps it exported too.
-domains=()
-for schema in docs/*-schema.json; do
-    d=$(basename "$schema" -schema.json)
-    [[ "$d" == "all-schemas-index" ]] && continue
-    domains+=("$d")
-done
-
-for d in "${domains[@]}"; do
-    if ! grep -qE "^pub mod ${d};" src/types/mod.rs; then
-        echo "error: docs/${d}-schema.json exists but src/types/mod.rs has no 'pub mod ${d};'" >&2
+for required in docs/spec/schemas.json docs/spec/operations.json; do
+    if [[ ! -f "$required" ]]; then
+        echo "error: $required not found. Run the /refresh-spec command first." >&2
         exit 1
     fi
 done
+
+echo "==> Validating the committed snapshot"
+python3 scripts/fetch_spec.py --check
 
 work_dir=$(mktemp -d -t etoro-typify.XXXXXX)
 trap 'rm -rf "$work_dir"' EXIT
 
-echo "==> Preprocessing schemas (crate version $crate_version)"
-python3 scripts/typify_prep.py "$work_dir"
+echo
+echo "==> Building typify input (crate version $crate_version)"
+python3 scripts/build_typify_input.py "$work_dir"
 
 echo
-echo "==> Running cargo typify per domain"
-mkdir -p src/types
-for d in "${domains[@]}"; do
-    input="$work_dir/etoro-${d}-typify.json"
-    output="src/types/${d}.rs"
-    if [[ ! -f "$input" ]]; then
-        echo "  ✗ $d: missing preprocessed input ($input)" >&2
-        exit 1
-    fi
-    if cargo typify --no-builder --crate "etoro-agent@${crate_version}" "$input" --output "$output" 2> "$work_dir/typify-err-${d}.log"; then
-        lines=$(wc -l < "$output")
-        echo "  ✓ $d: $lines lines"
-    else
-        echo "  ✗ $d:" >&2
-        sed 's/^/      /' "$work_dir/typify-err-${d}.log" >&2
-        exit 1
-    fi
-done
+echo "==> Running cargo typify"
+input="$work_dir/etoro-components.json"
+output="src/types/components.rs"
+if cargo typify --no-builder --crate "etoro-agent@${crate_version}" "$input" --output "$output" 2> "$work_dir/typify-err.log"; then
+    echo "  ✓ $output: $(wc -l < "$output") lines"
+else
+    sed 's/^/      /' "$work_dir/typify-err.log" >&2
+    exit 1
+fi
+
+# Second pass. typify renames schemas on the way to Rust (meResponse ->
+# MeResponse), so the facades can only be written now that there is a real
+# generated file to resolve every re-export against. A schema that maps to no
+# emitted type fails here rather than becoming a silently missing re-export.
+echo
+echo "==> Generating tag facades"
+python3 scripts/build_typify_input.py --emit-tags
+
+# typify's output is not rustfmt-clean (it wraps some long signatures
+# differently), which would fail the `cargo fmt --check` gate on every
+# regeneration. rustfmt is deterministic, so formatting here keeps the
+# generated files stable and the pipeline idempotent.
+echo
+echo "==> Formatting generated code"
+cargo fmt --all
 
 echo
 echo "==> Verifying compilation"

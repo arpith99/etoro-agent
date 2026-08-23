@@ -1,0 +1,633 @@
+{
+  "Agent Portfolios": {
+    "slug": "agent_portfolios",
+    "operations": [
+      "DELETE /api/v1/agent-portfolios/{agentPortfolioId}",
+      "DELETE /api/v1/agent-portfolios/{agentPortfolioId}/user-tokens/{userTokenId}",
+      "GET /api/v1/agent-portfolios",
+      "GET /api/v2/agent-portfolios/user-tokens/scopes",
+      "PATCH /api/v2/agent-portfolios/{agentPortfolioId}/user-tokens/{userTokenId}",
+      "POST /api/v2/agent-portfolios",
+      "POST /api/v2/agent-portfolios/{agentPortfolioId}/user-tokens"
+    ],
+    "schemas": [
+      "AgentPortfolioApi_CreateUserTokenResponse",
+      "AgentPortfolioApi_ErrorResponse",
+      "AgentPortfolioApi_GetAllowedScopesResponse",
+      "AgentPortfolioItem",
+      "AgentPortfolioUserTokenItem",
+      "CreateAgentPortfolioPartialResponse",
+      "CreateAgentPortfolioV2Request",
+      "CreateAgentPortfolioV2Response",
+      "CreateAgentPortfolioV2UserTokenItem",
+      "CreateUserTokenV2Request",
+      "GetAgentPortfoliosResponse",
+      "ScopeNameItem",
+      "UpdateUserTokenV2Request"
+    ]
+  },
+  "Social Feeds": {
+    "slug": "social_feeds",
+    "operations": [
+      "DELETE /api/v1/posts/{postId}",
+      "DELETE /api/v1/posts/{postId}/comments/{commentId}",
+      "DELETE /api/v1/posts/{postId}/comments/{commentId}/likes",
+      "DELETE /api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}",
+      "DELETE /api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}/likes",
+      "DELETE /api/v1/posts/{postId}/follows",
+      "DELETE /api/v1/posts/{postId}/likes",
+      "DELETE /api/v1/posts/{postId}/pins",
+      "DELETE /api/v1/posts/{postId}/polls/{pollId}/options/{optionId}/votes",
+      "DELETE /api/v1/posts/{postId}/saves",
+      "GET /api/v1/feeds/following",
+      "GET /api/v1/feeds/for-you",
+      "GET /api/v1/feeds/markets/{marketId}",
+      "GET /api/v1/feeds/news",
+      "GET /api/v1/feeds/saved",
+      "GET /api/v1/feeds/users/{userId}",
+      "GET /api/v1/feeds/users/{userId}/pinned",
+      "GET /api/v1/posts/{postId}",
+      "GET /api/v1/posts/{postId}/comments",
+      "GET /api/v1/posts/{postId}/comments/{commentId}/replies",
+      "GET /api/v1/posts/{postId}/shares",
+      "POST /api/v1/attachments",
+      "POST /api/v1/posts",
+      "POST /api/v1/posts/polls",
+      "POST /api/v1/posts/shares",
+      "POST /api/v1/posts/{postId}/comments",
+      "POST /api/v1/posts/{postId}/comments/{commentId}/likes",
+      "POST /api/v1/posts/{postId}/comments/{commentId}/replies",
+      "POST /api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}/likes",
+      "POST /api/v1/posts/{postId}/follows",
+      "POST /api/v1/posts/{postId}/likes",
+      "POST /api/v1/posts/{postId}/pins",
+      "POST /api/v1/posts/{postId}/polls/{pollId}/options/{optionId}/votes",
+      "POST /api/v1/posts/{postId}/saves",
+      "PUT /api/v1/posts/{postId}",
+      "PUT /api/v1/posts/{postId}/comments/{commentId}",
+      "PUT /api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}"
+    ],
+    "schemas": [
+      "Attachment",
+      "Attachments",
+      "Comment",
+      "CommentCreateRequest",
+      "CommentUpdateRequest",
+      "CommentsResponse",
+      "Discussion",
+      "DiscussionCreateRequest",
+      "DiscussionUpdateRequest",
+      "DiscussionsPost",
+      "DiscussionsResponse",
+      "Emotion",
+      "Market",
+      "PollCreateRequest",
+      "Post",
+      "SharePostRequest",
+      "SharesResponse",
+      "User"
+    ]
+  },
+  "Balances": {
+    "slug": "balances",
+    "operations": [
+      "GET /api/v1/balances",
+      "GET /api/v1/balances/history",
+      "GET /api/v1/balances/{accountType}",
+      "GET /api/v1/balances/{accountType}/history",
+      "GET /api/v1/balances/{accountType}/{accountId}",
+      "GET /api/v1/balances/{accountType}/{accountId}/history"
+    ],
+    "schemas": [
+      "AccountBalanceData",
+      "BalanceAggregatorApi_AccountType",
+      "BalanceAggregatorApi_PublicErrorResponse",
+      "BalancesErrorResponse",
+      "EquityDetailsData",
+      "GetBalancesResponse",
+      "GetHistoricalBalancesResponse",
+      "HistoricalAccountData",
+      "HistoricalDailySnapshotData"
+    ]
+  },
+  "Clubs": {
+    "slug": "clubs",
+    "operations": [
+      "GET /api/v1/clubs"
+    ],
+    "schemas": [
+      "ClubDashboardDataResponse",
+      "ClubInfo",
+      "ClubOffer",
+      "ClubsApi_Avatar",
+      "ClubsApi_PublicErrorResponse",
+      "ContactInfo",
+      "ContactsResponse",
+      "DowngradeRiskResponse",
+      "OfferInBundle",
+      "StaticEligibleOffer",
+      "UserOffersData",
+      "Webinar",
+      "WebinarsResponse"
+    ]
+  },
+  "Watchlists": {
+    "slug": "watchlists",
+    "operations": [
+      "DELETE /api/v1/watchlists/{watchlistId}",
+      "DELETE /api/v1/watchlists/{watchlistId}/items",
+      "GET /api/v1/curated-lists",
+      "GET /api/v1/market-recommendations/{itemsCount}",
+      "GET /api/v1/watchlists",
+      "GET /api/v1/watchlists/default-watchlists/items",
+      "GET /api/v1/watchlists/public/{userId}",
+      "GET /api/v1/watchlists/public/{userId}/{watchlistId}",
+      "GET /api/v1/watchlists/{watchlistId}",
+      "POST /api/v1/watchlists",
+      "POST /api/v1/watchlists/default-watchlist/selected-items",
+      "POST /api/v1/watchlists/newasdefault-watchlist",
+      "POST /api/v1/watchlists/{watchlistId}/items",
+      "POST /api/v2/watchlists",
+      "PUT /api/v1/watchlists/rank/{watchlistId}",
+      "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+      "PUT /api/v1/watchlists/{watchlistId}",
+      "PUT /api/v1/watchlists/{watchlistId}/items"
+    ],
+    "schemas": [
+      "BffFacadeRequest",
+      "CandlePoint",
+      "CuratedList",
+      "CuratedListItem",
+      "CuratedListsResponse",
+      "InstrumentMarketData",
+      "InstrumentMetadataSlim",
+      "LeverageConfig",
+      "MarketEnrichData",
+      "MarketRecommendationsResponse",
+      "SiblingData",
+      "SmartPortfolioEnrichData",
+      "SvgAvatar",
+      "TradeButtonStatusData",
+      "TradingAdditionalData",
+      "UserEnrichData",
+      "WatchlistApi_Avatar",
+      "WatchlistComponentResponse",
+      "WatchlistItemDto",
+      "WatchlistResponse",
+      "WatchlistsResponse"
+    ]
+  },
+  "Top Assets": {
+    "slug": "top_assets",
+    "operations": [
+      "GET /api/v1/impressions/topassets/user/{gcid}"
+    ],
+    "schemas": []
+  },
+  "App Data": {
+    "slug": "app_data",
+    "operations": [
+      "GET /api/v1/keydata/{application}"
+    ],
+    "schemas": [
+      "BetaTestKeydataResponse"
+    ]
+  },
+  "Market Data": {
+    "slug": "market_data",
+    "operations": [
+      "GET /api/v1/market-data/exchanges",
+      "GET /api/v1/market-data/instrument-types",
+      "GET /api/v1/market-data/instruments",
+      "GET /api/v1/market-data/instruments/history/closing-price",
+      "GET /api/v1/market-data/instruments/rates",
+      "GET /api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+      "GET /api/v1/market-data/search",
+      "GET /api/v1/market-data/stocks-industries"
+    ],
+    "schemas": [
+      "ExchangesResponse",
+      "Instrument",
+      "InstrumentSearchResponse",
+      "InstrumentTypesResponse",
+      "InstrumentsResponse",
+      "LiveRatesResponse",
+      "StocksIndustriesResponse",
+      "candlesResponse",
+      "closingPricesResponse"
+    ]
+  },
+  "Identity": {
+    "slug": "identity",
+    "operations": [
+      "GET /api/v1/me"
+    ],
+    "schemas": [
+      "meResponse"
+    ]
+  },
+  "Cash Accounts": {
+    "slug": "cash_accounts",
+    "operations": [
+      "GET /api/v1/money/accounts/cash/{accountId}/transactions"
+    ],
+    "schemas": [
+      "BankIdentifierEntry",
+      "BankTransferDetails",
+      "CardTransactionDetails",
+      "CashAccountTransaction",
+      "CashAccountTransactionsResponse",
+      "Counterparty",
+      "FiatbackApi_PublicErrorResponse",
+      "InternalTransferDetails",
+      "PaginationCursor"
+    ]
+  },
+  "Transfer": {
+    "slug": "transfer",
+    "operations": [
+      "GET /api/v1/money/transfer-eligibility",
+      "GET /api/v1/money/transfer-fee-configurations",
+      "GET /api/v1/money/transfer-limits",
+      "GET /api/v1/money/transferable-balance",
+      "GET /api/v1/money/transfers/{transferId}",
+      "GET /api/v1/money/transfers:lookup",
+      "POST /api/v1/money/transfers"
+    ],
+    "schemas": [
+      "LookupAccountIdentifier",
+      "LookupAccountType",
+      "MoneyTransferRequest",
+      "MoneyTransferResponse",
+      "MoneybusApi_AccountType",
+      "TransferAccountRef",
+      "TransferLookupDestination",
+      "TransferLookupResponse",
+      "TransferLookupResult",
+      "TransferLookupSource",
+      "TransferableBalanceResponse"
+    ]
+  },
+  "Notifications": {
+    "slug": "notifications",
+    "operations": [
+      "GET /api/v1/notifications/messages",
+      "PATCH /api/v1/notifications/messages"
+    ],
+    "schemas": [
+      "InAppNotificationMessage",
+      "InAppNotificationsMetadata",
+      "InAppNotificationsResult"
+    ]
+  },
+  "PI Data": {
+    "slug": "pi_data",
+    "operations": [
+      "GET /api/v1/pi-data/copiers"
+    ],
+    "schemas": [
+      "GeCopiersResponse"
+    ]
+  },
+  "PortfolioSearch": {
+    "slug": "portfolio_search",
+    "operations": [
+      "GET /api/v1/portfolios/search"
+    ],
+    "schemas": [
+      "PortfolioSearchBffApi_Error",
+      "PortfolioSearchResponse",
+      "PortfolioSearchResult"
+    ]
+  },
+  "Price Alerts": {
+    "slug": "price_alerts",
+    "operations": [
+      "DELETE /api/v1/price-alerts/{alertId}",
+      "GET /api/v1/price-alerts",
+      "PATCH /api/v1/price-alerts/{alertId}",
+      "POST /api/v1/price-alerts"
+    ],
+    "schemas": [
+      "CreatePriceAlertRequest",
+      "DeletePriceAlertResponse",
+      "PriceAlert",
+      "PriceAlertCollectionResponse",
+      "PriceAlertErrorResponse",
+      "PriceAlertMutationResponse",
+      "PriceAlertsApi_PublicErrorResponse",
+      "UpdatePriceAlertRequest"
+    ]
+  },
+  "SSO - Applications": {
+    "slug": "sso_applications",
+    "operations": [
+      "DELETE /api/v1/sso/applications/{clientId}",
+      "GET /api/v1/sso/applications",
+      "POST /api/v1/sso/applications",
+      "POST /api/v1/sso/applications/{clientId}/client-secret",
+      "PUT /api/v1/sso/applications/{clientId}"
+    ],
+    "schemas": [
+      "ApplicationItem",
+      "ApplicationScopeItem",
+      "CreateApplicationBody",
+      "CreateApplicationResponse",
+      "GetApplicationsResponse",
+      "RotateClientSecretResponse",
+      "ScopeItem",
+      "StsMetadataFrontApi_ErrorResponse",
+      "UpdateApplicationBody",
+      "UpdateApplicationResponse"
+    ]
+  },
+  "SSO - Scopes": {
+    "slug": "sso_scopes",
+    "operations": [
+      "GET /api/v1/sso/scopes"
+    ],
+    "schemas": [
+      "GetScopesResponse",
+      "ScopeResponseItem"
+    ]
+  },
+  "Sub-Accounts - eToro Trading": {
+    "slug": "sub_accounts_etoro_trading",
+    "operations": [
+      "DELETE /api/v1/sub-accounts/etoro-trading/user-tokens/{userTokenId}",
+      "GET /api/v1/sub-accounts/etoro-trading/user-tokens",
+      "GET /api/v1/sub-accounts/etoro-trading/user-tokens/scopes",
+      "PATCH /api/v1/sub-accounts/etoro-trading/user-tokens/{userTokenId}",
+      "POST /api/v1/sub-accounts/etoro-trading/money-transfers",
+      "POST /api/v1/sub-accounts/etoro-trading/user-tokens"
+    ],
+    "schemas": [
+      "CreateSubAccountUserTokenRequest",
+      "EtoroTradingSubAccountsMoneyTransferRequest",
+      "EtoroTradingSubAccountsOperationsApi_CreateUserTokenResponse",
+      "EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "EtoroTradingSubAccountsOperationsApi_GetAllowedScopesResponse",
+      "ListUserTokensResponse",
+      "ScopeNameItem",
+      "UpdateSubAccountUserTokenRequest",
+      "UserTokenItem"
+    ]
+  },
+  "Sub-Accounts": {
+    "slug": "sub_accounts",
+    "operations": [
+      "GET /api/v1/sub-accounts/me/accounts",
+      "POST /api/v1/sub-accounts/me/accounts"
+    ],
+    "schemas": []
+  },
+  "Trading - Demo": {
+    "slug": "trading_demo",
+    "operations": [
+      "DELETE /api/v1/trading/execution/demo/market-close-orders/{orderId}",
+      "DELETE /api/v2/trading/execution/demo/orders/{orderId}",
+      "DELETE /api/v3/trading/execution/demo/orders/{orderId}",
+      "GET /api/v1/trading/info/demo/aggregate-portfolio",
+      "GET /api/v1/trading/info/demo/close-orders/{orderId}",
+      "GET /api/v1/trading/info/demo/pnl",
+      "GET /api/v1/trading/info/demo/portfolio",
+      "GET /api/v1/trading/info/trade/demo/history",
+      "GET /api/v2/trading/info/demo/instrument-breakdown",
+      "GET /api/v2/trading/info/demo/orders:lookup",
+      "PATCH /api/v2/trading/demo/positions/{positionId}",
+      "POST /api/v1/trading/execution/demo/market-close-orders/positions/{positionId}",
+      "POST /api/v2/trading/execution/demo/orders",
+      "POST /api/v2/trading/info/demo/costs",
+      "POST /api/v2/trading/info/demo/eligibility",
+      "POST /api/v3/trading/execution/demo/orders"
+    ],
+    "schemas": [
+      "AggregatedPortfolioAccountTotals",
+      "CancelOrderResponse",
+      "ClientPortfolio",
+      "CostBreakdown",
+      "GetCostResponse",
+      "GetOrderInfoAsset",
+      "GetOrderInfoOpeningData",
+      "GetOrderInfoPositionExecution",
+      "GetOrderInfoResponse",
+      "GetOrderInfoStatus",
+      "InstrumentBreakdownAssetDemo",
+      "InstrumentBreakdownClosePositionDetailDemo",
+      "InstrumentBreakdownInstrumentDemo",
+      "InstrumentBreakdownMirrorDemo",
+      "InstrumentBreakdownOrderDemo",
+      "InstrumentBreakdownPositionDemo",
+      "InstrumentBreakdownResponseDemo",
+      "InstrumentEligibility",
+      "InstrumentEligibilityRequest",
+      "InstrumentEligibilityResponse",
+      "LeverageConfiguration",
+      "Mirror",
+      "OrderForClose",
+      "OrderForCloseInfoResponse",
+      "OrderForCloseMultiple",
+      "OrderForClosePositionInfoResponse",
+      "OrderForOpen",
+      "PortfolioResponse",
+      "PortfolioResponseWithPnl",
+      "ProblemDetails",
+      "TradingDemoAdminApi_UnifiedOrderRequest",
+      "TradingDemoApi_Position",
+      "TradingPortfolioDemoApi_AggregatedPortfolioInstrumentAggregate",
+      "TradingPortfolioDemoApi_AggregatedPortfolioMirrorAggregate",
+      "TradingPortfolioDemoApi_AggregatedPortfolioMirrorTotals",
+      "TradingPortfolioDemoApi_AggregatedPortfolioResponse",
+      "TradingRealAdminApi_Order",
+      "TradingRealAdminApi_Position",
+      "UnifiedOrderResponse",
+      "UpdatePositionRequest",
+      "UpdatePositionResponse"
+    ]
+  },
+  "Trading - Real": {
+    "slug": "trading_real",
+    "operations": [
+      "DELETE /api/v1/trading/execution/market-close-orders/{orderId}",
+      "DELETE /api/v2/trading/execution/orders/{orderId}",
+      "DELETE /api/v3/trading/execution/orders/{orderId}",
+      "GET /api/v1/trading/info/aggregate-portfolio",
+      "GET /api/v1/trading/info/portfolio",
+      "GET /api/v1/trading/info/real/close-orders/{orderId}",
+      "GET /api/v1/trading/info/real/pnl",
+      "GET /api/v1/trading/info/trade/history",
+      "GET /api/v2/trading/info/instrument-breakdown",
+      "GET /api/v2/trading/info/orders:lookup",
+      "PATCH /api/v2/trading/positions/{positionId}",
+      "POST /api/v1/trading/execution/market-close-orders/positions/{positionId}",
+      "POST /api/v2/trading/execution/orders",
+      "POST /api/v2/trading/info/costs",
+      "POST /api/v2/trading/info/eligibility",
+      "POST /api/v3/trading/execution/orders"
+    ],
+    "schemas": [
+      "AggregatedPortfolioAccountTotals",
+      "CancelOrderResponse",
+      "ClientPortfolio",
+      "CostBreakdown",
+      "GetCostResponse",
+      "GetOrderInfoAsset",
+      "GetOrderInfoOpeningData",
+      "GetOrderInfoPositionExecution",
+      "GetOrderInfoResponse",
+      "GetOrderInfoStatus",
+      "InstrumentBreakdownAsset",
+      "InstrumentBreakdownClosePositionDetail",
+      "InstrumentBreakdownInstrument",
+      "InstrumentBreakdownMirror",
+      "InstrumentBreakdownOrder",
+      "InstrumentBreakdownPosition",
+      "InstrumentBreakdownResponse",
+      "InstrumentEligibility",
+      "InstrumentEligibilityRequest",
+      "InstrumentEligibilityResponse",
+      "LeverageConfiguration",
+      "Mirror",
+      "OrderForClose",
+      "OrderForCloseInfoResponse",
+      "OrderForCloseMultiple",
+      "OrderForClosePositionInfoResponse",
+      "OrderForOpen",
+      "PortfolioResponse",
+      "PortfolioResponseWithPnl",
+      "ProblemDetails",
+      "TradingDemoApi_Position",
+      "TradingPortfolioRealApi_AggregatedPortfolioInstrumentAggregate",
+      "TradingPortfolioRealApi_AggregatedPortfolioMirrorAggregate",
+      "TradingPortfolioRealApi_AggregatedPortfolioMirrorTotals",
+      "TradingPortfolioRealApi_AggregatedPortfolioResponse",
+      "TradingRealAdminApi_Order",
+      "TradingRealAdminApi_Position",
+      "TradingRealAdminApi_UnifiedOrderRequest",
+      "UnifiedOrderResponse",
+      "UpdatePositionRequest",
+      "UpdatePositionResponse"
+    ]
+  },
+  "Users Info": {
+    "slug": "users_info",
+    "operations": [
+      "GET /api/v1/user-info/people",
+      "GET /api/v1/user-info/people/search",
+      "GET /api/v1/user-info/people/{username}/daily-gain",
+      "GET /api/v1/user-info/people/{username}/gain",
+      "GET /api/v1/user-info/people/{username}/portfolio/live",
+      "GET /api/v1/user-info/people/{username}/tradeinfo"
+    ],
+    "schemas": [
+      "PublicAggregatedInfoAccountStatus",
+      "PublicAggregatedInfoPlayerStatus",
+      "PublicAggregatedInfoPlayerStatusReason",
+      "PublicAggregatedInfoResponse",
+      "PublicAggregatedInfoUiUserAvatar",
+      "PublicAggregatedInfoUiUserBio",
+      "PublicAggregatedInfoUser",
+      "gainEntry",
+      "getUserDailyGainResponse",
+      "getUserGainResponse"
+    ]
+  },
+  "Rankings": {
+    "slug": "rankings",
+    "operations": [
+      "GET /api/v2/portfolios/rankings",
+      "GET /api/v2/portfolios/rankings/presets",
+      "GET /api/v2/portfolios/rankings/presets/{type}",
+      "GET /api/v2/portfolios/rankings/summary",
+      "GET /api/v2/portfolios/rankings/tags",
+      "GET /api/v2/portfolios/{username}/rankings",
+      "POST /api/v2/portfolios/rankings/multiple"
+    ],
+    "schemas": [
+      "CustomerRankingResponse",
+      "RankItem",
+      "RankingSummaryResponse",
+      "RankingTagsResponse",
+      "RankingsError",
+      "RankingsListResponse",
+      "RankingsMultipleResponse",
+      "RankingsMultipleResponseItem"
+    ]
+  },
+  "User Stats": {
+    "slug": "user_stats",
+    "operations": [
+      "GET /api/v2/portfolios/{username}/assets/history",
+      "GET /api/v2/portfolios/{username}/copiers",
+      "GET /api/v2/portfolios/{username}/exposure/history",
+      "GET /api/v2/portfolios/{username}/gain/{granularity}"
+    ],
+    "schemas": [
+      "AssetsHistoryAsset",
+      "AssetsHistoryEntry",
+      "AssetsHistoryResponse",
+      "CopiersCurrentResponse",
+      "ExposureHistoryEntry",
+      "ExposureHistoryResponse",
+      "ExposureItem",
+      "GainHistoryResponse",
+      "GainPoint",
+      "StandardErrorResponse",
+      "StatsAssetsApi_Error",
+      "StatsExposureApi_Error",
+      "StatsGainApi_Error"
+    ]
+  },
+  "Copy Trading": {
+    "slug": "copy_trading",
+    "operations": [
+      "DELETE /api/v2/trading/copy",
+      "GET /api/v2/trading/copy/{referenceId}",
+      "POST /api/v2/trading/copy",
+      "POST /api/v2/trading/copy/close",
+      "POST /api/v2/trading/copy/eligibility"
+    ],
+    "schemas": [
+      "CopyTradingCloseRequest",
+      "CopyTradingEligibilityRequest",
+      "CopyTradingEligibilityResponse",
+      "CopyTradingErrorResponse",
+      "CopyTradingRegisterRequest",
+      "CopyTradingStatusResponse",
+      "GatewayErrorResponse",
+      "TokenedResponse"
+    ]
+  },
+  "Copy Trading - Demo": {
+    "slug": "copy_trading_demo",
+    "operations": [
+      "DELETE /api/v2/trading/copy/demo",
+      "GET /api/v2/trading/copy/demo/{referenceId}",
+      "POST /api/v2/trading/copy/demo",
+      "POST /api/v2/trading/copy/demo/close",
+      "POST /api/v2/trading/copy/demo/eligibility"
+    ],
+    "schemas": [
+      "CopyTradingCloseRequest",
+      "CopyTradingEligibilityRequest",
+      "CopyTradingEligibilityResponse",
+      "CopyTradingErrorResponse",
+      "CopyTradingRegisterRequest",
+      "CopyTradingStatusResponse",
+      "GatewayErrorResponse",
+      "TokenedResponse"
+    ]
+  },
+  "_orphans": [
+    "AccountIdentifier",
+    "AccountTypePathParam",
+    "AssetScore",
+    "PaymentsApi_AccountType",
+    "StatsAssetsApi_RankingPeriod",
+    "StatsExposureApi_RankingPeriod",
+    "StatsRankingsApi_RankingPeriod",
+    "TransferEligibility",
+    "TransferFeeConfigurationRow",
+    "TransferLimitRow"
+  ]
+}

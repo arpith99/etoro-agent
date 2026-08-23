@@ -27,27 +27,14 @@
     ],
     "consolidated_from_common": "Avatar/Svg/ApplicationSource were previously in common-schema.json. Merged here because they are referenced ONLY by Market (Avatar←Market, Svg←Avatar, ApplicationSource←Market) — no other domain consumes them."
   },
-  "schemas": {
-    "MarketAssetType": {
-      "x-rust-type": {
-        "crate": "etoro-agent",
-        "version": "0.1.0",
-        "path": "etoro_agent::types::manual::MarketAssetType"
-      }
-    },
-    "MarketEventTag": {
-      "x-rust-type": {
-        "crate": "etoro-agent",
-        "version": "0.1.0",
-        "path": "etoro_agent::types::manual::MarketEventTag"
-      }
-    },
-    "ApplicationSource": {
-      "x-rust-type": {
-        "crate": "etoro-agent",
-        "version": "0.1.0",
-        "path": "etoro_agent::types::manual::ApplicationSource"
-      }
-    }
+  "schemas": {},
+  "_removed_stamps": {
+    "at_etoro_api_version": "v1.355.0",
+    "schemas": [
+      "ApplicationSource",
+      "MarketAssetType",
+      "MarketEventTag"
+    ],
+    "reason": "Removed at the v1.355.0 refresh: upstream deleted these standalone enum components and inlined them as `type: string` enums at each use site, so there is no schema left to stamp and the declared wire format is no longer the integer index. The matching int_or_string_enum! types remain in src/types/manual.rs, unreferenced, because they also accepted the integer form -- reattach them if live responses turn out to still send integers."
   }
 }

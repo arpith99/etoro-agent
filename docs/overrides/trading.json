@@ -16,20 +16,13 @@
       "TradeDirection (Long/Short), TradeType (Open/Close) are integer-encoded with string-named variants — wire format is the integer index"
     ]
   },
-  "schemas": {
-    "TradeDirection": {
-      "x-rust-type": {
-        "crate": "etoro-agent",
-        "version": "0.1.0",
-        "path": "etoro_agent::types::manual::TradeDirection"
-      }
-    },
-    "TradeType": {
-      "x-rust-type": {
-        "crate": "etoro-agent",
-        "version": "0.1.0",
-        "path": "etoro_agent::types::manual::TradeType"
-      }
-    }
+  "schemas": {},
+  "_removed_stamps": {
+    "at_etoro_api_version": "v1.355.0",
+    "schemas": [
+      "TradeDirection",
+      "TradeType"
+    ],
+    "reason": "Removed at the v1.355.0 refresh: upstream deleted these standalone enum components and inlined them as `type: string` enums at each use site, so there is no schema left to stamp and the declared wire format is no longer the integer index. The matching int_or_string_enum! types remain in src/types/manual.rs, unreferenced, because they also accepted the integer form -- reattach them if live responses turn out to still send integers."
   }
 }
