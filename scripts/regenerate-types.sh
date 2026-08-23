@@ -3,7 +3,7 @@
 # Regenerate Rust types from the committed OpenAPI snapshot in docs/spec/.
 #
 # Pipeline:
-#   1. scripts/build_typify_input.py  — merge docs/overrides/*.json onto the
+#   1. scripts/build_typify_input.py  — merge docs/overrides/ onto the
 #                                       snapshot, apply the schema transforms,
 #                                       emit a self-contained JSON Schema doc
 #                                       into a private temporary work

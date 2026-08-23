@@ -5,9 +5,9 @@ way it is, and which Rust idioms are worth carrying forward. Where
 [`architecture.md`](architecture.md) states the invariants, this document
 explains the implementation that upholds them.
 
-Describes the tree as of commit `945d525` (2026-08-16), at which point the
-suite is 20 tests green: 10 library unit tests, 3 in `main.rs`, 7 contract
-tests.
+Describes the tree as of the eToro API v1.355.0 refresh (2026-08-23). The
+suite is 21 Rust tests green (10 library unit, 3 in `main.rs`, 7 contract, 1
+doctest) plus 40 Python tests for the pipeline scripts.
 
 ## 1. The crate's shape
 
@@ -193,11 +193,20 @@ no-exception case still produces a useful message.
 
 ## 3. `src/types/` — generated versus hand-written
 
-`mod.rs` is 20 lines: `pub mod manual;` plus seven generated domains. Two
-crate-level `allow`s live there with comments explaining them — `dead_code`
-because most generated types are not used yet, `derivable_impls` because typify
-writes out `Default` impls by hand and Clippy objects. Scoping them to this
-module keeps strict linting in force for hand-written code.
+`mod.rs` declares three modules: `manual` (hand-written), `components` (every
+component schema, generated) and `tags` (generated facades re-exporting each
+API tag's subset of `components`). Two crate-level `allow`s live there with
+comments explaining them — `dead_code` because most generated types are not
+used yet, `derivable_impls` because typify writes out `Default` impls by hand
+and Clippy objects. Scoping them to this module keeps strict linting in force
+for hand-written code.
+
+The single-namespace-plus-facades shape mirrors upstream: the eToro spec keeps
+one flat pool of component schemas, so generating a module per tag would
+manufacture an ownership problem — `Instrument`, `Market` and `User` are each
+reachable from several tags and would become distinct, incompatible Rust types.
+One `components` module and thin `pub use` facades give tag-aligned paths with
+exactly one definition per type, and no owner map to maintain.
 
 ### `manual.rs` — the escape hatch
 
@@ -243,10 +252,21 @@ things.
 
 The failure arms matter as much as the success arms: an unexpected value
 produces `invalid integer for TradeDirection: 99`, never a silent default. Note
-the consequence — these enums are **closed**. If eToro adds a fifteenth
-`MarketAssetType`, the whole response fails to decode. That is a deliberate
-trade (loud spec drift over silent data loss) recorded in `architecture.md`, and
-it remains an open decision.
+the consequence — these enums are **closed**. If eToro adds a fifteenth asset
+type, the whole response fails to decode. That is a deliberate trade (loud spec
+drift over silent data loss) recorded in `architecture.md`, and it remains an
+open decision.
+
+Most of this macro's output is now **unreferenced**, and the reason is a good
+illustration of the pipeline earning its keep. At v1.355.0 upstream deleted the
+standalone integer-enum components and inlined them at each use site as plain
+`type: string` enums, so 16 of the 19 `x-rust-type` stamps had nothing left to
+attach to — caught immediately by the override guard rather than by a silent
+behaviour change. Only the three `PublicAggregatedInfo*` enums are still wired
+in. The rest stay in the file because they encode something the spec no longer
+states: the integer value each variant maps to, and the observation that some
+endpoints sent integers where others sent names. If a live response ever fails
+to decode one of these as a string, that tolerance is the thing to reach for.
 
 ## 4. `src/main.rs` — thin, except for one careful part
 
@@ -323,35 +343,60 @@ replaced with a real dump.
 
 ## 6. The regeneration pipeline
 
-`docs/*-schema.json` are the source of truth, extracted from eToro's portal.
-Each carries a `_meta` block recording the source, the API version
-(`v1.158.0`), and hand-written notes; the `market_data` one documents several
-places where the search endpoint's behavior differs from its spec.
+Three stages, documented in full in [`scripts/README.md`](../scripts/README.md):
 
-`scripts/typify_prep.py` turns them into self-contained JSON Schema 2020-12
-documents: resolving `$ref`s across domain files, rewriting
-`#/components/schemas/X` to `#/$defs/X`, converting OpenAPI `nullable` into
-JSON Schema null-unions, redirecting every `type: number` to `Numeric`, and
-pinning `x-rust-type` versions.
+```text
+[retrieve]  MCP docs server → docs/spec/*.json        (agent-driven, committed)
+[extract]   + docs/overrides/schemas.json → typify input  (build_typify_input.py)
+[codegen]   → src/types/components.rs + tags.rs       (cargo typify + second pass)
+```
 
-That last step is the subtlest thing in the repository, and its docstring
-explains why:
+`docs/spec/` is a committed snapshot of the upstream OpenAPI document — 242
+component schemas and a 169-operation index at API v1.355.0. Committing it is
+what makes stages 2 and 3 deterministic and offline: builds never touch the
+network, and upstream drift arrives as a reviewable diff instead of a surprise.
+
+Retrieval is the one stage that is not a plain script. The document is only
+served through the eToro API Docs MCP server; probing the docs host for a
+public copy returns 403 behind bot protection, or 404 at every plausible path.
+So `/refresh-spec` drives it, and `scripts/fetch_spec.py` assembles and
+validates the result.
+
+`scripts/build_typify_input.py` merges `docs/overrides/schemas.json` onto the
+snapshot and applies six transforms whose **order is load-bearing**: enums
+first, because the `x-enumNames` → `x-enum-varnames` rename must happen before
+unknown `x-*` keys are stripped; nullability last, so it sees the final type
+and enum shape.
+
+Two guards in that script are worth understanding, because both have already
+caught real drift:
+
+**An override naming a schema that does not exist is a hard error.** Without
+it, upstream renaming a type would silently detach a `Numeric` or manual-enum
+override, and a monetary field would quietly become an `f64`. At the v1.355.0
+refresh this fired on 16 of 19 stamps at once — upstream had deleted those
+integer-enum components and inlined them as string enums.
+
+**Every facade re-export is resolved against the real generated file.** typify
+renames schemas on the way to Rust (`meResponse` → `MeResponse`), so facade
+generation is a second pass that runs after codegen; a schema mapping to no
+emitted type fails the build rather than vanishing from the public API.
+
+The subtlest thing in the repository is still the `x-rust-type` version pin:
 
 > typify treats the version as a semver *requirement*; if it is not satisfied
 > by the `--crate` flag, the override is **silently ignored** and typify falls
 > back to generating its own type (f64 for numbers, ...).
 
-A silent fallback to `f64` would quietly undo the entire decimal guarantee. The
-script therefore reads the version from `Cargo.toml`, and
-`regenerate-types.sh` reads it from the same place — one source of truth, no
-drift.
+A silent fallback to `f64` would quietly undo the decimal guarantee, so both
+the Python script and the shell script read the version from the same
+`Cargo.toml` field.
 
 The shell script's other defensive touches: cargo-typify pinned to exactly
-`0.6.2` (codegen output is not stable across versions); the domain list derived
-by globbing `docs/` rather than hardcoded; a **refusal to run** if a schema file
-exists without a matching `pub mod` in `mod.rs`, so a new domain cannot be
-silently generated but never compiled; `mktemp -d` with a `trap` cleanup; and a
-closing `cargo check`.
+`0.6.2` (codegen output is not stable across versions); a `mktemp -d` workdir
+with a `trap` cleanup; `cargo fmt` after generation, because typify's output is
+not rustfmt-clean and would otherwise fail the gate on every run; and a closing
+`cargo check`. Running it twice produces identical bytes.
 
 ## 7. Loose threads
 
@@ -373,4 +418,6 @@ Open items, in rough priority order:
    is whether it bites loudly now or quietly later.
 5. **No retries and no rate-limit awareness** — deliberate and documented.
    `get_json` is the single chokepoint where that policy would live, which is a
-   useful property of the current design.
+   useful property of the current design. `docs/spec/operations.json` now
+   records eToro's actual rate-limit pools, including which endpoints share a
+   budget, so that policy no longer has to be guessed at.

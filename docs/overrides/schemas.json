@@ -1,0 +1,44 @@
+{
+  "_comment": [
+    "Hand-authored additions merged onto docs/spec/schemas.json before codegen.",
+    "The snapshot is verbatim upstream and is overwritten by every refresh, so any",
+    "local change to a schema has to live here instead.",
+    "",
+    "Keyed by schema name. An entry naming a schema that no longer exists is a hard",
+    "error: that is what stops an upstream rename from silently detaching an override",
+    "and turning a monetary field into an f64 or a duplicate generated enum.",
+    "",
+    "These three are nullable integer enums. Without the override typify emits a",
+    "transparent newtype wrapping an Option wrapping the enum, which then gets wrapped",
+    "in another Option at each field site; the manual types are plain enums that also",
+    "accept the string form.",
+    "",
+    "Note Numeric does NOT rely on this file -- it is applied to every `type: number`",
+    "by a bulk transform in scripts/build_typify_input.py.",
+    "",
+    "Behavioural notes about the API live in docs/api-observations.md, not here."
+  ],
+  "schemas": {
+    "PublicAggregatedInfoAccountStatus": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::PublicAggregatedInfoAccountStatus"
+      }
+    },
+    "PublicAggregatedInfoPlayerStatus": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::PublicAggregatedInfoPlayerStatus"
+      }
+    },
+    "PublicAggregatedInfoPlayerStatusReason": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::PublicAggregatedInfoPlayerStatusReason"
+      }
+    }
+  }
+}

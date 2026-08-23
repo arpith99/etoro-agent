@@ -13,7 +13,7 @@ means exactly one `Instrument` type instead of one per tag that mentions it.
 Inputs:
     docs/spec/schemas.json     upstream component schemas (verbatim)
     docs/spec/operations.json  operation index, used to seed each tag's closure
-    docs/overrides/*.json      hand-authored x-rust-type stamps and notes
+    docs/overrides/*.json      hand-authored x-rust-type stamps
 
 Outputs:
     <workdir>/etoro-components.json   self-contained JSON Schema 2020-12 doc

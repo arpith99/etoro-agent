@@ -66,24 +66,59 @@ wire-format invariants, and the constraints to preserve when adding endpoints.
 
 ## Generated types
 
-Strongly-typed Rust models for the eToro API live in `src/types/`, generated from
-the per-domain JSON schema files in `docs/`:
+Strongly-typed Rust models live in `src/types/`, generated from `docs/spec/` —
+a committed snapshot of the upstream eToro OpenAPI document (currently API
+**v1.355.0**: 242 component schemas, 169 operations).
 
-| Module | Source | Schemas |
-|---|---|---|
-| `agent_portfolios` | `docs/agent_portfolios-schema.json` | 10 |
-| `feeds_posts` | `docs/feeds_posts-schema.json` | 53 (+12 inlined) |
-| `identity` | `docs/identity-schema.json` | 10 |
-| `market_data` | `docs/market_data-schema.json` | 17 |
-| `portfolio` | `docs/portfolio-schema.json` | 7 (+6 inlined) |
-| `trading` | `docs/trading-schema.json` | 25 (+5 inlined) |
-| `watchlists` | `docs/watchlists-schema.json` | 3 |
+Upstream keeps one flat namespace of component schemas, so codegen emits a
+single `types::components` module and one thin facade per API tag re-exporting
+the types that tag's operations reach:
 
-Selected cross-domain types have a single owner module and are reused elsewhere
-(for example, `Market` is owned by `market_data`). This avoids distinct Rust
-types representing the same API object.
+```rust
+use etoro_agent::types::tags::identity::MeResponse;
+use etoro_agent::types::tags::watchlists::WatchlistsResponse;
+```
 
-### Regenerating after schema changes
+That gives tag-aligned paths while keeping exactly one definition per type, so
+a type reachable from several tags (`Instrument`, `Market`, `User`) is still a
+single Rust type. Types generated from inline objects rather than named
+schemas — `WatchlistsResponseException`, for instance — live only in
+`types::components`.
+
+| Facade | Tag | Types | Operations |
+|---|---|---|---|
+| `types::tags::agent_portfolios` | Agent Portfolios | 13 | 7 |
+| `types::tags::app_data` | App Data | 1 | 1 |
+| `types::tags::balances` | Balances | 9 | 6 |
+| `types::tags::cash_accounts` | Cash Accounts | 9 | 1 |
+| `types::tags::clubs` | Clubs | 13 | 1 |
+| `types::tags::copy_trading` | Copy Trading | 8 | 5 |
+| `types::tags::copy_trading_demo` | Copy Trading - Demo | 8 | 5 |
+| `types::tags::identity` | Identity | 1 | 1 |
+| `types::tags::market_data` | Market Data | 9 | 8 |
+| `types::tags::notifications` | Notifications | 3 | 2 |
+| `types::tags::pi_data` | PI Data | 1 | 1 |
+| `types::tags::portfolio_search` | PortfolioSearch | 3 | 1 |
+| `types::tags::price_alerts` | Price Alerts | 8 | 4 |
+| `types::tags::rankings` | Rankings | 8 | 7 |
+| `types::tags::social_feeds` | Social Feeds | 18 | 37 |
+| `types::tags::sso_applications` | SSO - Applications | 10 | 5 |
+| `types::tags::sso_scopes` | SSO - Scopes | 2 | 1 |
+| `types::tags::sub_accounts_etoro_trading` | Sub-Accounts - eToro Trading | 9 | 6 |
+| `types::tags::trading_demo` | Trading - Demo | 41 | 16 |
+| `types::tags::trading_real` | Trading - Real | 41 | 16 |
+| `types::tags::transfer` | Transfer | 11 | 7 |
+| `types::tags::user_stats` | User Stats | 13 | 4 |
+| `types::tags::users_info` | Users Info | 10 | 6 |
+| `types::tags::watchlists` | Watchlists | 21 | 18 |
+
+Hand-written wire behaviour (`Numeric`, the integer-encoded enums) lives in
+`src/types/manual.rs`, attached through `x-rust-type` stamps in
+`docs/overrides/`. Places where the API's behaviour differs from its spec are
+recorded in [`docs/api-observations.md`](docs/api-observations.md). See
+[`scripts/README.md`](scripts/README.md) for the full pipeline.
+
+### Regenerating
 
 Prerequisite (one-time):
 
@@ -91,43 +126,37 @@ Prerequisite (one-time):
 cargo install cargo-typify --version 0.6.2 --locked
 ```
 
-Then run:
+Then:
 
 ```sh
-scripts/regenerate-types.sh
+./scripts/regenerate-types.sh
 ```
 
-This:
-1. Preprocesses `docs/*-schema.json` into typify-compatible JSON Schema 2020-12
-   documents (`scripts/typify_prep.py`): inlines transitive `$ref` dependencies
-   across sibling files, rewrites OpenAPI ref paths to `$defs`, normalizes
-   `nullable: true` → JSON Schema null type union, pins every `x-rust-type`
-   annotation to the crate version in `Cargo.toml`, redirects `type: number`
-   to `manual::Numeric`, and turns integer-encoded string enums that have *no*
-   hand-written override into plain string enums.
-2. Runs `cargo typify` per domain → `src/types/<domain>.rs`.
-3. Runs `cargo check` to verify the generated code compiles.
+It validates the committed snapshot, merges `docs/overrides/`, applies the
+schema transforms, runs `cargo typify`, generates the tag facades, formats the
+output, and runs `cargo check`. The run is idempotent — regenerating twice
+produces identical bytes.
+
+Refreshing the snapshot itself from upstream is a separate, agent-driven step
+(`/refresh-spec`), because the OpenAPI document is only served through the
+eToro API Docs MCP server. [`scripts/README.md`](scripts/README.md) covers
+both, along with the traps worth knowing before changing any of it.
 
 ### Known gotchas in the generated types
 
-- **Integer-encoded enums** (`MarketAssetType`, `PostType`, `UserRole`, etc.)
-  use hand-written overrides in `types/manual.rs`, wired in by `x-rust-type`
-  annotations stamped by hand on the standalone schemas in `docs/*-schema.json`
-  (the preprocessor does not add these automatically). They accept either the
-  integer wire value or the string name and serialize as the integer value.
-  Inline copies of the same enums (e.g. `Post.editStatus`) are declared as
-  `type: string` in the spec and therefore stay string-only.
-- **`feeds_posts-schema.json` has two manual edits** (`Post.type` and
-  `Post.metadata`): the inline shapes were replaced with `$ref`s to the
-  standalone `PostType` / `PostMetadata` schemas to avoid duplicate type
-  generation. See the `_replaced_inline` annotations in the source. The result:
-  `Post.metadata` exposes the (always-`None`-for-non-Article-posts) `article`
-  field, and `Post.type` exposes all 8 variants instead of just `Default`.
-- **Numeric price/amount fields use `Numeric`**, a
-  [`rust_decimal::Decimal`](https://crates.io/crates/rust_decimal) newtype. Its
-  serde adapter and `serde_json` are configured for arbitrary-precision JSON
-  numbers, so values do not pass through `f64`. `Decimal` holds 28 significant
-  digits (extra digits are rounded) and rejects magnitudes ≥ 2^96 ≈ 7.9e28.
+- **Closed enums.** An unrecognised enum value anywhere in a response fails the
+  whole call. That is deliberate — silently mapping unknown values would hide
+  spec drift — but an eToro-side addition surfaces as a decode failure until
+  the snapshot is refreshed.
+- **Integer-encoded enums are mostly historical now.** At v1.355.0 upstream
+  deleted the standalone integer-enum components and inlined them as plain
+  `type: string` enums, so only three (`PublicAggregatedInfo*`) still use the
+  hand-written `int_or_string_enum!` overrides. The rest remain in
+  `src/types/manual.rs`, unreferenced, because they also accept the integer
+  form — reach for them if a live response turns out to still send integers.
+  See the status note in that file.
+- **Orphan schemas.** Regeneration prints any schema no operation reaches.
+  They are still generated, just not re-exported by a tag facade.
 
 ## Client contract tests
 
@@ -150,26 +179,30 @@ cargo clippy --all-targets -- -D warnings
 ## Project layout
 
 ```text
-docs/                       # JSON schema files (source of truth for types/)
+docs/
   architecture.md           # runtime boundaries and safety invariants
-  *-schema.json             #   per-domain extracts from the eToro OpenAPI spec
-  all-schemas-index.json    #   compact index of all 128 component schemas
+  code-walkthrough.md       # guided tour of the implementation
+  domains.json              # generated: tag -> module slug + schema closure
+  spec/                     # committed OpenAPI snapshot (source of truth)
+    schemas.json            #   component schemas, verbatim upstream
+    operations.json         #   operation index: tags, scopes, rate-limit pools
+    _meta.json              #   API version, retrieval date, counts
+  overrides/                # hand-authored x-rust-type stamps and field notes
 scripts/
-  typify_prep.py            # preprocesses schemas → typify-compatible inputs
+  README.md                 # the pipeline, end to end
+  fetch_spec.py             # assemble + validate the snapshot
+  verify_chunks.py          # prove a retrieval was byte-faithful
+  build_typify_input.py     # overrides + transforms -> typify input, facades
   regenerate-types.sh       # full regeneration pipeline
+  tests/                    # unit tests for the above
 src/
   lib.rs                    # reusable client and public wire-type modules
   main.rs
-  types/                    # generated; do not edit by hand
-    mod.rs                  #   (committed; declares the submodules below)
+  types/
+    mod.rs                  #   (committed; declares the modules below)
     manual.rs               #   exact numerics and integer/string enum overrides
-    agent_portfolios.rs
-    feeds_posts.rs
-    identity.rs
-    market_data.rs
-    portfolio.rs
-    trading.rs
-    watchlists.rs
+    components.rs           #   generated; every component schema
+    tags.rs                 #   generated; one facade module per API tag
 tests/
   client_contract.rs        # local mock HTTP contract tests
   fixtures/                 # sanitized API-shaped responses

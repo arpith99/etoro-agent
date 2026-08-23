@@ -82,32 +82,32 @@ instrument-specific scale, range, and sign checks.
 
 ## Generated types
 
-The JSON schema fragments under `docs/` are the source of truth for generated
-Rust modules. `scripts/typify_prep.py`:
+Everything in `src/types/` is generated from `docs/spec/`, a committed snapshot
+of the upstream eToro OpenAPI document. `scripts/README.md` documents the
+pipeline in full; the parts that constrain the rest of the system are:
 
-1. resolves transitive references across domains;
-2. renames the OpenAPI `x-enumNames` extension to typify's `x-enum-varnames`
-   (before stripping unknown `x-*` keys) so integer-enum names survive;
-3. converts OpenAPI nullability into JSON Schema null unions, leaving untyped
-   `nullable` schemas untyped (→ `serde_json::Value`) rather than null-only;
-4. redirects shared types to one owner module;
-5. pins every `x-rust-type` annotation to the `[package]` version in
-   `Cargo.toml` (typify silently ignores an override whose version requirement
-   the `--crate` flag does not satisfy);
-6. redirects every `type: number` field to `manual::Numeric`; integer-encoded
-   string enums are redirected only where a `x-rust-type` annotation has been
-   stamped by hand on the standalone schema in `docs/*-schema.json` — the
-   remainder become string-only enums; and
-7. emits self-contained JSON Schema documents into a private temporary
-   directory supplied by the shell script (never a fixed path under `/tmp`).
+- **The snapshot is the source of truth.** `docs/spec/schemas.json` holds the
+  component schemas verbatim; `docs/spec/operations.json` indexes every
+  operation with its tags, scopes, rate-limit pool, and request/response
+  `$ref`s. Refreshing it is agent-driven (`/refresh-spec`) because the document
+  is only served through the eToro API Docs MCP server. Everything downstream
+  is deterministic and offline.
+- **Local schema changes live in `docs/overrides/`**, keyed by schema name:
+  `x-rust-type` stamps pointing at `src/types/manual.rs`. An override naming a
+  schema that no longer exists is a hard error, so upstream renaming a type
+  cannot silently detach one. Behaviour observed against the live API — the
+  places where the spec is wrong — is recorded separately in
+  [`api-observations.md`](api-observations.md).
+- **One namespace, tag-aligned views.** Upstream keeps a single flat component
+  namespace, so codegen emits one `types::components` module and
+  `types::tags::<tag>` facades that re-export the types each tag's operations
+  reach. There is exactly one `Instrument` type, not one per tag that mentions
+  it. Types generated from inline objects appear only in `components`.
+- **Generated files are not edited by hand.** Manual wire behaviour belongs in
+  `src/types/manual.rs`, wired in through an `x-rust-type` override.
 
-`scripts/regenerate-types.sh` requires cargo-typify 0.6.2, derives the domain
-list from `docs/*-schema.json`, refuses to run if `src/types/mod.rs` does not
-export one of them, passes the Cargo.toml version to `cargo typify --crate`,
-regenerates each domain, and runs `cargo check`. Generated domain modules
-should not be edited by hand. Manual wire behavior belongs in
-`src/types/manual.rs` and must be wired in through `x-rust-type` schema
-annotations.
+`scripts/regenerate-types.sh` runs the whole thing and is idempotent:
+regenerating twice produces identical bytes.
 
 ## Sensitive data
 
@@ -126,9 +126,14 @@ must not be converted into test fixtures. Contract fixtures under
 
 When extending the client:
 
-1. add or update the source schema and regenerate the types;
+1. confirm the operation is in `docs/spec/operations.json` and find its
+   response type in the matching `types::tags::<tag>` facade — every component
+   schema is already generated, so no regeneration is normally needed. Only
+   refresh the snapshot if the operation is missing;
 2. add a narrowly typed client method;
-3. validate required success-envelope fields after deserialization;
+3. validate required success-envelope fields after deserialization — envelope
+   conventions differ per endpoint, so read the schema rather than copying an
+   existing method's checks;
 4. add a synthetic fixture and a local contract test for the path, headers,
    response shape, and failure behavior; and
 5. keep live API calls and credentials out of automated tests.
