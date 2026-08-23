@@ -1,0 +1,57 @@
+{
+  "source": "eToro API Docs MCP: /openapi/api-reference/openapi.json",
+  "retrieved": "2026-08-23",
+  "openapi_version": "3.0.1",
+  "etoro_api_version": "v1.355.0",
+  "title": "eToro Api",
+  "servers": [
+    {
+      "url": "https://public-api.etoro.com",
+      "description": "eToro Public API"
+    }
+  ],
+  "counts": {
+    "schemas": 242,
+    "operations": 169
+  },
+  "chunks": {
+    "schemas": [
+      "schemas-000.json",
+      "schemas-030.json",
+      "schemas-045.json",
+      "schemas-052.json",
+      "schemas-054.json",
+      "schemas-058.json",
+      "schemas-071.json",
+      "schemas-083.json",
+      "schemas-092.json",
+      "schemas-096.json",
+      "schemas-098.json",
+      "schemas-100.json",
+      "schemas-113.json",
+      "schemas-122.json",
+      "schemas-128.json",
+      "schemas-130.json",
+      "schemas-134.json",
+      "schemas-136.json",
+      "schemas-146.json",
+      "schemas-156.json",
+      "schemas-163.json",
+      "schemas-165.json",
+      "schemas-169.json",
+      "schemas-170.json",
+      "schemas-183.json",
+      "schemas-200.json",
+      "schemas-216.json",
+      "schemas-228.json",
+      "schemas-232.json",
+      "schemas-238.json"
+    ],
+    "operations": [
+      "operations-000.json",
+      "operations-045.json",
+      "operations-090.json",
+      "operations-130.json"
+    ]
+  }
+}

@@ -7,3 +7,7 @@
 !tests/fixtures/*.json
 # Staging area for chunked spec retrieval; assembled by scripts/fetch-spec.py.
 docs/spec/.staging/
+
+# Python bytecode from scripts/
+__pycache__/
+*.pyc

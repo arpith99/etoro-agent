@@ -1,0 +1,4601 @@
+[
+  {
+    "path": "/api/v1/agent-portfolios",
+    "method": "get",
+    "operationId": "getAgentPortfolios",
+    "tags": [
+      "Agent Portfolios"
+    ],
+    "summary": "Get Agent Portfolios",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:agent-portfolio:read",
+      "etoro-public:agent-portfolio:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetAgentPortfoliosResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/agent-portfolios/{agentPortfolioId}",
+    "method": "delete",
+    "operationId": "deleteAgentPortfoliosByAgentPortfolioId",
+    "tags": [
+      "Agent Portfolios"
+    ],
+    "summary": "Delete Agent Portfolio",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:agent-portfolio:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/agent-portfolios/{agentPortfolioId}/user-tokens/{userTokenId}",
+    "method": "delete",
+    "operationId": "deleteAgentPortfoliosByAgentPortfolioIdUserTokensByUserTokenId",
+    "tags": [
+      "Agent Portfolios"
+    ],
+    "summary": "Delete User Token",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:agent-portfolio:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/attachments",
+    "method": "post",
+    "operationId": "postAttachments",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Upload a media attachment",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Attachment"
+    ]
+  },
+  {
+    "path": "/api/v1/balances",
+    "method": "get",
+    "operationId": "getBalances",
+    "tags": [
+      "Balances"
+    ],
+    "summary": "Get aggregated balances",
+    "scopes": [
+      "etoro-public:money.balance:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetBalancesResponse",
+      "#/components/schemas/BalancesErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/balances/history",
+    "method": "get",
+    "operationId": "getHistoricalBalances",
+    "tags": [
+      "Balances"
+    ],
+    "summary": "Get historical balance snapshots",
+    "scopes": [
+      "etoro-public:money.balance:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetHistoricalBalancesResponse",
+      "#/components/schemas/BalancesErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalancesErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/balances/{accountType}",
+    "method": "get",
+    "operationId": "getBalancesByAccountType",
+    "tags": [
+      "Balances"
+    ],
+    "summary": "Get balances by account type",
+    "scopes": [
+      "etoro-public:money.balance:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetBalancesResponse",
+      "#/components/schemas/BalancesErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/balances/{accountType}/history",
+    "method": "get",
+    "operationId": "getHistoricalBalancesByAccountType",
+    "tags": [
+      "Balances"
+    ],
+    "summary": "Get historical balances by account type",
+    "scopes": [
+      "etoro-public:money.balance:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetHistoricalBalancesResponse",
+      "#/components/schemas/BalancesErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalancesErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/balances/{accountType}/{accountId}",
+    "method": "get",
+    "operationId": "getBalanceByAccount",
+    "tags": [
+      "Balances"
+    ],
+    "summary": "Get balance for a specific account",
+    "scopes": [
+      "etoro-public:money.balance:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetBalancesResponse",
+      "#/components/schemas/BalancesErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalancesErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/balances/{accountType}/{accountId}/history",
+    "method": "get",
+    "operationId": "getHistoricalBalanceByAccount",
+    "tags": [
+      "Balances"
+    ],
+    "summary": "Get account balance history",
+    "scopes": [
+      "etoro-public:money.balance:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetHistoricalBalancesResponse",
+      "#/components/schemas/BalancesErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalanceAggregatorApi_PublicErrorResponse",
+      "#/components/schemas/BalancesErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/clubs",
+    "method": "get",
+    "operationId": "getClubs",
+    "tags": [
+      "Clubs"
+    ],
+    "summary": "Get club dashboard data",
+    "scopes": [
+      "etoro-public:club:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/ClubDashboardDataResponse",
+      "#/components/schemas/ClubsApi_PublicErrorResponse",
+      "#/components/schemas/ClubsApi_PublicErrorResponse",
+      "#/components/schemas/ClubsApi_PublicErrorResponse",
+      "#/components/schemas/ClubsApi_PublicErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/curated-lists",
+    "method": "get",
+    "operationId": "getCuratedLists",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Get curated lists",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:real:read",
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:read",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CuratedListsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/feeds/following",
+    "method": "get",
+    "operationId": "getFeedsFollowing",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Get following feed",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/feeds/for-you",
+        "GET /api/v1/feeds/instrument/{marketId}",
+        "GET /api/v1/feeds/markets/{marketId}",
+        "GET /api/v1/feeds/news",
+        "GET /api/v1/feeds/saved",
+        "GET /api/v1/feeds/user/{userId}",
+        "GET /api/v1/feeds/users/{userId}",
+        "GET /api/v1/feeds/users/{userId}/pinned"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/DiscussionsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/feeds/for-you",
+    "method": "get",
+    "operationId": "getFeedsForYou",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Get personalised For You feed",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/feeds/following",
+        "GET /api/v1/feeds/instrument/{marketId}",
+        "GET /api/v1/feeds/markets/{marketId}",
+        "GET /api/v1/feeds/news",
+        "GET /api/v1/feeds/saved",
+        "GET /api/v1/feeds/user/{userId}",
+        "GET /api/v1/feeds/users/{userId}",
+        "GET /api/v1/feeds/users/{userId}/pinned"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/DiscussionsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/feeds/markets/{marketId}",
+    "method": "get",
+    "operationId": "getFeedsMarketsByMarketId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Get instrument feed posts",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/feeds/following",
+        "GET /api/v1/feeds/for-you",
+        "GET /api/v1/feeds/instrument/{marketId}",
+        "GET /api/v1/feeds/news",
+        "GET /api/v1/feeds/saved",
+        "GET /api/v1/feeds/user/{userId}",
+        "GET /api/v1/feeds/users/{userId}",
+        "GET /api/v1/feeds/users/{userId}/pinned"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/DiscussionsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/feeds/news",
+    "method": "get",
+    "operationId": "getFeedsNews",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Get news feed",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/feeds/following",
+        "GET /api/v1/feeds/for-you",
+        "GET /api/v1/feeds/instrument/{marketId}",
+        "GET /api/v1/feeds/markets/{marketId}",
+        "GET /api/v1/feeds/saved",
+        "GET /api/v1/feeds/user/{userId}",
+        "GET /api/v1/feeds/users/{userId}",
+        "GET /api/v1/feeds/users/{userId}/pinned"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/DiscussionsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/feeds/saved",
+    "method": "get",
+    "operationId": "getFeedsSaved",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Get saved feed",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/feeds/following",
+        "GET /api/v1/feeds/for-you",
+        "GET /api/v1/feeds/instrument/{marketId}",
+        "GET /api/v1/feeds/markets/{marketId}",
+        "GET /api/v1/feeds/news",
+        "GET /api/v1/feeds/user/{userId}",
+        "GET /api/v1/feeds/users/{userId}",
+        "GET /api/v1/feeds/users/{userId}/pinned"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/DiscussionsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/feeds/users/{userId}",
+    "method": "get",
+    "operationId": "getFeedsUsersByUserId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Get user feed posts",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/feeds/following",
+        "GET /api/v1/feeds/for-you",
+        "GET /api/v1/feeds/instrument/{marketId}",
+        "GET /api/v1/feeds/markets/{marketId}",
+        "GET /api/v1/feeds/news",
+        "GET /api/v1/feeds/saved",
+        "GET /api/v1/feeds/user/{userId}",
+        "GET /api/v1/feeds/users/{userId}/pinned"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/DiscussionsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/feeds/users/{userId}/pinned",
+    "method": "get",
+    "operationId": "getFeedsUsersByUserIdPinned",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Get user pinned feed posts",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/feeds/following",
+        "GET /api/v1/feeds/for-you",
+        "GET /api/v1/feeds/instrument/{marketId}",
+        "GET /api/v1/feeds/markets/{marketId}",
+        "GET /api/v1/feeds/news",
+        "GET /api/v1/feeds/saved",
+        "GET /api/v1/feeds/user/{userId}",
+        "GET /api/v1/feeds/users/{userId}"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/DiscussionsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/impressions/topassets/user/{gcid}",
+    "method": "get",
+    "operationId": "getImpressionsTopassetsUserByGcid",
+    "tags": [
+      "Top Assets"
+    ],
+    "summary": "Get top assets for a user",
+    "scopes": [
+      "etoro-public:feed:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/keydata/{application}",
+    "method": "get",
+    "operationId": "getKeydataByApplication",
+    "tags": [
+      "App Data"
+    ],
+    "summary": "Get application key data",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:demo:write",
+      "etoro-public:real:read",
+      "etoro-public:demo:read",
+      "etoro-public:user-info:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/BetaTestKeydataResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-data/exchanges",
+    "method": "get",
+    "operationId": "getMarketDataExchanges",
+    "tags": [
+      "Market Data"
+    ],
+    "summary": "List supported exchanges",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 120,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/market-data/instrument-types",
+        "GET /api/v1/market-data/instruments",
+        "GET /api/v1/market-data/instruments/history/closing-price",
+        "GET /api/v1/market-data/instruments/rates",
+        "GET /api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+        "GET /api/v1/market-data/search",
+        "GET /api/v1/market-data/stocks-industries"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/ExchangesResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-data/instrument-types",
+    "method": "get",
+    "operationId": "getMarketDataInstrumentTypes",
+    "tags": [
+      "Market Data"
+    ],
+    "summary": "List instrument types",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 120,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/market-data/exchanges",
+        "GET /api/v1/market-data/instruments",
+        "GET /api/v1/market-data/instruments/history/closing-price",
+        "GET /api/v1/market-data/instruments/rates",
+        "GET /api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+        "GET /api/v1/market-data/search",
+        "GET /api/v1/market-data/stocks-industries"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/InstrumentTypesResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-data/instruments",
+    "method": "get",
+    "operationId": "getMarketDataInstruments",
+    "tags": [
+      "Market Data"
+    ],
+    "summary": "Get instrument display data",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 120,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/market-data/exchanges",
+        "GET /api/v1/market-data/instrument-types",
+        "GET /api/v1/market-data/instruments/history/closing-price",
+        "GET /api/v1/market-data/instruments/rates",
+        "GET /api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+        "GET /api/v1/market-data/search",
+        "GET /api/v1/market-data/stocks-industries"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/InstrumentsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-data/instruments/history/closing-price",
+    "method": "get",
+    "operationId": "getMarketDataInstrumentsHistoryClosingPrice",
+    "tags": [
+      "Market Data"
+    ],
+    "summary": "Get historical closing prices",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 120,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/market-data/exchanges",
+        "GET /api/v1/market-data/instrument-types",
+        "GET /api/v1/market-data/instruments",
+        "GET /api/v1/market-data/instruments/rates",
+        "GET /api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+        "GET /api/v1/market-data/search",
+        "GET /api/v1/market-data/stocks-industries"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/closingPricesResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-data/instruments/rates",
+    "method": "get",
+    "operationId": "getMarketDataInstrumentsRates",
+    "tags": [
+      "Market Data"
+    ],
+    "summary": "Get instrument market rates",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 120,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/market-data/exchanges",
+        "GET /api/v1/market-data/instrument-types",
+        "GET /api/v1/market-data/instruments",
+        "GET /api/v1/market-data/instruments/history/closing-price",
+        "GET /api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+        "GET /api/v1/market-data/search",
+        "GET /api/v1/market-data/stocks-industries"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/LiveRatesResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+    "method": "get",
+    "operationId": "getMarketDataInstrumentsByInstrumentIdHistoryCandlesByDirectionByIntervalByCandlesCount",
+    "tags": [
+      "Market Data"
+    ],
+    "summary": "Get instrument candle history",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 120,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/market-data/exchanges",
+        "GET /api/v1/market-data/instrument-types",
+        "GET /api/v1/market-data/instruments",
+        "GET /api/v1/market-data/instruments/history/closing-price",
+        "GET /api/v1/market-data/instruments/rates",
+        "GET /api/v1/market-data/search",
+        "GET /api/v1/market-data/stocks-industries"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/candlesResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-data/search",
+    "method": "get",
+    "operationId": "getMarketDataSearch",
+    "tags": [
+      "Market Data"
+    ],
+    "summary": "Search for Instruments",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 120,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/market-data/exchanges",
+        "GET /api/v1/market-data/instrument-types",
+        "GET /api/v1/market-data/instruments",
+        "GET /api/v1/market-data/instruments/history/closing-price",
+        "GET /api/v1/market-data/instruments/rates",
+        "GET /api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+        "GET /api/v1/market-data/stocks-industries"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/InstrumentSearchResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-data/stocks-industries",
+    "method": "get",
+    "operationId": "getMarketDataStocksIndustries",
+    "tags": [
+      "Market Data"
+    ],
+    "summary": "Get stocks industries",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 120,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/market-data/exchanges",
+        "GET /api/v1/market-data/instrument-types",
+        "GET /api/v1/market-data/instruments",
+        "GET /api/v1/market-data/instruments/history/closing-price",
+        "GET /api/v1/market-data/instruments/rates",
+        "GET /api/v1/market-data/instruments/{instrumentId}/history/candles/{direction}/{interval}/{candlesCount}",
+        "GET /api/v1/market-data/search"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/StocksIndustriesResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/market-recommendations/{itemsCount}",
+    "method": "get",
+    "operationId": "getMarketRecommendationsByItemsCount",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Get market recommendations",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:real:read",
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:read",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/MarketRecommendationsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/me",
+    "method": "get",
+    "operationId": "getMe",
+    "tags": [
+      "Identity"
+    ],
+    "summary": "Get authenticated user profile",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:demo:read",
+      "etoro-public:real:write",
+      "etoro-public:demo:write",
+      "etoro-public:user-info:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/meResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/money/accounts/cash/{accountId}/transactions",
+    "method": "get",
+    "operationId": "listCashAccountTransactions",
+    "tags": [
+      "Cash Accounts"
+    ],
+    "summary": "List cash account transactions (paginated)",
+    "scopes": [
+      "etoro-public:money.cash-transactions:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CashAccountTransactionsResponse",
+      "#/components/schemas/FiatbackApi_PublicErrorResponse",
+      "#/components/schemas/FiatbackApi_PublicErrorResponse",
+      "#/components/schemas/FiatbackApi_PublicErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/money/transfer-eligibility",
+    "method": "get",
+    "operationId": "getTransferEligibility",
+    "tags": [
+      "Transfer"
+    ],
+    "summary": "Transfer eligibility (source and destination accounts)",
+    "scopes": [
+      "etoro-public:money.transfer:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/money/transfer-fee-configurations",
+    "method": "get",
+    "operationId": "getTransferFeeConfiguration",
+    "tags": [
+      "Transfer"
+    ],
+    "summary": "List transfer fees",
+    "scopes": [
+      "etoro-public:money.transfer:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/money/transfer-limits",
+    "method": "get",
+    "operationId": "getTransferLimits",
+    "tags": [
+      "Transfer"
+    ],
+    "summary": "List transfer limits",
+    "scopes": [
+      "etoro-public:money.transfer:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/money/transferable-balance",
+    "method": "get",
+    "operationId": "getTransferableBalance",
+    "tags": [
+      "Transfer"
+    ],
+    "summary": "Get max transferable amount",
+    "scopes": [
+      "etoro-public:money.transfer:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/TransferableBalanceResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/money/transfers",
+    "method": "post",
+    "operationId": "postMoneyTransfer",
+    "tags": [
+      "Transfer"
+    ],
+    "summary": "Execute an internal account-to-account transfer",
+    "scopes": [
+      "etoro-public:money.transfer:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/MoneyTransferRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/MoneyTransferResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/money/transfers/{transferId}",
+    "method": "get",
+    "operationId": "getTransferById",
+    "tags": [
+      "Transfer"
+    ],
+    "summary": "Get transfer by ID",
+    "scopes": [
+      "etoro-public:money.transfer:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/TransferLookupResult"
+    ]
+  },
+  {
+    "path": "/api/v1/money/transfers:lookup",
+    "method": "get",
+    "operationId": "lookupTransfersByRequestReferenceId",
+    "tags": [
+      "Transfer"
+    ],
+    "summary": "List transfers by reference ID",
+    "scopes": [
+      "etoro-public:money.transfer:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/TransferLookupResult"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/messages",
+    "method": "get",
+    "operationId": "getNotificationsMessages",
+    "tags": [
+      "Notifications"
+    ],
+    "summary": "Get in-app notifications",
+    "scopes": [
+      "etoro-public:notifications:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/InAppNotificationsResult"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/messages",
+    "method": "patch",
+    "operationId": "patchNotificationsMessages",
+    "tags": [
+      "Notifications"
+    ],
+    "summary": "Mark all notifications as read",
+    "scopes": [
+      "etoro-public:notifications:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/pi-data/copiers",
+    "method": "get",
+    "operationId": "getPiDataCopiers",
+    "tags": [
+      "PI Data"
+    ],
+    "summary": "Get copiers public info",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:pi-data:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GeCopiersResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/portfolios/search",
+    "method": "get",
+    "operationId": "searchPortfolios",
+    "tags": [
+      "PortfolioSearch"
+    ],
+    "summary": "Search for trader portfolios or Smart Portfolios by free-text query",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/PortfolioSearchResponse",
+      "#/components/schemas/PortfolioSearchBffApi_Error",
+      "#/components/schemas/PortfolioSearchBffApi_Error",
+      "#/components/schemas/PortfolioSearchBffApi_Error",
+      "#/components/schemas/PortfolioSearchBffApi_Error"
+    ]
+  },
+  {
+    "path": "/api/v1/posts",
+    "method": "post",
+    "operationId": "postPosts",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Create a new discussion post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/DiscussionCreateRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Post"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/polls",
+    "method": "post",
+    "operationId": "postPostsPolls",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Create a poll post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/PollCreateRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Post"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/shares",
+    "method": "post",
+    "operationId": "postPostsShares",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Share a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/SharePostRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Post"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}",
+    "method": "delete",
+    "operationId": "deletePostsByPostId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Soft-delete a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}",
+    "method": "get",
+    "operationId": "getPostsByPostId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Get a single post by ID",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/Discussion"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}",
+    "method": "put",
+    "operationId": "putPostsByPostId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Update an existing post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/DiscussionUpdateRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Post"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments",
+    "method": "get",
+    "operationId": "getPostsByPostIdComments",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "List comments on a post",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CommentsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments",
+    "method": "post",
+    "operationId": "postPostsByPostIdComments",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Create a comment on a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CommentCreateRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Comment"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdCommentsByCommentId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Soft-delete a comment",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}",
+    "method": "put",
+    "operationId": "putPostsByPostIdCommentsByCommentId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Update a comment",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CommentUpdateRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Comment"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}/likes",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdCommentsByCommentIdLikes",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Unlike a comment",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}/likes",
+    "method": "post",
+    "operationId": "postPostsByPostIdCommentsByCommentIdLikes",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Like a comment",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}/replies",
+    "method": "get",
+    "operationId": "getPostsByPostIdCommentsByCommentIdReplies",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "List replies on a comment",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CommentsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}/replies",
+    "method": "post",
+    "operationId": "postPostsByPostIdCommentsByCommentIdReplies",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Create a reply",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CommentCreateRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Comment"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdCommentsByCommentIdRepliesByReplyId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Soft-delete a reply",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}",
+    "method": "put",
+    "operationId": "putPostsByPostIdCommentsByCommentIdRepliesByReplyId",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Update a reply",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CommentUpdateRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/Comment"
+    ]
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}/likes",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdCommentsByCommentIdRepliesByReplyIdLikes",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Unlike a reply",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/comments/{commentId}/replies/{replyId}/likes",
+    "method": "post",
+    "operationId": "postPostsByPostIdCommentsByCommentIdRepliesByReplyIdLikes",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Like a reply",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/follows",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdFollows",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Unfollow a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/follows",
+    "method": "post",
+    "operationId": "postPostsByPostIdFollows",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Follow a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/likes",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdLikes",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Unlike a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/likes",
+    "method": "post",
+    "operationId": "postPostsByPostIdLikes",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Like a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/pins",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdPins",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Unpin post from profile",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/pins",
+    "method": "post",
+    "operationId": "postPostsByPostIdPins",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Pin post to profile",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/polls/{pollId}/options/{optionId}/votes",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdPollsByPollIdOptionsByOptionIdVotes",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Remove poll vote",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/polls/{pollId}/options/{optionId}/votes",
+    "method": "post",
+    "operationId": "postPostsByPostIdPollsByPollIdOptionsByOptionIdVotes",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Vote on a poll option",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/saves",
+    "method": "delete",
+    "operationId": "deletePostsByPostIdSaves",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Unsave a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/saves",
+    "method": "post",
+    "operationId": "postPostsByPostIdSaves",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "Save a post",
+    "scopes": [
+      "etoro-public:feed:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/posts/{postId}/shares",
+    "method": "get",
+    "operationId": "getPostsByPostIdShares",
+    "tags": [
+      "Social Feeds"
+    ],
+    "summary": "List shares of a post",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/SharesResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/price-alerts",
+    "method": "get",
+    "operationId": "getPriceAlerts",
+    "tags": [
+      "Price Alerts"
+    ],
+    "summary": "Get price alerts",
+    "scopes": [
+      "etoro-public:price-alerts:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/PriceAlertCollectionResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/price-alerts",
+    "method": "post",
+    "operationId": "postPriceAlerts",
+    "tags": [
+      "Price Alerts"
+    ],
+    "summary": "Create a price alert",
+    "scopes": [
+      "etoro-public:price-alerts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CreatePriceAlertRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/PriceAlertMutationResponse",
+      "#/components/schemas/PriceAlertErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertErrorResponse",
+      "#/components/schemas/PriceAlertErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/price-alerts/{alertId}",
+    "method": "delete",
+    "operationId": "deletePriceAlertsByAlertId",
+    "tags": [
+      "Price Alerts"
+    ],
+    "summary": "Delete a price alert",
+    "scopes": [
+      "etoro-public:price-alerts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/DeletePriceAlertResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/price-alerts/{alertId}",
+    "method": "patch",
+    "operationId": "patchPriceAlertsByAlertId",
+    "tags": [
+      "Price Alerts"
+    ],
+    "summary": "Update a price alert",
+    "scopes": [
+      "etoro-public:price-alerts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/UpdatePriceAlertRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/PriceAlertMutationResponse",
+      "#/components/schemas/PriceAlertErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse",
+      "#/components/schemas/PriceAlertsApi_PublicErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sso/applications",
+    "method": "get",
+    "operationId": "getApplications",
+    "tags": [
+      "SSO - Applications"
+    ],
+    "summary": "List my OAuth applications",
+    "scopes": [
+      "etoro-public:sso-applications:read",
+      "etoro-public:sso-applications:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetApplicationsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sso/applications",
+    "method": "post",
+    "operationId": "createApplications",
+    "tags": [
+      "SSO - Applications"
+    ],
+    "summary": "Register OAuth application",
+    "scopes": [
+      "etoro-public:sso-applications:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CreateApplicationBody"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/CreateApplicationResponse",
+      "#/components/schemas/StsMetadataFrontApi_ErrorResponse",
+      "#/components/schemas/StsMetadataFrontApi_ErrorResponse",
+      "#/components/schemas/StsMetadataFrontApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sso/applications/{clientId}",
+    "method": "delete",
+    "operationId": "deleteApplicationsByClientId",
+    "tags": [
+      "SSO - Applications"
+    ],
+    "summary": "Delete OAuth application",
+    "scopes": [
+      "etoro-public:sso-applications:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/StsMetadataFrontApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sso/applications/{clientId}",
+    "method": "put",
+    "operationId": "updateApplicationsByClientId",
+    "tags": [
+      "SSO - Applications"
+    ],
+    "summary": "Update OAuth application",
+    "scopes": [
+      "etoro-public:sso-applications:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/UpdateApplicationBody"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/UpdateApplicationResponse",
+      "#/components/schemas/StsMetadataFrontApi_ErrorResponse",
+      "#/components/schemas/StsMetadataFrontApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sso/applications/{clientId}/client-secret",
+    "method": "post",
+    "operationId": "rotateApplicationsClientSecretByClientId",
+    "tags": [
+      "SSO - Applications"
+    ],
+    "summary": "Replace OAuth client secret",
+    "scopes": [
+      "etoro-public:sso-applications:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/RotateClientSecretResponse",
+      "#/components/schemas/StsMetadataFrontApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sso/scopes",
+    "method": "get",
+    "operationId": "getScopes",
+    "tags": [
+      "SSO - Scopes"
+    ],
+    "summary": "List available OAuth scopes",
+    "scopes": [
+      "etoro-public:sso-scopes:read",
+      "etoro-public:sso-scopes:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetScopesResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sub-accounts/etoro-trading/money-transfers",
+    "method": "post",
+    "operationId": "createSubAccountMoneyTransfer",
+    "tags": [
+      "Sub-Accounts - eToro Trading"
+    ],
+    "summary": "Create Sub-Account Money Transfer",
+    "scopes": [
+      "etoro-public:money:transfer"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/EtoroTradingSubAccountsMoneyTransferRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sub-accounts/etoro-trading/user-tokens",
+    "method": "get",
+    "operationId": "getSubAccountUserTokens",
+    "tags": [
+      "Sub-Accounts - eToro Trading"
+    ],
+    "summary": "List Sub-Account User Tokens",
+    "scopes": [
+      "etoro-public:sub-accounts:read",
+      "etoro-public:sub-accounts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/ListUserTokensResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sub-accounts/etoro-trading/user-tokens",
+    "method": "post",
+    "operationId": "createSubAccountUserToken",
+    "tags": [
+      "Sub-Accounts - eToro Trading"
+    ],
+    "summary": "Create Sub-Account User Token",
+    "scopes": [
+      "etoro-public:sub-accounts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CreateSubAccountUserTokenRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_CreateUserTokenResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sub-accounts/etoro-trading/user-tokens/scopes",
+    "method": "get",
+    "operationId": "getSubAccountUserTokenScopes",
+    "tags": [
+      "Sub-Accounts - eToro Trading"
+    ],
+    "summary": "Get Allowed Sub-Account Token Scopes",
+    "scopes": [
+      "etoro-public:sub-accounts:read",
+      "etoro-public:sub-accounts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_GetAllowedScopesResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sub-accounts/etoro-trading/user-tokens/{userTokenId}",
+    "method": "delete",
+    "operationId": "deleteSubAccountUserToken",
+    "tags": [
+      "Sub-Accounts - eToro Trading"
+    ],
+    "summary": "Revoke Sub-Account User Token",
+    "scopes": [
+      "etoro-public:sub-accounts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sub-accounts/etoro-trading/user-tokens/{userTokenId}",
+    "method": "patch",
+    "operationId": "updateSubAccountUserToken",
+    "tags": [
+      "Sub-Accounts - eToro Trading"
+    ],
+    "summary": "Update Sub-Account User Token",
+    "scopes": [
+      "etoro-public:sub-accounts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/UpdateSubAccountUserTokenRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse",
+      "#/components/schemas/EtoroTradingSubAccountsOperationsApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/sub-accounts/me/accounts",
+    "method": "get",
+    "operationId": "getMySubAccounts",
+    "tags": [
+      "Sub-Accounts"
+    ],
+    "summary": "Get My Sub-Accounts",
+    "scopes": [
+      "etoro-public:sub-accounts:read",
+      "etoro-public:sub-accounts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/sub-accounts/me/accounts",
+    "method": "post",
+    "operationId": "createMySubAccount",
+    "tags": [
+      "Sub-Accounts"
+    ],
+    "summary": "Create My Sub-Account",
+    "scopes": [
+      "etoro-public:sub-accounts:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": [
+      null,
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/trading/execution/demo/market-close-orders/positions/{positionId}",
+    "method": "post",
+    "operationId": "createTradingExecutionDemoMarketCloseOrdersPositionsByPositionId",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Close demo position by units",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/demo/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/demo/orders/{orderId}",
+        "DELETE /api/v3/trading/execution/demo/orders/{orderId}",
+        "POST /api/v1/trading/execution/demo/limit-orders",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/demo/orders",
+        "POST /api/v3/trading/execution/demo/orders"
+      ]
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/trading/execution/demo/market-close-orders/{orderId}",
+    "method": "delete",
+    "operationId": "deleteTradingExecutionDemoMarketCloseOrdersByOrderId",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Cancel pending demo close order",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/demo/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/demo/orders/{orderId}",
+        "DELETE /api/v3/trading/execution/demo/orders/{orderId}",
+        "POST /api/v1/trading/execution/demo/limit-orders",
+        "POST /api/v1/trading/execution/demo/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/demo/orders",
+        "POST /api/v3/trading/execution/demo/orders"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/trading/execution/market-close-orders/positions/{positionId}",
+    "method": "post",
+    "operationId": "createTradingExecutionMarketCloseOrdersPositionsByPositionId",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Close position by units",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/orders/{orderId}",
+        "DELETE /api/v3/trading/execution/orders/{orderId}",
+        "POST /api/v1/trading/execution/limit-orders",
+        "POST /api/v1/trading/execution/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/orders",
+        "POST /api/v3/trading/execution/orders"
+      ]
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/trading/execution/market-close-orders/{orderId}",
+    "method": "delete",
+    "operationId": "deleteTradingExecutionMarketCloseOrdersByOrderId",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Cancel pending close order",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/orders/{orderId}",
+        "DELETE /api/v3/trading/execution/orders/{orderId}",
+        "POST /api/v1/trading/execution/limit-orders",
+        "POST /api/v1/trading/execution/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/orders",
+        "POST /api/v3/trading/execution/orders"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/aggregate-portfolio",
+    "method": "get",
+    "operationId": "getAggregatedPortfolio",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Get aggregated portfolio snapshot",
+    "scopes": [
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/TradingPortfolioRealApi_AggregatedPortfolioResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/demo/aggregate-portfolio",
+    "method": "get",
+    "operationId": "getAggregatedPortfolioDemo",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Get aggregated portfolio snapshot",
+    "scopes": [
+      "etoro-public:trade.demo:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/TradingPortfolioDemoApi_AggregatedPortfolioResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/demo/close-orders/{orderId}",
+    "method": "get",
+    "operationId": "getTradingInfoDemoCloseOrdersByOrderId",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Get close order information and closed position details",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/demo/orders/{orderId}",
+        "GET /api/v2/trading/info/demo/orders:lookup"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/OrderForCloseInfoResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/demo/pnl",
+    "method": "get",
+    "operationId": "getTradingInfoDemoPnl",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Get account PnL and portfolio details",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/demo/portfolio",
+        "GET /api/v2/trading/info/demo/instrument-breakdown"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/PortfolioResponseWithPnl"
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/demo/portfolio",
+    "method": "get",
+    "operationId": "getTradingInfoDemoPortfolio",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Get demo portfolio breakdown",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/demo/pnl",
+        "GET /api/v2/trading/info/demo/instrument-breakdown"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/PortfolioResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/portfolio",
+    "method": "get",
+    "operationId": "getTradingInfoPortfolio",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Get portfolio breakdown",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/real/pnl",
+        "GET /api/v2/trading/info/instrument-breakdown"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/PortfolioResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/real/close-orders/{orderId}",
+    "method": "get",
+    "operationId": "getTradingInfoRealCloseOrdersByOrderId",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Get close order information and closed position details",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/real/orders/{orderId}",
+        "GET /api/v2/trading/info/orders:lookup"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/OrderForCloseInfoResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/real/pnl",
+    "method": "get",
+    "operationId": "getTradingInfoRealPnl",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Get account PnL and portfolio details",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/portfolio",
+        "GET /api/v2/trading/info/instrument-breakdown"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/PortfolioResponseWithPnl"
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/trade/demo/history",
+    "method": "get",
+    "operationId": "getTradingInfoTradeDemoHistory",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "List trading history",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/trading/info/trade/history",
+    "method": "get",
+    "operationId": "getTradingInfoTradeHistory",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "List trading history",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/user-info/people",
+    "method": "get",
+    "operationId": "getUserInfoPeople",
+    "tags": [
+      "Users Info"
+    ],
+    "summary": "Get user profile and account summary",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/PublicAggregatedInfoResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/user-info/people/search",
+    "method": "get",
+    "operationId": "getUserInfoPeopleSearch",
+    "tags": [
+      "Users Info"
+    ],
+    "summary": "Search users",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:demo:read",
+      "etoro-public:real:write",
+      "etoro-public:demo:write",
+      "etoro-public:user-info:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/user-info/people/{username}/daily-gain",
+    "method": "get",
+    "operationId": "getUserInfoPeopleByUsernameDailyGain",
+    "tags": [
+      "Users Info"
+    ],
+    "summary": "Get user daily performance",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:demo:read",
+      "etoro-public:real:write",
+      "etoro-public:demo:write",
+      "etoro-public:user-info:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/getUserDailyGainResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/user-info/people/{username}/gain",
+    "method": "get",
+    "operationId": "getUserInfoPeopleByUsernameGain",
+    "tags": [
+      "Users Info"
+    ],
+    "summary": "Get user performance history",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:demo:read",
+      "etoro-public:real:write",
+      "etoro-public:demo:write",
+      "etoro-public:user-info:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/getUserGainResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/user-info/people/{username}/portfolio/live",
+    "method": "get",
+    "operationId": "getUserInfoPeopleByUsernamePortfolioLive",
+    "tags": [
+      "Users Info"
+    ],
+    "summary": "Get user live portfolio",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:demo:read",
+      "etoro-public:real:write",
+      "etoro-public:demo:write",
+      "etoro-public:user-info:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/user-info/people/{username}/tradeinfo",
+    "method": "get",
+    "operationId": "getUserInfoPeopleByUsernameTradeinfo",
+    "tags": [
+      "Users Info"
+    ],
+    "summary": "Get user trade info",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:demo:read",
+      "etoro-public:real:write",
+      "etoro-public:demo:write",
+      "etoro-public:user-info:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists",
+    "method": "get",
+    "operationId": "getWatchlists",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Get user watchlists",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:read",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/watchlists/default-watchlists/items",
+        "GET /api/v1/watchlists/public/{userId}",
+        "GET /api/v1/watchlists/public/{userId}/{watchlistId}",
+        "GET /api/v1/watchlists/{watchlistId}"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/WatchlistsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists",
+    "method": "post",
+    "operationId": "postWatchlists",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Create a new watchlist",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/WatchlistsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists/default-watchlist/selected-items",
+    "method": "post",
+    "operationId": "postWatchlistsDefaultWatchlistSelectedItems",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Create default watchlist with selected items",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": [
+      "#/components/schemas/WatchlistsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists/default-watchlists/items",
+    "method": "get",
+    "operationId": "getWatchlistsDefaultWatchlistsItems",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Get default watchlist items",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:real:read",
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:read",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/watchlists",
+        "GET /api/v1/watchlists/public/{userId}",
+        "GET /api/v1/watchlists/public/{userId}/{watchlistId}",
+        "GET /api/v1/watchlists/{watchlistId}"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists/newasdefault-watchlist",
+    "method": "post",
+    "operationId": "postWatchlistsNewasdefaultWatchlist",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Create watchlist and set as default",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/WatchlistsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists/public/{userId}",
+    "method": "get",
+    "operationId": "getWatchlistsPublicByUserId",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Get user's public watchlists",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:real:read",
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:read",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/watchlists",
+        "GET /api/v1/watchlists/default-watchlists/items",
+        "GET /api/v1/watchlists/public/{userId}/{watchlistId}",
+        "GET /api/v1/watchlists/{watchlistId}"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/WatchlistsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists/public/{userId}/{watchlistId}",
+    "method": "get",
+    "operationId": "getWatchlistsPublicByUserIdByWatchlistId",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Get single public watchlist",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:real:read",
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:read",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/watchlists",
+        "GET /api/v1/watchlists/default-watchlists/items",
+        "GET /api/v1/watchlists/public/{userId}",
+        "GET /api/v1/watchlists/{watchlistId}"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/WatchlistResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists/rank/{watchlistId}",
+    "method": "put",
+    "operationId": "putWatchlistsRankByWatchlistId",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Change watchlist rank",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+    "method": "put",
+    "operationId": "putWatchlistsSetUserSelectedUserDefaultByWatchlistId",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Set watchlist as default",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/watchlists/{watchlistId}",
+    "method": "delete",
+    "operationId": "deleteWatchlistsByWatchlistId",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Delete watchlist",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/watchlists/{watchlistId}",
+    "method": "get",
+    "operationId": "getWatchlistsByWatchlistId",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Get single watchlist",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:read",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/watchlists",
+        "GET /api/v1/watchlists/default-watchlists/items",
+        "GET /api/v1/watchlists/public/{userId}",
+        "GET /api/v1/watchlists/public/{userId}/{watchlistId}"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/WatchlistsResponse"
+    ]
+  },
+  {
+    "path": "/api/v1/watchlists/{watchlistId}",
+    "method": "put",
+    "operationId": "putWatchlistsByWatchlistId",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Rename watchlist",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/watchlists/{watchlistId}/items",
+    "method": "delete",
+    "operationId": "deleteWatchlistsByWatchlistIdItems",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Remove items from watchlist",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/watchlists/{watchlistId}/items",
+    "method": "post",
+    "operationId": "postWatchlistsByWatchlistIdItems",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Add items to watchlist",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}/items"
+      ]
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v1/watchlists/{watchlistId}/items",
+    "method": "put",
+    "operationId": "putWatchlistsByWatchlistIdItems",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Update items in watchlist",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/watchlists/{watchlistId}",
+        "DELETE /api/v1/watchlists/{watchlistId}/items",
+        "POST /api/v1/watchlists",
+        "POST /api/v1/watchlists/default-watchlist/selected-items",
+        "POST /api/v1/watchlists/newasdefault-watchlist",
+        "POST /api/v1/watchlists/{watchlistId}/items",
+        "PUT /api/v1/watchlists/rank/{watchlistId}",
+        "PUT /api/v1/watchlists/setUserSelectedUserDefault/{watchlistId}",
+        "PUT /api/v1/watchlists/{watchlistId}"
+      ]
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": []
+  },
+  {
+    "path": "/api/v2/agent-portfolios",
+    "method": "post",
+    "operationId": "createAgentPortfoliosV2",
+    "tags": [
+      "Agent Portfolios"
+    ],
+    "summary": "Create Agent Portfolio (v2)",
+    "scopes": [
+      "etoro-public:agent-portfolio:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CreateAgentPortfolioV2Request"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/CreateAgentPortfolioV2Response",
+      "#/components/schemas/CreateAgentPortfolioPartialResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/agent-portfolios/user-tokens/scopes",
+    "method": "get",
+    "operationId": "getAgentPortfoliosScopes",
+    "tags": [
+      "Agent Portfolios"
+    ],
+    "summary": "Get Allowed Scopes (v2)",
+    "scopes": [
+      "etoro-public:agent-portfolio:read",
+      "etoro-public:agent-portfolio:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/AgentPortfolioApi_GetAllowedScopesResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/agent-portfolios/{agentPortfolioId}/user-tokens",
+    "method": "post",
+    "operationId": "createAgentPortfoliosByAgentPortfolioIdUserTokensV2",
+    "tags": [
+      "Agent Portfolios"
+    ],
+    "summary": "Create User Token (v2)",
+    "scopes": [
+      "etoro-public:agent-portfolio:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CreateUserTokenV2Request"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/AgentPortfolioApi_CreateUserTokenResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/agent-portfolios/{agentPortfolioId}/user-tokens/{userTokenId}",
+    "method": "patch",
+    "operationId": "updateAgentPortfoliosByAgentPortfolioIdUserTokensByUserTokenIdV2",
+    "tags": [
+      "Agent Portfolios"
+    ],
+    "summary": "Update User Token (v2)",
+    "scopes": [
+      "etoro-public:agent-portfolio:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/UpdateUserTokenV2Request"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse",
+      "#/components/schemas/AgentPortfolioApi_ErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/rankings",
+    "method": "get",
+    "operationId": "getPortfoliosRankings",
+    "tags": [
+      "Rankings"
+    ],
+    "summary": "Get paginated investor rankings",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/RankingsListResponse",
+      "#/components/schemas/RankingsError",
+      "#/components/schemas/RankingsError"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/rankings/multiple",
+    "method": "post",
+    "operationId": "getMultiplePortfoliosRankings",
+    "tags": [
+      "Rankings"
+    ],
+    "summary": "Bulk-fetch ranking rows",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      null
+    ],
+    "responseSchemas": [
+      "#/components/schemas/RankingsMultipleResponse",
+      "#/components/schemas/RankingsError",
+      "#/components/schemas/RankingsError"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/rankings/presets",
+    "method": "get",
+    "operationId": "listPortfolioRankingsPresets",
+    "tags": [
+      "Rankings"
+    ],
+    "summary": "List available ranking presets",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null,
+      "#/components/schemas/RankingsError"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/rankings/presets/{type}",
+    "method": "get",
+    "operationId": "getPortfolioRankingsByPreset",
+    "tags": [
+      "Rankings"
+    ],
+    "summary": "Get rankings by named preset",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/RankingsListResponse",
+      "#/components/schemas/RankingsError",
+      "#/components/schemas/RankingsError",
+      null
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/rankings/summary",
+    "method": "get",
+    "operationId": "getPortfoliosRankingsSummary",
+    "tags": [
+      "Rankings"
+    ],
+    "summary": "Get ranking universe aggregated by sector or industry",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/RankingSummaryResponse",
+      "#/components/schemas/RankingsError",
+      "#/components/schemas/RankingsError"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/rankings/tags",
+    "method": "get",
+    "operationId": "listPortfolioRankingsTags",
+    "tags": [
+      "Rankings"
+    ],
+    "summary": "List all ranking tags",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/RankingTagsResponse",
+      "#/components/schemas/RankingsError",
+      "#/components/schemas/RankingsError"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/{username}/assets/history",
+    "method": "get",
+    "operationId": "getAssetsHistory",
+    "tags": [
+      "User Stats"
+    ],
+    "summary": "Get asset allocation history",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/AssetsHistoryResponse",
+      "#/components/schemas/StatsAssetsApi_Error",
+      "#/components/schemas/StatsAssetsApi_Error",
+      "#/components/schemas/StatsAssetsApi_Error",
+      "#/components/schemas/StatsAssetsApi_Error",
+      "#/components/schemas/StatsAssetsApi_Error",
+      "#/components/schemas/StatsAssetsApi_Error"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/{username}/copiers",
+    "method": "get",
+    "operationId": "getPortfolioCopiers",
+    "tags": [
+      "User Stats"
+    ],
+    "summary": "Get portfolio copier stats",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CopiersCurrentResponse",
+      "#/components/schemas/StandardErrorResponse",
+      "#/components/schemas/StandardErrorResponse",
+      "#/components/schemas/StandardErrorResponse",
+      "#/components/schemas/StandardErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/{username}/exposure/history",
+    "method": "get",
+    "operationId": "getExposureHistory",
+    "tags": [
+      "User Stats"
+    ],
+    "summary": "Get market exposure history",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/ExposureHistoryResponse",
+      "#/components/schemas/StatsExposureApi_Error",
+      "#/components/schemas/StatsExposureApi_Error",
+      "#/components/schemas/StatsExposureApi_Error",
+      "#/components/schemas/StatsExposureApi_Error",
+      "#/components/schemas/StatsExposureApi_Error",
+      "#/components/schemas/StatsExposureApi_Error"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/{username}/gain/{granularity}",
+    "method": "get",
+    "operationId": "getGainHistory",
+    "tags": [
+      "User Stats"
+    ],
+    "summary": "Get investor gain time-series",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GainHistoryResponse",
+      "#/components/schemas/StatsGainApi_Error",
+      "#/components/schemas/StatsGainApi_Error",
+      "#/components/schemas/StatsGainApi_Error",
+      "#/components/schemas/StatsGainApi_Error"
+    ]
+  },
+  {
+    "path": "/api/v2/portfolios/{username}/rankings",
+    "method": "get",
+    "operationId": "getPortfolioRanking",
+    "tags": [
+      "Rankings"
+    ],
+    "summary": "Get ranking row for a single investor",
+    "scopes": [],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CustomerRankingResponse",
+      "#/components/schemas/RankingsError",
+      "#/components/schemas/RankingsError",
+      "#/components/schemas/RankingsError"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy",
+    "method": "delete",
+    "operationId": "closeCopyTrading",
+    "tags": [
+      "Copy Trading"
+    ],
+    "summary": "Close or detach a copy relationship",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/TokenedResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy",
+    "method": "post",
+    "operationId": "registerCopyTrading",
+    "tags": [
+      "Copy Trading"
+    ],
+    "summary": "Start copying an investor, or adjust an existing copy",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CopyTradingRegisterRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/TokenedResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy/close",
+    "method": "post",
+    "operationId": "closeCopyTradingViaPost",
+    "tags": [
+      "Copy Trading"
+    ],
+    "summary": "Close or detach a copy relationship (JSON body)",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CopyTradingCloseRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/TokenedResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy/demo",
+    "method": "delete",
+    "operationId": "closeCopyTradingDemo",
+    "tags": [
+      "Copy Trading - Demo"
+    ],
+    "summary": "Close or detach a copy relationship",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/TokenedResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy/demo",
+    "method": "post",
+    "operationId": "registerCopyTradingDemo",
+    "tags": [
+      "Copy Trading - Demo"
+    ],
+    "summary": "Start copying an investor, or adjust an existing copy",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CopyTradingRegisterRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/TokenedResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy/demo/close",
+    "method": "post",
+    "operationId": "closeCopyTradingViaPostDemo",
+    "tags": [
+      "Copy Trading - Demo"
+    ],
+    "summary": "Close or detach a copy relationship (JSON body)",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CopyTradingCloseRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/TokenedResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy/demo/eligibility",
+    "method": "post",
+    "operationId": "checkCopyTradingEligibilityDemo",
+    "tags": [
+      "Copy Trading - Demo"
+    ],
+    "summary": "Pre-check whether a copy registration would be allowed",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CopyTradingEligibilityRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/CopyTradingEligibilityResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/CopyTradingErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy/demo/{referenceId}",
+    "method": "get",
+    "operationId": "getCopyTradingStatusDemo",
+    "tags": [
+      "Copy Trading - Demo"
+    ],
+    "summary": "Poll a copy operation's outcome",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CopyTradingStatusResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy/eligibility",
+    "method": "post",
+    "operationId": "checkCopyTradingEligibility",
+    "tags": [
+      "Copy Trading"
+    ],
+    "summary": "Pre-check whether a copy registration would be allowed",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/CopyTradingEligibilityRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/CopyTradingEligibilityResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/CopyTradingErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/copy/{referenceId}",
+    "method": "get",
+    "operationId": "getCopyTradingStatus",
+    "tags": [
+      "Copy Trading"
+    ],
+    "summary": "Poll a copy operation's outcome",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CopyTradingStatusResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/GatewayErrorResponse",
+      "#/components/schemas/CopyTradingErrorResponse",
+      "#/components/schemas/GatewayErrorResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/demo/positions/{positionId}",
+    "method": "patch",
+    "operationId": "updateDemoPosition",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Modify stop-loss and take-profit settings on an open position",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/UpdatePositionRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/UpdatePositionResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/execution/demo/orders",
+    "method": "post",
+    "operationId": "createTradingExecutionDemoOrders",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Create an order",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/demo/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/demo/orders/{orderId}",
+        "DELETE /api/v3/trading/execution/demo/orders/{orderId}",
+        "POST /api/v1/trading/execution/demo/limit-orders",
+        "POST /api/v1/trading/execution/demo/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-units",
+        "POST /api/v3/trading/execution/demo/orders"
+      ]
+    },
+    "requestSchemas": [
+      "#/components/schemas/TradingDemoAdminApi_UnifiedOrderRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/UnifiedOrderResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/execution/demo/orders/{orderId}",
+    "method": "delete",
+    "operationId": "deleteTradingExecutionDemoOrdersByOrderId",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Cancels an order before it is executed",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/demo/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-open-orders/{orderId}",
+        "DELETE /api/v3/trading/execution/demo/orders/{orderId}",
+        "POST /api/v1/trading/execution/demo/limit-orders",
+        "POST /api/v1/trading/execution/demo/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/demo/orders",
+        "POST /api/v3/trading/execution/demo/orders"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null,
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/execution/orders",
+    "method": "post",
+    "operationId": "createTradingExecutionOrders",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Create an order",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/orders/{orderId}",
+        "DELETE /api/v3/trading/execution/orders/{orderId}",
+        "POST /api/v1/trading/execution/limit-orders",
+        "POST /api/v1/trading/execution/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/market-open-orders/by-units",
+        "POST /api/v3/trading/execution/orders"
+      ]
+    },
+    "requestSchemas": [
+      "#/components/schemas/TradingRealAdminApi_UnifiedOrderRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/UnifiedOrderResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/execution/orders/{orderId}",
+    "method": "delete",
+    "operationId": "deleteTradingExecutionOrdersByOrderId",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Cancels an order before it is executed",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-open-orders/{orderId}",
+        "DELETE /api/v3/trading/execution/orders/{orderId}",
+        "POST /api/v1/trading/execution/limit-orders",
+        "POST /api/v1/trading/execution/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/orders",
+        "POST /api/v3/trading/execution/orders"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      null,
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/info/costs",
+    "method": "post",
+    "operationId": "getCost",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Get what-if trading cost breakdown",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [
+      "#/components/schemas/TradingRealAdminApi_UnifiedOrderRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/GetCostResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/info/demo/costs",
+    "method": "post",
+    "operationId": "getCostDemo",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Get what-if trading cost breakdown",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [
+      "#/components/schemas/TradingDemoAdminApi_UnifiedOrderRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/GetCostResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/info/demo/eligibility",
+    "method": "post",
+    "operationId": "getInstrumentEligibilityDemo",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Check instrument trading eligibility",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [
+      "#/components/schemas/InstrumentEligibilityRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/InstrumentEligibilityResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/info/demo/instrument-breakdown",
+    "method": "get",
+    "operationId": "getTradingInfoDemoPortfolioInstrumentBreakdown",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Get instrument breakdown (demo)",
+    "scopes": [
+      "etoro-public:trade.demo:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/demo/pnl",
+        "GET /api/v1/trading/info/demo/portfolio"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/InstrumentBreakdownResponseDemo"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/info/demo/orders:lookup",
+    "method": "get",
+    "operationId": "getTradingInfoDemoOrdersLookup",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Get order information and position details",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:read",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/demo/close-orders/{orderId}",
+        "GET /api/v1/trading/info/demo/orders/{orderId}"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetOrderInfoResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/info/eligibility",
+    "method": "post",
+    "operationId": "getInstrumentEligibility",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Check instrument trading eligibility",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [
+      "#/components/schemas/InstrumentEligibilityRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/InstrumentEligibilityResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/info/instrument-breakdown",
+    "method": "get",
+    "operationId": "getTradingInfoPortfolioInstrumentBreakdown",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Get instrument breakdown",
+    "scopes": [
+      "etoro-public:trade.real:read"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/portfolio",
+        "GET /api/v1/trading/info/real/pnl"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/InstrumentBreakdownResponse"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/info/orders:lookup",
+    "method": "get",
+    "operationId": "getTradingInfoOrdersLookup",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Get order information and position details",
+    "scopes": [
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:trade.real:read",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "GET /api/v1/trading/info/real/close-orders/{orderId}",
+        "GET /api/v1/trading/info/real/orders/{orderId}"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/GetOrderInfoResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/trading/positions/{positionId}",
+    "method": "patch",
+    "operationId": "updateRealPosition",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Modify stop-loss and take-profit settings on an open position",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": true,
+      "defaultPool": true
+    },
+    "requestSchemas": [
+      "#/components/schemas/UpdatePositionRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/UpdatePositionResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v2/watchlists",
+    "method": "post",
+    "operationId": "getWatchlistsV2",
+    "tags": [
+      "Watchlists"
+    ],
+    "summary": "Get user watchlists (BFF V2)",
+    "scopes": [
+      "etoro-public:demo:read",
+      "etoro-public:demo:write",
+      "etoro-public:real:read",
+      "etoro-public:real:write",
+      "etoro-public:watchlist:read",
+      "etoro-public:watchlist:write"
+    ],
+    "ratelimit": {
+      "limit": 60,
+      "window": 60,
+      "shared": false,
+      "defaultPool": false
+    },
+    "requestSchemas": [
+      "#/components/schemas/BffFacadeRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/WatchlistComponentResponse"
+    ]
+  },
+  {
+    "path": "/api/v3/trading/execution/demo/orders",
+    "method": "post",
+    "operationId": "createTradingExecutionDemoOrdersV3",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Submit an order for asynchronous processing",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/demo/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/demo/orders/{orderId}",
+        "DELETE /api/v3/trading/execution/demo/orders/{orderId}",
+        "POST /api/v1/trading/execution/demo/limit-orders",
+        "POST /api/v1/trading/execution/demo/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/demo/orders"
+      ]
+    },
+    "requestSchemas": [
+      "#/components/schemas/TradingDemoAdminApi_UnifiedOrderRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/UnifiedOrderResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v3/trading/execution/demo/orders/{orderId}",
+    "method": "delete",
+    "operationId": "deleteTradingExecutionDemoOrdersByOrderIdV3",
+    "tags": [
+      "Trading - Demo"
+    ],
+    "summary": "Request cancellation of a pending order",
+    "scopes": [
+      "etoro-public:demo:write",
+      "etoro-public:trade.demo:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/demo/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/demo/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/demo/orders/{orderId}",
+        "POST /api/v1/trading/execution/demo/limit-orders",
+        "POST /api/v1/trading/execution/demo/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/demo/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/demo/orders",
+        "POST /api/v3/trading/execution/demo/orders"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CancelOrderResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v3/trading/execution/orders",
+    "method": "post",
+    "operationId": "createTradingExecutionOrdersV3",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Submit an order for asynchronous processing",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/orders/{orderId}",
+        "DELETE /api/v3/trading/execution/orders/{orderId}",
+        "POST /api/v1/trading/execution/limit-orders",
+        "POST /api/v1/trading/execution/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/orders"
+      ]
+    },
+    "requestSchemas": [
+      "#/components/schemas/TradingRealAdminApi_UnifiedOrderRequest"
+    ],
+    "responseSchemas": [
+      "#/components/schemas/UnifiedOrderResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  },
+  {
+    "path": "/api/v3/trading/execution/orders/{orderId}",
+    "method": "delete",
+    "operationId": "deleteTradingExecutionOrdersByOrderIdV3",
+    "tags": [
+      "Trading - Real"
+    ],
+    "summary": "Request cancellation of a pending order",
+    "scopes": [
+      "etoro-public:real:write",
+      "etoro-public:trade.real:write"
+    ],
+    "ratelimit": {
+      "limit": 20,
+      "window": 60,
+      "shared": true,
+      "defaultPool": false,
+      "sharedWith": [
+        "DELETE /api/v1/trading/execution/limit-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-close-orders/{orderId}",
+        "DELETE /api/v1/trading/execution/market-open-orders/{orderId}",
+        "DELETE /api/v2/trading/execution/orders/{orderId}",
+        "POST /api/v1/trading/execution/limit-orders",
+        "POST /api/v1/trading/execution/market-close-orders/positions/{positionId}",
+        "POST /api/v1/trading/execution/market-open-orders/by-amount",
+        "POST /api/v1/trading/execution/market-open-orders/by-units",
+        "POST /api/v2/trading/execution/orders",
+        "POST /api/v3/trading/execution/orders"
+      ]
+    },
+    "requestSchemas": [],
+    "responseSchemas": [
+      "#/components/schemas/CancelOrderResponse",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails",
+      "#/components/schemas/ProblemDetails"
+    ]
+  }
+]
