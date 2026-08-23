@@ -1,0 +1,48 @@
+{
+  "_provenance": {
+    "migrated_from": "docs/identity-schema.json",
+    "recorded_at_etoro_api_version": "v1.158.0",
+    "note": "Observations were recorded against the version above; re-verify against the current spec snapshot before relying on them."
+  },
+  "_notes": {
+    "notes": [
+      "meResponse returns the AUTHENTICATED user (gcid + realCid + demoCid). Use it to discover your own customer IDs.",
+      "User is the lightweight profile shape used inside posts/comments/feeds/copy-metadata.",
+      "PublicAggregatedInfoUser is the rich profile (30 fields) with verification status, account state, GDPR info, copy-trading attributes.",
+      "Three integer-encoded enums embedded here: AccountStatus (2 variants), PlayerStatus (15 variants), PlayerStatusReason (43 variants 0-42). Wire format is the integer; consider Rust enum + #[serde(into=u32, try_from=u32)] or store as raw integer with a lookup table.",
+      "UserRole is also an integer-encoded enum (11 variants): Regular, PI, Moderator, Anonymous, eToroTeam, eTorian, CopyPortfolio, Depositor, Admin, Verified, Analyst.",
+      "Note casing: meResponse uses lowercase 'cid' (gcid/realCid/demoCid) but PublicAggregatedInfoUser uses 'CID' (realCID/demoCID/masterAccountCid). Same concept, different shape per endpoint.",
+      "User.roles is an array of strings — but UserRole standalone is type:integer. The same enum is wire-encoded differently in different contexts."
+    ]
+  },
+  "schemas": {
+    "UserRole": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::UserRole"
+      }
+    },
+    "PublicAggregatedInfoAccountStatus": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::PublicAggregatedInfoAccountStatus"
+      }
+    },
+    "PublicAggregatedInfoPlayerStatus": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::PublicAggregatedInfoPlayerStatus"
+      }
+    },
+    "PublicAggregatedInfoPlayerStatusReason": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::PublicAggregatedInfoPlayerStatusReason"
+      }
+    }
+  }
+}

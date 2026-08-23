@@ -1,0 +1,53 @@
+{
+  "_provenance": {
+    "migrated_from": "docs/market_data-schema.json",
+    "recorded_at_etoro_api_version": "v1.158.0",
+    "note": "Observations were recorded against the version above; re-verify against the current spec snapshot before relying on them."
+  },
+  "_notes": {
+    "spec_vs_reality_notes": [
+      "Search endpoint (GET /api/v1/market-data/search): the fields= query param is marked required in spec but is NOT enforced — verified empirically (request without it returns 200)",
+      "Search default response (no fields=) returns ~50+ analytic / market-cap fields NOT described in the Instrument schema below — many with hyphenated names like peRatio-TTM-System-Avg that cannot be Rust struct field names without #[serde(rename = ...)]",
+      "Search default response includes a system-aggregate pseudo-instrument with negative instrumentId (-100000) containing crypto-market-wide stats (Bitcoin dominance, etc.) — filter out negative IDs",
+      "Standard fields like symbol, displayname, exchangeID, instrumentType return null UNLESS explicitly listed in fields=",
+      "Default pageSize is 20; totalItems can be ~11k+ — always paginate or filter narrowly",
+      "Live rates: rate items use instrumentID (CAPITAL ID) — different casing than instrumentId in search response. Need #[serde(rename = \"instrumentID\")] in Rust",
+      "Live rates: spec marks several fields obsolete (unitMargin*, *Discounted) — skip modeling them",
+      "Live rates: prices are float in spec — use rust_decimal::Decimal in production code, never f32/f64 for money",
+      "MarketAssetType and MarketEventTag are integer-encoded enums with string-named variants — wire format is the integer index (NOT the string name)",
+      "Standalone Market schema is DIFFERENT from the inline market object inside WatchlistItemDto — same name, different shape",
+      "candlesResponse has nested 'candles' inside outer 'candles' (different shapes) — outer item per-instrument, inner items per-time-period. Inner items use instrumentID (capital), outer uses instrumentId (lowercase). Yes, really.",
+      "closingPricesResponse top level is a bare ARRAY (no envelope object). Outer items each carry instrumentId + officialClosingPrice + nested daily/weekly/monthly with prices that can be -1 (sentinel for 'no data')"
+    ],
+    "modeling_recommendations": [
+      "For symbol resolution: pass internalSymbolFull=AAPL AND fields=instrumentId,internalSymbolFull,displayname,symbol — then verify exact internalSymbolFull match per the docs",
+      "Skip search items where instrumentId < 0 (system aggregates)",
+      "Treat all Instrument fields as Option<T> — none are required by spec and reality confirms many can be null",
+      "For closing prices: handle the -1 sentinel value explicitly, ideally Option<Decimal> via custom deserializer that maps -1 -> None"
+    ],
+    "consolidated_from_common": "Avatar/Svg/ApplicationSource were previously in common-schema.json. Merged here because they are referenced ONLY by Market (Avatar←Market, Svg←Avatar, ApplicationSource←Market) — no other domain consumes them."
+  },
+  "schemas": {
+    "MarketAssetType": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::MarketAssetType"
+      }
+    },
+    "MarketEventTag": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::MarketEventTag"
+      }
+    },
+    "ApplicationSource": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::ApplicationSource"
+      }
+    }
+  }
+}

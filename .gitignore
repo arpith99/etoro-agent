@@ -2,4 +2,8 @@
 .env
 *.json
 !docs/*.json
+!docs/spec/*.json
+!docs/overrides/*.json
 !tests/fixtures/*.json
+# Staging area for chunked spec retrieval; assembled by scripts/fetch-spec.py.
+docs/spec/.staging/

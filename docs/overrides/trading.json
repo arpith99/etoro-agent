@@ -1,0 +1,35 @@
+{
+  "_provenance": {
+    "migrated_from": "docs/trading-schema.json",
+    "recorded_at_etoro_api_version": "v1.158.0",
+    "note": "Observations were recorded against the version above; re-verify against the current spec snapshot before relying on them."
+  },
+  "_notes": {
+    "notes": [
+      "Two parallel naming conventions live here: the user-facing camelCase set (createOrderRequest, getOrderResponse, etc.) and the .NET-namespaced internal DTOs (eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.*). The lowercase ones are what API users typically call; the namespaced ones describe internal request shapes.",
+      "Heavy field-name casing inconsistency: instrumentId vs instrumentID vs InstrumentId vs InstrumentID across schemas. Plan on using #[serde(rename = ...)] generously.",
+      "ALL price/amount/rate fields are float in spec — use rust_decimal::Decimal in production code, never f32/f64",
+      "orderType is 'MKT' or 'LMT' (string enum); executionType is 'GTC' or 'IOC' (string enum). Model as Rust enums with #[serde(rename_all)].",
+      "BUT some schemas (Order, OrderForOpen, OrderForClose, OrderForOpenInfoResponse) use INTEGER orderType/executionType — same concept, different wire format per endpoint",
+      "Position has 35 fields — the heaviest non-portfolio object schema. Many will be missing/nullable in practice; model defensively.",
+      "Mirror (copy-trading) has 26 fields and lots of obsolete/internal state — read the descriptions carefully; many fields are marked Obsolete.",
+      "TradeDirection (Long/Short), TradeType (Open/Close) are integer-encoded with string-named variants — wire format is the integer index"
+    ]
+  },
+  "schemas": {
+    "TradeDirection": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::TradeDirection"
+      }
+    },
+    "TradeType": {
+      "x-rust-type": {
+        "crate": "etoro-agent",
+        "version": "0.1.0",
+        "path": "etoro_agent::types::manual::TradeType"
+      }
+    }
+  }
+}
