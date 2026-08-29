@@ -87,6 +87,9 @@ loopback hosts, so credentials cannot be sent in cleartext by a mistyped URL.
 See [Architecture and safety](docs/architecture.md) for component boundaries,
 wire-format invariants, and the constraints to preserve when adding endpoints.
 
+See [Roadmap](docs/roadmap.md) for the planned path to a live strategy, and the
+API constraints that shape it.
+
 ## Generated types
 
 Strongly-typed Rust models live in `src/types/`, generated from `docs/spec/` —
@@ -206,6 +209,7 @@ docs/
   architecture.md           # runtime boundaries and safety invariants
   code-walkthrough.md       # guided tour of the implementation
   domains.json              # generated: tag -> module slug + schema closure
+  roadmap.md                # plan from read-only client to a live strategy
   spec/                     # committed OpenAPI snapshot (source of truth)
     schemas.json            #   component schemas, verbatim upstream
     operations.json         #   operation index: tags, scopes, rate-limit pools
