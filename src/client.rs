@@ -8,7 +8,7 @@ use crate::types::{
     // The exception envelope is a nested type generated from an inline object,
     // not a component schema, so it has no tag facade to be re-exported from.
     components::WatchlistsResponseException,
-    tags::{trading_real::PortfolioResponse, watchlists::WatchlistsResponse},
+    tags::{identity::MeResponse, trading_real::PortfolioResponse, watchlists::WatchlistsResponse},
 };
 const BASE_URL: &str = "https://public-api.etoro.com";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
@@ -91,6 +91,12 @@ impl EtoroClient {
             response.client_portfolio.is_some(),
             "portfolio response omitted clientPortfolio (request ID {request_id})"
         );
+        Ok(response)
+    }
+
+    pub async fn me(&self) -> Result<MeResponse> {
+        let (response, _): (MeResponse, _) = self.get_json("api/v1/me").await?;
+
         Ok(response)
     }
 

@@ -29,6 +29,12 @@ async fn main() -> Result<()> {
         dump_private("portfolio_response.json", &portfolio)?;
     }
 
+    let me = client.me().await?;
+    println!("Fetched user details for user: {}.", me.username);
+    if dump_responses {
+        dump_private("me_response.json", &me)?;
+    }
+
     Ok(())
 }
 

@@ -27,6 +27,23 @@ live response before relying on either version.
 - **Casing differs per endpoint:** `meResponse` uses lowercase `cid`
   (`gcid`/`realCid`/`demoCid`) while `PublicAggregatedInfoUser` uses `CID`
   (`realCID`/`demoCID`/`masterAccountCid`). Same concept, different spelling.
+Confirmed against a live `GET /api/v1/me` response (2026-08-23, API v1.355.0):
+
+- **`middleName` is sent as `""`, not `null`, when absent.** The spec declares
+  it `nullable: true`, so the generated field is `Option<String>` — but the
+  absent case arrives as `Some("")` and never as `None`. Code matching on
+  `Some(..)` still has to handle the empty string. Pinned by
+  `me_contract_uses_expected_path_and_headers`.
+- **`dateOfBirth` is a plain date** (`"1985-06-06"`), not RFC 3339. Leaving it
+  as `String` is correct; adding `format: date-time` would make the response
+  fail to decode.
+- The response decodes with **no hand-written validation** in `me()` — every
+  field the client relies on is non-`Option`, so serde enforces presence. A
+  missing required field produces `missing field \`gcid\`` wrapped in the
+  `get_json` decode context, which is actionable enough to rely on.
+- `demoCid` is populated even when the token holds **no demo scope**. You can
+  see the demo account without being able to act on it.
+
 - ⚠️ `UserRole` was a standalone integer enum (11 variants: Regular, PI,
   Moderator, Anonymous, eToroTeam, eTorian, CopyPortfolio, Depositor, Admin,
   Verified, Analyst). Note `User.roles` was an array of **strings** while the

@@ -9,6 +9,7 @@ use std::{
 
 const WATCHLISTS_FIXTURE: &str = include_str!("fixtures/watchlists.json");
 const PORTFOLIO_FIXTURE: &str = include_str!("fixtures/portfolio.json");
+const ME_FIXTURE: &str = include_str!("fixtures/me.json");
 
 struct MockResponse {
     base_url: String,
@@ -112,6 +113,59 @@ async fn portfolio_contract_preserves_decimal_precision() {
     let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
     assert!(request.starts_with("GET /api/v1/trading/info/portfolio HTTP/1.1\r\n"));
     assert_auth_and_request_id(&request);
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn me_contract_uses_expected_path_and_headers() {
+    let mock = serve_once("200 OK", ME_FIXTURE);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let response = client.me().await.unwrap();
+
+    // Upstream marks these required, so they decode as plain values rather than
+    // Option. No `.unwrap()` here is the point: presence is enforced by serde
+    // at the type level, which is why me() carries no hand-written checks.
+    assert_eq!(response.gcid, 111111);
+    assert_eq!(response.demo_cid, 222222);
+    assert_eq!(response.real_cid, 333333);
+    assert_eq!(response.username, "fixture-user");
+    assert_eq!(response.scopes.len(), 2);
+
+    // The API sends an empty string, not null, for an absent middle name --
+    // observed on a live response. `nullable: true` in the spec makes this an
+    // Option, so the absent case arrives as Some("") and never as None. Callers
+    // matching on Some(..) must still handle the empty string.
+    assert_eq!(response.middle_name.as_deref(), Some(""));
+
+    let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert!(request.starts_with("GET /api/v1/me HTTP/1.1\r\n"));
+    assert_auth_and_request_id(&request);
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn me_missing_required_field_is_rejected_with_the_field_name() {
+    // me() has no hand-written validation: every field it relies on is
+    // non-Option, so serde is the only thing standing between a malformed
+    // response and the caller. This pins that the resulting error is actually
+    // actionable -- it must name the missing field, not just say "decode
+    // failed" -- because nothing else in the method would catch it.
+    let mock = serve_once(
+        "200 OK",
+        r#"{"realCid":333333,"demoCid":222222,"username":"fixture-user","playerLevel":1,
+            "gender":0,"language":1,"dateOfBirth":"1970-01-01","scopes":[]}"#,
+    );
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let error = format!("{:#}", client.me().await.unwrap_err());
+    assert!(error.contains("could not decode response body"), "{error}");
+    assert!(error.contains("missing field `gcid`"), "{error}");
+    assert!(error.contains("request ID"), "{error}");
+
+    mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
     mock.server.join().unwrap();
 }
 

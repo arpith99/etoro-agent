@@ -1,0 +1,18 @@
+{
+  "avatarUrl": "https://example.invalid/avatars/150x150/fixture.png",
+  "dateOfBirth": "1970-01-01",
+  "demoCid": 222222,
+  "firstName": "Fixture",
+  "gcid": 111111,
+  "gender": 0,
+  "language": 1,
+  "lastName": "User",
+  "middleName": "",
+  "playerLevel": 1,
+  "realCid": 333333,
+  "scopes": [
+    "etoro-public:demo:read",
+    "etoro-public:user-info:read"
+  ],
+  "username": "fixture-user"
+}
