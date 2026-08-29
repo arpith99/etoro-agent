@@ -5,9 +5,9 @@ way it is, and which Rust idioms are worth carrying forward. Where
 [`architecture.md`](architecture.md) states the invariants, this document
 explains the implementation that upholds them.
 
-Describes the tree as of the eToro API v1.355.0 refresh (2026-08-23). The
-suite is 21 Rust tests green (10 library unit, 3 in `main.rs`, 7 contract, 1
-doctest) plus 40 Python tests for the pipeline scripts.
+Describes the tree as of the typed-errors change (2026-08-23), on API
+v1.355.0. The suite is 26 Rust tests green (10 library unit, 3 in `main.rs`,
+11 contract, 2 doctests) plus 40 Python tests for the pipeline scripts.
 
 ## 1. The crate's shape
 
@@ -19,6 +19,7 @@ structural decision in the project.
 // src/lib.rs
 extern crate self as etoro_agent;
 pub mod client;
+pub mod error;
 pub mod types;
 ```
 
@@ -45,7 +46,8 @@ since running it would make live API calls.
 
 | Crate | Why it is there |
 |---|---|
-| `anyhow` | One error type (`anyhow::Error`) for the whole app, with `.context()` chaining. Fine for a binary; a library published for others would want typed errors instead (`thiserror`). |
+| `thiserror` | Typed errors for the library: `ClientError` for construction, `ApiError` for requests. Callers match on variants instead of parsing strings. |
+| `anyhow` | Kept for the *binary* only, where a human reads the message. `ApiError` implements `std::error::Error`, so `?` converts it in `main.rs` with no glue. |
 | `serde_json` with `arbitrary_precision` | Makes serde_json keep a JSON number's exact text instead of parsing it into `f64`. This is a *global* feature: it changes how every number in the crate is handled. |
 | `rust_decimal` with `serde-arbitrary-precision` | The other half of that bridge. |
 | `reqwest` with `json` | The `json` feature is currently unused — nothing in `src/` calls `.json()`, because the client deserializes manually (see below). |
@@ -60,14 +62,18 @@ since running it would make live API calls.
 logic lives in one place.
 
 ```rust
-let sensitive = |s: &str| -> Result<header::HeaderValue> {
-    let mut value = header::HeaderValue::from_str(s)?;
+let sensitive = |header: &'static str, value: &str| -> Result<_, ClientError> {
+    let mut value = header::HeaderValue::from_str(value)
+        .map_err(|source| ClientError::InvalidCredential { header, source })?;
     value.set_sensitive(true);
     Ok(value)
 };
 ```
 
-A **closure returning `Result`**, so `?` works inside it. `set_sensitive` does
+A **closure returning `Result`**, so `?` works inside it. It takes the header
+name as well as the value purely so the error can say *which* credential was
+malformed — the earlier string-based version could not tell them apart.
+`set_sensitive` does
 two real things: it stops the value being HPACK-indexed on HTTP/2 (so the key
 is not cached in a shared compression table), and it makes `HeaderValue`'s
 `Debug` print `Sensitive` instead of the key — so an accidental
@@ -92,13 +98,13 @@ responsibility: **API paths must not start with a slash.** The
 `http://localhost:8080/prefix` case in the loopback test exercises exactly this.
 
 ```rust
-ensure!(
-    base_url.scheme() == "https" || (base_url.scheme() == "http" && is_loopback(&base_url)),
-    "refusing to send API credentials over non-HTTPS base URL {base_url}"
-);
+if !(base_url.scheme() == "https" || (base_url.scheme() == "http" && is_loopback(&base_url))) {
+    return Err(ClientError::InsecureBaseUrl { url: base_url.to_string() });
+}
 ```
 
-`ensure!` is anyhow's `if !cond { return Err(...) }`. The rule is
+`InsecureBaseUrl` is deliberately a different variant from `InvalidBaseUrl`:
+the URL parsed perfectly well and we are *refusing* it. The rule is
 *credentials-shaped*, not URL-shaped: because auth headers are baked into the
 client, any origin it is pointed at receives them, so plaintext is only
 tolerable where the bytes cannot leave the machine. `is_loopback` handles
@@ -108,26 +114,43 @@ just `127.0.0.1`), and strips `[...]` for IPv6 literals such as `[::1]`.
 ### `get_json` — the one place HTTP happens
 
 ```rust
-async fn get_json<T: DeserializeOwned>(&self, path: &str) -> Result<(T, String)>
+async fn get_json<T: DeserializeOwned>(&self, path: &str)
+    -> Result<(T, RequestContext), ApiError>
 ```
 
 **Generic over the response type**, private, and returns the decoded value
-**plus the request ID**. Three things to notice:
+**plus a `RequestContext`** carrying the request ID and URL. Three things to
+notice:
 
 **`DeserializeOwned` rather than `Deserialize<'de>`.** The bound means "can be
 deserialized without borrowing from the input buffer" — necessary because
 `body` is a local that dies at the end of the function, so a type borrowing
 `&str` slices out of it could not outlive it.
 
-**The request ID is returned, not swallowed.** Every error message in every
-endpoint method carries it, so a support question of the form "which request?"
-has an answer. Threading it through the return type is the plumbing cost.
+**The request ID is returned, not swallowed.** Every error carries it, so a
+support question of the form "which request?" has an answer. It travels inside
+`RequestContext` so that an endpoint method raising an envelope error can
+attach the same ID and URL `get_json` would have used — `ctx.malformed("...")`
+rather than re-deriving them.
 
 ```rust
-let body = response.bytes().await?;
-if !status.is_success() { bail!("GET {url} returned {status} ...: {}", body_excerpt(&body)); }
-let value = serde_json::from_slice(&body).with_context(|| ...)?;
+let status = response.status();
+let retry_after = response.headers().get(header::RETRY_AFTER)…;   // before bytes()!
+let body = response.bytes().await.map_err(…Transport…)?;
+
+if !status.is_success() {
+    return Err(ctx.error(match status {
+        StatusCode::TOO_MANY_REQUESTS => ApiErrorKind::RateLimited { retry_after },
+        StatusCode::FORBIDDEN         => ApiErrorKind::Forbidden { body },
+        status                        => ApiErrorKind::Http { status, body },
+    }));
+}
+let value = serde_json::from_slice(&body).map_err(…Decode…)?;
 ```
+
+Note the header read placed *before* `bytes()`: that call consumes the
+response, so reading `Retry-After` afterwards is impossible and
+`RateLimited { retry_after }` could only ever be `None`.
 
 **This is why `.json()` is not used.** `reqwest`'s `.json()` consumes the
 response and, on failure, says nothing about what the body actually contained.
@@ -138,9 +161,6 @@ that no longer matches our types" is the difference between a five-minute and a
 two-hour debugging session, and `schema_mismatch_is_reported_as_decode_failure_not_invalid_json`
 pins it.
 
-`with_context(|| ...)` takes a **closure**, so the `format!` runs only on the
-error path; the eager `.context("...")` would allocate on every successful call.
-
 `body_excerpt` caps at 512 *chars*, not bytes (`String::from_utf8_lossy` then
 `.chars()`, so it cannot split a multi-byte character), and appends `…` only if
 there was more. The `chars.by_ref().take(n)` idiom consumes 512 and then asks
@@ -149,14 +169,15 @@ the *same* iterator whether anything remains.
 ### The two endpoint methods, and why they differ
 
 ```rust
-pub async fn watchlists(&self) -> Result<WatchlistsResponse> {
+pub async fn watchlists(&self) -> Result<WatchlistsResponse, ApiError> {
     match response.is_succeeded {
         Some(true) => {}
-        Some(false) => bail!("... API-level failure ({detail}; request ID {request_id})"),
-        None => bail!("watchlists response omitted isSucceeded ..."),
+        Some(false) => return Err(ctx.error(ApiErrorKind::ApiFailure { detail })),
+        None => return Err(ctx.malformed("watchlists response omitted isSucceeded")),
     }
-    let status = response.status.with_context(|| ...)?;
-    ensure!((200..300).contains(&status), "...");
+    let Some(status) = response.status else {
+        return Err(ctx.malformed("watchlists response omitted status"));
+    };
 ```
 
 Matching on `Option<bool>` gives **three** cases, and all three are handled
@@ -169,8 +190,10 @@ Note also that HTTP 200 does **not** imply success: eToro can return `200 OK`
 with `isSucceeded: false` inside. Checking the envelope is not paranoia.
 
 ```rust
-pub async fn portfolio(&self) -> Result<PortfolioResponse> {
-    ensure!(response.client_portfolio.is_some(), "...");
+pub async fn portfolio(&self) -> Result<PortfolioResponse, ApiError> {
+    if response.client_portfolio.is_none() {
+        return Err(ctx.malformed("portfolio response omitted clientPortfolio"));
+    }
 ```
 
 Much thinner, and not from laziness. `WatchlistsResponse` has
@@ -180,7 +203,18 @@ conventions — the validation follows the schema. Any new endpoint therefore
 starts with the question *what does this response's envelope actually
 guarantee?*, not with copying an existing method.
 
-`describe_exception` uses a **let-else**:
+`me()` is the third answer to that question and the most interesting: it
+validates **nothing**. Upstream marks its nine useful fields required, so they
+decode as plain values and serde rejects an incomplete response before the
+method body runs. The check did not disappear — it moved into the type, where
+it is enforced at every use site instead of once per call. The cost is that
+serde's message becomes the only diagnostic, which is why a contract test
+drops `gcid` and pins that the error names the missing field.
+
+`exception_detail` converts the generated envelope into the error type's own
+`ExceptionDetail`, so `src/error.rs` never mentions a generated type and does
+not have to move when the schema snapshot is refreshed. Its `Display` uses a
+**let-else** pattern in the same spirit as the original:
 
 ```rust
 let Some(exception) = exception else {
@@ -408,9 +442,10 @@ the environment.
 Open items, in rough priority order:
 
 1. **`reqwest`'s `json` feature is unused** — a one-line removal.
-2. **`anyhow` everywhere** suits a binary, but as soon as something needs to
-   *react* to a failure differently (retry a 429, re-authenticate on 403),
-   typed errors are required. Today a caller can only match on error strings.
+2. ~~**`anyhow` everywhere**~~ — done. `src/error.rs` now defines `ClientError`
+   and `ApiError`; callers branch with `is_retryable()` / `retry_after()` rather
+   than matching strings. The variants are shaped by the decisions a caller
+   makes, not by the 15 places the client can fail.
 3. **`portfolio()`'s thin validation** is schema-driven, but it means the
    client's guarantees vary per endpoint. Worth stating explicitly as more
    endpoints are added.

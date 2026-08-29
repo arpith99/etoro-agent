@@ -16,3 +16,8 @@ rust_decimal = { version = "1", features = ["serde-arbitrary-precision"] }
 regress = "0.10"
 dotenvy = "0.15"
 anyhow = "1"
+# Typed client errors. anyhow stays for the binary, where a human reads the
+# message; the library returns errors callers can match on.
+thiserror = "2"
+# typify emits url::Url in generated code paths and the client parses base URLs.
+url = "2"

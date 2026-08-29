@@ -1,4 +1,6 @@
 use etoro_agent::client::EtoroClient;
+use etoro_agent::error::ApiErrorKind;
+use reqwest::StatusCode;
 use std::{
     io::{Read, Write},
     net::TcpListener,
@@ -18,10 +20,23 @@ struct MockResponse {
 }
 
 fn serve_once(status: &str, body: &'static str) -> MockResponse {
+    serve_once_with_headers(status, &[], body)
+}
+
+fn serve_once_with_headers(
+    status: &str,
+    extra_headers: &[(&str, &str)],
+    body: &'static str,
+) -> MockResponse {
+    let extra_headers: String = extra_headers
+        .iter()
+        .map(|(name, value)| format!("{name}: {value}\r\n"))
+        .collect();
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let address = listener.local_addr().unwrap();
     let (request_sender, request) = mpsc::channel();
     let status = status.to_owned();
+    let extra_headers = extra_headers.to_owned();
 
     let server = thread::spawn(move || {
         // `TcpListener::accept` has no timeout, so a client that never connects
@@ -57,7 +72,7 @@ fn serve_once(status: &str, body: &'static str) -> MockResponse {
             .unwrap();
 
         let response = format!(
-            "HTTP/1.1 {status}\r\ncontent-type: application/json\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+            "HTTP/1.1 {status}\r\ncontent-type: application/json\r\n{extra_headers}content-length: {}\r\nconnection: close\r\n\r\n{body}",
             body.len()
         );
         stream.write_all(response.as_bytes()).unwrap();
@@ -171,14 +186,64 @@ async fn me_missing_required_field_is_rejected_with_the_field_name() {
 
 #[tokio::test]
 async fn http_errors_include_status_body_and_request_id() {
-    let mock = serve_once("429 Too Many Requests", r#"{"message":"rate limited"}"#);
+    let mock = serve_once("500 Internal Server Error", r#"{"message":"boom"}"#);
     let client =
         EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
 
-    let error = client.watchlists().await.unwrap_err().to_string();
-    assert!(error.contains("429 Too Many Requests"));
-    assert!(error.contains("rate limited"));
-    assert!(error.contains("request ID"));
+    let error = client.watchlists().await.unwrap_err();
+
+    // A server error is worth retrying; the status is typed so callers branch on
+    // `is_server_error()` rather than needing a variant per code.
+    assert!(matches!(
+        &error.kind,
+        ApiErrorKind::Http { status, body }
+            if *status == StatusCode::INTERNAL_SERVER_ERROR && body.contains("boom")
+    ));
+    assert!(error.is_retryable());
+    assert_eq!(error.status(), Some(StatusCode::INTERNAL_SERVER_ERROR));
+    assert!(error.to_string().contains("request ID"));
+
+    mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn rate_limiting_is_typed_and_carries_retry_after() {
+    // 429 is split out of Http because it is the only status carrying data the
+    // caller needs. Retry-After must be read from the headers before the body is
+    // consumed, so this also pins that ordering in get_json.
+    let mock = serve_once_with_headers(
+        "429 Too Many Requests",
+        &[("retry-after", "30")],
+        r#"{"message":"rate limited"}"#,
+    );
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let error = client.watchlists().await.unwrap_err();
+
+    assert!(matches!(error.kind, ApiErrorKind::RateLimited { .. }));
+    assert_eq!(error.retry_after(), Some(Duration::from_secs(30)));
+    assert!(error.is_retryable());
+    assert_eq!(error.status(), Some(StatusCode::TOO_MANY_REQUESTS));
+
+    mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn forbidden_is_reported_as_a_scope_problem_and_is_not_retryable() {
+    // eToro returns 403, not 401, when a key lacks the scope for an endpoint.
+    // Retrying that would only burn rate-limit budget.
+    let mock = serve_once("403 Forbidden", r#"{"message":"insufficient scope"}"#);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let error = client.watchlists().await.unwrap_err();
+
+    assert!(matches!(&error.kind, ApiErrorKind::Forbidden { body } if body.contains("scope")));
+    assert!(!error.is_retryable());
+    assert!(error.to_string().contains("may lack the scope"));
 
     mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
     mock.server.join().unwrap();

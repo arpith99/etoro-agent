@@ -53,12 +53,35 @@ async fn main() -> Result<()> {
 }
 ```
 
-Every request gets a UUID request ID. Transport, HTTP, decoding, and response
-validation errors include that ID where available. HTTP error messages include
-at most the first 512 characters of the response body; API-level failures
-(`isSucceeded: false`) include the `exception` reason and message. The client
-has a 30-second request timeout; retry and rate-limit policies are not
-implemented. `EtoroClient::with_base_url` refuses plain `http` for anything but
+Endpoint methods return [`ApiError`](src/error.rs), which callers can match on
+rather than parse:
+
+```rust,no_run
+# use etoro_agent::{client::EtoroClient, error::ApiErrorKind};
+# async fn example(client: &EtoroClient) {
+match client.watchlists().await {
+    Ok(response) => { /* ... */ }
+    Err(error) if error.is_retryable() => {
+        // 429, 5xx, timeout — error.retry_after() says how long the API asked for
+    }
+    Err(error) => match error.kind {
+        ApiErrorKind::Forbidden { .. } => { /* the key likely lacks a scope */ }
+        ApiErrorKind::Decode(_) => { /* the spec snapshot has drifted */ }
+        _ => { /* ... */ }
+    },
+}
+# }
+```
+
+Every request carries a UUID request ID, and every error carries it back along
+with the URL. HTTP error messages include at most the first 512 characters of
+the response body; API-level failures (`isSucceeded: false`) carry the
+`exception` reason and message. Client construction returns a separate
+`ClientError`, since nothing there is retryable.
+
+The client has a 30-second request timeout; retry and rate-limit policies are
+not implemented, though `is_retryable()` and `retry_after()` are the inputs one
+would need. `EtoroClient::with_base_url` refuses plain `http` for anything but
 loopback hosts, so credentials cannot be sent in cleartext by a mistyped URL.
 
 See [Architecture and safety](docs/architecture.md) for component boundaries,

@@ -22,9 +22,11 @@ evaluation, persistence, scheduling, and order execution are not implemented.
  generated response types -- serde decoding and envelope validation
 ```
 
-`src/lib.rs` exports the reusable client and wire types. `src/main.rs` is a
-small executable that loads credentials, calls the two implemented read-only
-endpoints, and prints aggregate counts.
+`src/lib.rs` exports the reusable client, its typed errors, and the wire types.
+`src/main.rs` is a small executable that loads credentials, calls the three
+implemented read-only endpoints, and prints aggregate counts. It keeps `anyhow`
+for reporting, which works unchanged because the library's errors implement
+`std::error::Error`.
 
 `EtoroClient::with_base_url` exists for API-compatible sandboxes and local
 contract tests. Production callers should normally use `EtoroClient::new`,
@@ -38,15 +40,31 @@ The client currently exposes:
 
 | Method | HTTP endpoint | Validation |
 |---|---|---|
-| `watchlists()` | `GET /api/v1/watchlists` | `isSucceeded` must be true and the embedded status must be 2xx; on failure the `exception` reason/message/invalidItems are included in the error |
+| `watchlists()` | `GET /api/v1/watchlists` | `isSucceeded` must be true and the embedded status must be 2xx; on failure the `exception` reason/message/invalidItems are carried in the error |
 | `portfolio()` | `GET /api/v1/trading/info/portfolio` | `clientPortfolio` must be present |
+| `me()` | `GET /api/v1/me` | none by hand — upstream marks nine fields required, so serde enforces presence before the method returns |
 
-Both requests send `x-api-key`, `x-user-key`, and a fresh `x-request-id`.
+Every request sends `x-api-key`, `x-user-key`, and a fresh `x-request-id`.
 Authentication header values are marked sensitive in `reqwest`, and requests
-have a 30-second timeout. Non-successful HTTP responses return the status,
-request ID, and a response-body excerpt capped at 512 characters. A 2xx body
-that does not match the generated types is reported as a decode failure with
-serde's reason (for example an unknown enum variant), not as "invalid JSON".
+have a 30-second timeout.
+
+Failures are typed, in `src/error.rs`. `ClientError` covers construction
+(nothing there is retryable); `ApiError` covers requests and carries the
+request ID and URL alongside an `ApiErrorKind`. The variants are shaped by the
+decisions a caller makes rather than by the places the client can fail:
+`RateLimited` is separate from `Http` because it alone carries `Retry-After`,
+and `Forbidden` is separate because eToro returns 403 — not 401 — when a key
+lacks scope. Nuance beyond the variants lives in methods, so the branch exists
+once: `ApiError::is_retryable()` and `ApiError::retry_after()`.
+
+Non-successful HTTP responses carry the status, the request ID, and a
+response-body excerpt capped at 512 characters. A 2xx body that does not match
+the generated types is reported as a decode failure carrying serde's own reason
+(for example an unknown enum variant or a missing required field), not as
+"invalid JSON". A 2xx body that decodes but violates an envelope invariant is
+`Malformed`, which is distinct from the API deliberately reporting failure
+(`ApiFailure`): the first means the snapshot has drifted, the second means the
+API said no.
 
 Enum types are closed: an unrecognised variant anywhere in a response fails
 the whole call. That is deliberate for now — silently mapping unknown values
@@ -54,9 +72,13 @@ would hide spec drift — but it means an eToro-side addition (a new watchlist
 type, asset class, ...) surfaces as a decode failure until the schema and
 `manual.rs` are updated.
 
-Retries are deliberately absent. A future retry policy must account for eToro
-rate limits and must never retry a non-idempotent trading request without an
-explicit idempotency design.
+Retries are deliberately absent, but the inputs a policy needs now exist:
+`is_retryable()` / `retry_after()` on the error, and per-endpoint rate-limit
+pools in `docs/spec/operations.json` (order execution is 20 requests/60s shared
+across about ten endpoints; market data is a separate 120/60s pool; everything
+else draws on a shared 60/60s default). `get_json` remains the single chokepoint
+where such a policy would live. It must never retry a non-idempotent trading
+request without an explicit idempotency design.
 
 ## Numeric invariant
 

@@ -1,9 +1,9 @@
 use std::{net::IpAddr, time::Duration};
 
-use anyhow::{Context, Result, bail, ensure};
-use reqwest::{Url, header};
+use reqwest::{StatusCode, Url, header};
 use serde::de::DeserializeOwned;
 
+use crate::error::{ApiError, ApiErrorKind, ClientError, ExceptionDetail};
 use crate::types::{
     // The exception envelope is a nested type generated from an inline object,
     // not a component schema, so it has no tag facade to be re-exported from.
@@ -21,7 +21,7 @@ pub struct EtoroClient {
 }
 
 impl EtoroClient {
-    pub fn new(api_key: &str, user_key: &str) -> Result<Self> {
+    pub fn new(api_key: &str, user_key: &str) -> Result<Self, ClientError> {
         Self::with_base_url(api_key, user_key, BASE_URL)
     }
 
@@ -32,24 +32,36 @@ impl EtoroClient {
     /// [`Self::new`]. Because those headers carry credentials, only `https`
     /// origins are accepted, except for loopback hosts (`localhost`,
     /// `127.0.0.0/8`, `::1`) where plain `http` is allowed for local mocks.
-    pub fn with_base_url(api_key: &str, user_key: &str, base_url: &str) -> Result<Self> {
+    pub fn with_base_url(
+        api_key: &str,
+        user_key: &str,
+        base_url: &str,
+    ) -> Result<Self, ClientError> {
         let mut headers = header::HeaderMap::new();
 
-        let sensitive = |s: &str| -> Result<header::HeaderValue> {
-            let mut value = header::HeaderValue::from_str(s)?;
+        let sensitive = |header: &'static str, value: &str| -> Result<_, ClientError> {
+            let mut value = header::HeaderValue::from_str(value)
+                .map_err(|source| ClientError::InvalidCredential { header, source })?;
             value.set_sensitive(true);
             Ok(value)
         };
-        headers.insert("x-api-key", sensitive(api_key)?);
-        headers.insert("x-user-key", sensitive(user_key)?);
+        headers.insert("x-api-key", sensitive("x-api-key", api_key)?);
+        headers.insert("x-user-key", sensitive("x-user-key", user_key)?);
 
-        let base_url: Url = format!("{}/", base_url.trim_end_matches('/'))
+        let normalized = format!("{}/", base_url.trim_end_matches('/'));
+        let base_url: Url = normalized
             .parse()
-            .context("invalid eToro API base URL")?;
-        ensure!(
-            base_url.scheme() == "https" || (base_url.scheme() == "http" && is_loopback(&base_url)),
-            "refusing to send API credentials over non-HTTPS base URL {base_url}"
-        );
+            .map_err(|source| ClientError::InvalidBaseUrl {
+                url: normalized.clone(),
+                source,
+            })?;
+        if !(base_url.scheme() == "https"
+            || (base_url.scheme() == "http" && is_loopback(&base_url)))
+        {
+            return Err(ClientError::InsecureBaseUrl {
+                url: base_url.to_string(),
+            });
+        }
         Ok(Self {
             http: reqwest::Client::builder()
                 .default_headers(headers)
@@ -59,82 +71,132 @@ impl EtoroClient {
         })
     }
 
-    pub async fn watchlists(&self) -> Result<WatchlistsResponse> {
-        let (response, request_id): (WatchlistsResponse, _) =
-            self.get_json("api/v1/watchlists").await?;
+    pub async fn watchlists(&self) -> Result<WatchlistsResponse, ApiError> {
+        let (response, ctx): (WatchlistsResponse, _) = self.get_json("api/v1/watchlists").await?;
 
         match response.is_succeeded {
             Some(true) => {}
+            // The API deliberately said no, and told us why.
             Some(false) => {
-                let detail = describe_exception(response.exception.as_ref());
-                bail!(
-                    "watchlists response reported an API-level failure ({detail}; request ID {request_id})"
-                )
+                return Err(ctx.error(ApiErrorKind::ApiFailure {
+                    detail: response.exception.as_ref().map(exception_detail),
+                }));
             }
-            None => bail!("watchlists response omitted isSucceeded (request ID {request_id})"),
+            // Absent is not the same as false: it means the response is not the
+            // shape we believe it is, which is a different bug.
+            None => {
+                return Err(ctx.malformed("watchlists response omitted isSucceeded"));
+            }
         }
-        let status = response.status.with_context(|| {
-            format!("watchlists response omitted status (request ID {request_id})")
-        })?;
-        ensure!(
-            (200..300).contains(&status),
-            "watchlists response reported API status {status} (request ID {request_id})"
-        );
+        let Some(status) = response.status else {
+            return Err(ctx.malformed("watchlists response omitted status"));
+        };
+        if !(200..300).contains(&status) {
+            return Err(ctx.malformed(format!("watchlists response reported API status {status}")));
+        }
 
         Ok(response)
     }
 
-    pub async fn portfolio(&self) -> Result<PortfolioResponse> {
-        let (response, request_id): (PortfolioResponse, _) =
+    pub async fn portfolio(&self) -> Result<PortfolioResponse, ApiError> {
+        let (response, ctx): (PortfolioResponse, _) =
             self.get_json("api/v1/trading/info/portfolio").await?;
-        ensure!(
-            response.client_portfolio.is_some(),
-            "portfolio response omitted clientPortfolio (request ID {request_id})"
-        );
+        if response.client_portfolio.is_none() {
+            return Err(ctx.malformed("portfolio response omitted clientPortfolio"));
+        }
         Ok(response)
     }
 
-    pub async fn me(&self) -> Result<MeResponse> {
-        let (response, _): (MeResponse, _) = self.get_json("api/v1/me").await?;
-
+    /// The authenticated user's profile.
+    ///
+    /// No envelope validation: upstream marks `gcid`, `realCid`, `demoCid`,
+    /// `username` and `scopes` required, so they decode as plain values and
+    /// serde rejects a response missing any of them before this returns. The
+    /// check lives in the type rather than here.
+    pub async fn me(&self) -> Result<MeResponse, ApiError> {
+        let (response, _ctx): (MeResponse, _) = self.get_json("api/v1/me").await?;
         Ok(response)
     }
 
-    async fn get_json<T: DeserializeOwned>(&self, path: &str) -> Result<(T, String)> {
+    async fn get_json<T: DeserializeOwned>(
+        &self,
+        path: &str,
+    ) -> Result<(T, RequestContext), ApiError> {
         let request_id = uuid::Uuid::new_v4().to_string();
-        let url = self
-            .base_url
-            .join(path)
-            .with_context(|| format!("invalid API path {path:?}"))?;
+        let url = self.base_url.join(path).map_err(|_| ApiError {
+            request_id: request_id.clone(),
+            url: self.base_url.to_string(),
+            kind: ApiErrorKind::InvalidPath {
+                path: path.to_owned(),
+            },
+        })?;
+        let ctx = RequestContext {
+            request_id,
+            url: url.to_string(),
+        };
 
         let response = self
             .http
             .get(url.clone())
-            .header("x-request-id", &request_id)
+            .header("x-request-id", &ctx.request_id)
             .send()
             .await
-            .with_context(|| format!("GET {url} failed (request ID {request_id})"))?;
+            .map_err(|source| ctx.error(ApiErrorKind::Transport(source)))?;
 
         let status = response.status();
-        let body = response.bytes().await.with_context(|| {
-            format!("failed to read GET {url} response body (request ID {request_id})")
-        })?;
+        // Headers must be read before `bytes()` consumes the response, or
+        // `retry_after` could only ever be None.
+        let retry_after = response
+            .headers()
+            .get(header::RETRY_AFTER)
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<u64>().ok())
+            .map(Duration::from_secs);
+
+        let body = response
+            .bytes()
+            .await
+            .map_err(|source| ctx.error(ApiErrorKind::Transport(source)))?;
 
         if !status.is_success() {
-            bail!(
-                "GET {url} returned {status} (request ID {request_id}): {}",
-                body_excerpt(&body)
-            );
+            let body = body_excerpt(&body);
+            return Err(ctx.error(match status {
+                StatusCode::TOO_MANY_REQUESTS => ApiErrorKind::RateLimited { retry_after },
+                StatusCode::FORBIDDEN => ApiErrorKind::Forbidden { body },
+                status => ApiErrorKind::Http { status, body },
+            }));
         }
 
         // The serde error itself says *why* (syntax error, unknown enum variant,
-        // wrong type, ...); the context only says *where*. Calling this "invalid
+        // wrong type, ...); the variant only says *where*. Calling this "invalid
         // JSON" would misdescribe the common case of a valid body that no
         // longer matches our generated types.
-        let value = serde_json::from_slice(&body).with_context(|| {
-            format!("could not decode response body from GET {url} (request ID {request_id})")
-        })?;
-        Ok((value, request_id))
+        let value = serde_json::from_slice(&body)
+            .map_err(|source| ctx.error(ApiErrorKind::Decode(source)))?;
+        Ok((value, ctx))
+    }
+}
+
+/// Per-request context, so endpoint methods can raise envelope errors carrying
+/// the same request ID and URL that `get_json` would have used.
+struct RequestContext {
+    request_id: String,
+    url: String,
+}
+
+impl RequestContext {
+    fn error(&self, kind: ApiErrorKind) -> ApiError {
+        ApiError {
+            request_id: self.request_id.clone(),
+            url: self.url.clone(),
+            kind,
+        }
+    }
+
+    fn malformed(&self, detail: impl Into<String>) -> ApiError {
+        self.error(ApiErrorKind::Malformed {
+            detail: detail.into(),
+        })
     }
 }
 
@@ -150,26 +212,15 @@ fn is_loopback(url: &Url) -> bool {
     })
 }
 
-/// Renders the machine-readable failure envelope eToro attaches to
-/// `isSucceeded: false` responses, so callers see the reason, not just the fact.
-fn describe_exception(exception: Option<&WatchlistsResponseException>) -> String {
-    let Some(exception) = exception else {
-        return "no exception details".to_owned();
-    };
-    let mut parts = Vec::new();
-    if let Some(reason) = &exception.reason {
-        parts.push(format!("reason {reason:?}"));
-    }
-    if let Some(message) = &exception.message {
-        parts.push(format!("message {message:?}"));
-    }
-    if !exception.invalid_items.is_empty() {
-        parts.push(format!("invalid items {:?}", exception.invalid_items));
-    }
-    if parts.is_empty() {
-        "empty exception object".to_owned()
-    } else {
-        parts.join(", ")
+/// Converts the generated exception envelope into the error type's own shape.
+///
+/// Keeping [`ExceptionDetail`] free of generated types means the error module
+/// does not move every time the schema snapshot is refreshed.
+fn exception_detail(exception: &WatchlistsResponseException) -> ExceptionDetail {
+    ExceptionDetail {
+        reason: exception.reason.clone(),
+        message: exception.message.clone(),
+        invalid_items: exception.invalid_items.clone(),
     }
 }
 
