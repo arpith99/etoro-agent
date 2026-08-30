@@ -79,6 +79,15 @@ pub struct Bar {
     /// Split ratio effective this session; `1` means no split.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub split_factor: Option<Numeric>,
+    /// Volume restated in post-split shares.
+    ///
+    /// Split-adjusted only, unlike [`Self::total_return_close`]: a dividend
+    /// changes the price but not the number of shares that traded, so the two
+    /// adjustments are not interchangeable. This cannot be derived from the
+    /// ratio between the two closes for exactly that reason -- that ratio has
+    /// dividends folded into it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub split_adjusted_volume: Option<Numeric>,
 }
 
 /// An inclusive range of sessions to fetch.

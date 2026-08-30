@@ -10,7 +10,7 @@
     "adjHigh": 91.125,
     "adjLow": 89.775,
     "adjClose": 90.0,
-    "adjVolume": 1234567,
+    "adjVolume": 3703701,
     "divCash": 0.0,
     "splitFactor": 1.0
   },
@@ -23,7 +23,8 @@
     "volume": 3000000,
     "adjClose": 34.0,
     "divCash": 0.0,
-    "splitFactor": 3.0
+    "splitFactor": 3.0,
+    "adjVolume": 9000000
   },
   {
     "date": "2026-08-27T00:00:00.000Z",

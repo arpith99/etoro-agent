@@ -191,6 +191,8 @@ struct Row {
     div_cash: Option<Numeric>,
     #[serde(rename = "splitFactor")]
     split_factor: Option<Numeric>,
+    #[serde(rename = "adjVolume")]
+    adj_volume: Option<Numeric>,
 }
 
 impl Row {
@@ -207,6 +209,7 @@ impl Row {
             total_return_close: self.adj_close,
             dividend_cash: self.div_cash,
             split_factor: self.split_factor,
+            split_adjusted_volume: self.adj_volume,
         }
     }
 }

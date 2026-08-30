@@ -42,13 +42,24 @@
       priceFormat: { type: 'volume' },
     });
     chart.priceScale('volume').applyOptions({ scaleMargins: { top: 0.78, bottom: 0 } });
-    volume.setData(DATA.volume);
   }
 
   // ---- series selection (as reported vs total return) ----------------------
 
   let active = 'reported';
   const bars = () => DATA[active];
+  // A split changes the share count, so volume steps at the split date on an
+  // as-traded series exactly as price does. Switching one without the other
+  // would leave the lower pane quietly disagreeing with the upper one.
+  const volumeBars = () =>
+    (active === 'adjusted' && DATA.volumeAdjusted) || DATA.volume;
+
+  function showSeries(name) {
+    active = name;
+    candles.setData(bars());
+    if (volume) volume.setData(volumeBars());
+    refreshMas();
+  }
 
   // ---- moving averages -----------------------------------------------------
 
@@ -139,8 +150,8 @@
 
   if (DATA.adjusted) {
     bar.append(group('series', [
-      ['As reported', true, () => { active = 'reported'; candles.setData(bars()); refreshMas(); }, true],
-      ['Total return', false, () => { active = 'adjusted'; candles.setData(bars()); refreshMas(); }, true],
+      ['As reported', true, () => showSeries('reported'), true],
+      ['Total return', false, () => showSeries('adjusted'), true],
     ]));
   }
 
@@ -174,7 +185,7 @@
 
   // ---- go ------------------------------------------------------------------
 
-  candles.setData(bars());
+  showSeries('reported');
   chart.timeScale().fitContent();
   showLegend(bars()[bars().length - 1]);
 })();

@@ -90,6 +90,14 @@ async fn both_price_series_and_the_corporate_actions_survive_decoding() {
 
     let third = &bars[2];
     assert_eq!(third.split_factor.as_ref().unwrap().to_string(), "3.0");
+    // Volume is split-adjusted separately from price: a 3:1 split triples the
+    // share count for the same money, and a dividend would move price without
+    // moving volume at all.
+    assert_eq!(
+        third.split_adjusted_volume.as_ref().unwrap().to_string(),
+        "9000000"
+    );
+    assert!(second.split_adjusted_volume.is_none());
     mock.server.join().unwrap();
 }
 

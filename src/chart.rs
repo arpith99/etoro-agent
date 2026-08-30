@@ -258,20 +258,34 @@ pub fn render_html(bars: &[Bar], title: &str, subtitle: &str) -> String {
             .collect()
     };
 
-    let volume: Vec<serde_json::Value> = bars
-        .iter()
-        .filter_map(|bar| {
-            let value = bar.volume.as_ref()?;
-            let rising = as_f64(&bar.close) >= as_f64(&bar.open);
-            Some(serde_json::json!({
-                "time": bar.date.to_string(),
-                "value": as_f64(value),
-                // Muted, so volume reads as context rather than competing with
-                // the price bars above it.
-                "color": if rising { "rgba(38,166,154,0.4)" } else { "rgba(239,83,80,0.4)" },
-            }))
-        })
-        .collect();
+    // Volume is emitted twice for the same reason prices are. A split changes
+    // the share count, so on an as-traded series the volume bars step at the
+    // split date just as the price does -- and toggling the price without the
+    // volume would leave the pane below quietly wrong.
+    let volume_points = |series: SeriesChoice| -> Vec<serde_json::Value> {
+        bars.iter()
+            .filter_map(|bar| {
+                let value = match series {
+                    SeriesChoice::Reported => bar.volume.as_ref()?,
+                    // Fall back rather than fabricate, as with prices.
+                    SeriesChoice::TotalReturn => {
+                        bar.split_adjusted_volume.as_ref().or(bar.volume.as_ref())?
+                    }
+                };
+                // Direction is unaffected by adjustment: scaling open and close
+                // by the same factor cannot flip which is larger.
+                let rising = as_f64(&bar.close) >= as_f64(&bar.open);
+                Some(serde_json::json!({
+                    "time": bar.date.to_string(),
+                    "value": as_f64(value),
+                    // Muted, so volume reads as context rather than competing
+                    // with the price bars above it.
+                    "color": if rising { "rgba(38,166,154,0.4)" } else { "rgba(239,83,80,0.4)" },
+                }))
+            })
+            .collect()
+    };
+    let has_adjusted_volume = bars.iter().any(|bar| bar.split_adjusted_volume.is_some());
 
     let data = serde_json::json!({
         "reported": points(SeriesChoice::Reported),
@@ -280,7 +294,12 @@ pub fn render_html(bars: &[Bar], title: &str, subtitle: &str) -> String {
         } else {
             serde_json::Value::Null
         },
-        "volume": volume,
+        "volume": volume_points(SeriesChoice::Reported),
+        "volumeAdjusted": if has_adjusted_volume {
+            serde_json::Value::from(volume_points(SeriesChoice::TotalReturn))
+        } else {
+            serde_json::Value::Null
+        },
     });
     // `</script>` inside a script block would end it early. The values here are
     // numbers and dates, but escaping the sequence costs nothing and removes
@@ -354,6 +373,7 @@ mod tests {
             total_return_close: None,
             dividend_cash: None,
             split_factor: None,
+            split_adjusted_volume: None,
         }
     }
 
@@ -446,6 +466,29 @@ mod tests {
         assert!(html.contains("contains a split"));
         // Exactly three script blocks: data, library, page logic.
         assert_eq!(html.matches("</script>").count(), 3);
+    }
+
+    #[test]
+    fn adjusted_volume_is_emitted_when_the_source_has_it() {
+        let mut split = bar_with("2026-08-04", "100", Some("100"), Some("4"));
+        split.volume = Some(Numeric("1000".parse().unwrap()));
+        split.split_adjusted_volume = Some(Numeric("4000".parse().unwrap()));
+        let mut before = bar_with("2026-08-03", "400", Some("100"), None);
+        before.volume = Some(Numeric("250".parse().unwrap()));
+        before.split_adjusted_volume = Some(Numeric("1000".parse().unwrap()));
+
+        let html = render_html(&[before, split], "AAPL 1d", "test");
+        assert!(html.contains("\"volumeAdjusted\""));
+        // The adjusted figure must actually be present, not just the key.
+        assert!(html.contains("1000.0"), "adjusted volume missing");
+    }
+
+    #[test]
+    fn no_adjusted_volume_means_no_second_volume_series() {
+        let mut b = bar_with("2026-08-03", "400", Some("100"), None);
+        b.volume = Some(Numeric("250".parse().unwrap()));
+        let html = render_html(&[b], "AAPL 1d", "test");
+        assert!(html.contains("\"volumeAdjusted\":null"));
     }
 
     #[test]

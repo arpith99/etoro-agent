@@ -393,6 +393,7 @@ mod tests {
             total_return_close: None,
             dividend_cash: None,
             split_factor: None,
+            split_adjusted_volume: None,
         }
     }
 
