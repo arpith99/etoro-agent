@@ -123,7 +123,7 @@ spread will be far too pessimistic at the liquid end and dangerously optimistic
 at the thin end, so the cost model should be per-instrument and seeded from
 observed rates rather than a single constant.
 
-### 2. Candle store
+### 2. Candle store — **done 2026-08-30**
 
 A local store, merge-on-refetch, keyed by (instrument, interval, timestamp).
 Necessary because the API window rolls forward; every fetch not persisted is
@@ -162,8 +162,22 @@ information needed to recover the other, and which one a strategy should use is
 not knowable in advance — a momentum rule wants price return, anything holding
 dividend payers for the yield wants total return.
 
-**Done when** re-running the fetch does not duplicate rows, and the store
-survives a source change without a schema change.
+**Done.** `src/data/` holds the layer: a `BarSource` trait with a `Tiingo`
+implementation, and a `BarStore` trait with a newline-delimited-JSON
+`FileStore`. `cargo run -- fetch-bars AAPL,MSFT` wires them together.
+
+Two decisions worth carrying forward. `PriceBasis` is part of the trait
+contract rather than documentation, because which convention a series follows
+is not observable from the data — and eToro and Tiingo genuinely differ.
+And the store's path layout, `<source>/<symbol>/<interval>.ndjson`, makes
+mixing conventions within one series impossible rather than merely
+discouraged; a mismatched merge is refused outright.
+
+Not SQLite: at daily resolution a symbol is roughly a thousand rows a decade,
+so indexes buy nothing, and SQLite has no decimal type — prices in a `REAL`
+column would silently reintroduce the `f64` loss the wire types exist to
+prevent. Revisit at intraday resolution, where a symbol-year is ~100k rows;
+`BarStore` being a trait makes that an implementation swap.
 
 ### 3. Backtest engine
 

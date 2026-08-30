@@ -8,6 +8,10 @@
 # Staging area for chunked spec retrieval; assembled by scripts/fetch-spec.py.
 docs/spec/.staging/
 
+# Local bar store: derived data, refetchable from Tiingo, and large. The
+# .ndjson files would not match the *.json rule above, so name the root.
+/market-data/
+
 # Python bytecode from scripts/
 __pycache__/
 *.pyc

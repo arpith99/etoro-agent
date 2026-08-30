@@ -1,12 +1,88 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-use anyhow::Result;
+use anyhow::{Context, Result, anyhow, bail};
+use chrono::{Datelike, NaiveDate, Utc};
 use etoro_agent::client::EtoroClient;
+use etoro_agent::data::{
+    BarSource, DataError, DateRange,
+    store::{BarStore, FileStore, Interval, SeriesKey},
+    tiingo::Tiingo,
+};
 use serde::Serialize;
+
+const USAGE: &str = "\
+usage:
+  etoro-agent                                  account summary
+  etoro-agent prices  SYM[,SYM...]             live bid/ask from eToro
+  etoro-agent fetch-bars SYM[,SYM...] [FROM] [TO]
+                                               daily bars from Tiingo into the store
+
+dates are YYYY-MM-DD; FROM defaults to five years ago and TO to today.
+";
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenvy::dotenv().ok();
+    match Command::parse(std::env::args().skip(1).collect())? {
+        Command::Summary { symbols } => account_summary(symbols).await,
+        Command::FetchBars { symbols, range } => fetch_bars(symbols, range).await,
+    }
+}
+
+/// Fetches daily bars into the local store.
+///
+/// Deliberately requires no eToro credentials: this reaches Tiingo only, and
+/// making it depend on keys it does not use would be a reason not to run it.
+async fn fetch_bars(symbols: Vec<String>, range: DateRange) -> Result<()> {
+    let token = std::env::var("TIINGO_API_KEY")
+        .context("TIINGO_API_KEY is needed to fetch bars; see scripts/README.md")?;
+    let source = Tiingo::new(&token)?;
+    let store = FileStore::new(store_root());
+
+    println!(
+        "Fetching {} .. {} from {} into {}",
+        range.start,
+        range.end,
+        source.name(),
+        store_root().display()
+    );
+
+    for symbol in &symbols {
+        let bars = match source.daily_bars(symbol, range).await {
+            Ok(bars) => bars,
+            // One bad ticker should not abandon the rest of the batch.
+            Err(DataError::UnknownSymbol { .. }) => {
+                println!("  {symbol}: not a ticker {} knows", source.name());
+                continue;
+            }
+            Err(error) => return Err(error.into()),
+        };
+
+        let key = SeriesKey::new(source.name(), symbol, Interval::Daily)?;
+        // The basis comes from the source rather than being assumed here: the
+        // store refuses to mix conventions, and this is where the two meet.
+        let outcome = store.merge(&key, source.basis(), &bars)?;
+        println!(
+            "  {symbol}: {} fetched, {} added, {} updated, {} unchanged, {} stored",
+            bars.len(),
+            outcome.added,
+            outcome.updated,
+            outcome.unchanged,
+            outcome.total,
+        );
+    }
+    Ok(())
+}
+
+/// Where series are written. Market data, not account data, so it carries no
+/// special permissions -- but it is gitignored, being derived and large.
+fn store_root() -> PathBuf {
+    std::env::var("ETORO_AGENT_STORE")
+        .unwrap_or_else(|_| "market-data".to_owned())
+        .into()
+}
+
+async fn account_summary(symbols: Vec<String>) -> Result<()> {
     let api_key = std::env::var("ETORO_API_KEY")?;
     let user_key = std::env::var("ETORO_USER_KEY")?;
     let dump_responses = env_flag("ETORO_DUMP_RESPONSES");
@@ -35,11 +111,9 @@ async fn main() -> Result<()> {
         dump_private("me_response.json", &me)?;
     }
 
-    // Symbols come in as one comma-separated argument. Resolution is one call
-    // per symbol -- the search filter takes a single value -- but pricing is a
-    // single call for the whole set, which is the batching that matters:
-    // `rates` accepts up to 100 IDs at once.
-    let symbols = requested_symbols();
+    // Resolution is one call per symbol -- the search filter takes a single
+    // value -- but pricing is a single call for the whole set, which is the
+    // batching that matters: `rates` accepts up to 100 IDs at once.
     let mut resolved: Vec<(String, i64)> = Vec::new();
     for symbol in &symbols {
         match client.resolve_symbol(symbol).await? {
@@ -80,21 +154,66 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-/// Symbol priced when none is given on the command line.
+/// Symbol used when none is given on the command line.
 const DEFAULT_SYMBOL: &str = "AAPL";
 
-/// Parses the optional `AAPL,TSLA,MSFT` argument.
-///
-/// Duplicates are dropped so a repeated symbol does not cost an extra
-/// resolution call, and order is preserved so the output matches what was
-/// asked for. Case is left as typed: symbol matching is case-insensitive, and
-/// echoing the input back unchanged is less confusing than correcting it.
-fn requested_symbols() -> Vec<String> {
-    parse_symbols(
-        &std::env::args()
-            .nth(1)
-            .unwrap_or_else(|| DEFAULT_SYMBOL.to_owned()),
-    )
+/// How far back `fetch-bars` reaches when no start date is given.
+const DEFAULT_HISTORY_YEARS: i32 = 5;
+
+/// What the binary was asked to do.
+#[derive(Debug, PartialEq)]
+enum Command {
+    Summary {
+        symbols: Vec<String>,
+    },
+    FetchBars {
+        symbols: Vec<String>,
+        range: DateRange,
+    },
+}
+
+impl Command {
+    /// Parsed from owned arguments rather than read from the environment, so
+    /// the dispatch is testable without a process.
+    fn parse(args: Vec<String>) -> Result<Self> {
+        let today = Utc::now().date_naive();
+        match args.split_first() {
+            None => Ok(Self::Summary {
+                symbols: parse_symbols(DEFAULT_SYMBOL),
+            }),
+            Some((verb, rest)) if verb == "prices" => Ok(Self::Summary {
+                symbols: parse_symbols(rest.first().map_or(DEFAULT_SYMBOL, String::as_str)),
+            }),
+            Some((verb, rest)) if verb == "fetch-bars" => {
+                let Some(symbols) = rest.first() else {
+                    bail!("fetch-bars needs at least one symbol\n\n{USAGE}");
+                };
+                let start = match rest.get(1) {
+                    Some(text) => parse_date(text)?,
+                    None => today
+                        .with_year(today.year() - DEFAULT_HISTORY_YEARS)
+                        // 29 February has no counterpart in a common year.
+                        .unwrap_or(today),
+                };
+                let end = match rest.get(2) {
+                    Some(text) => parse_date(text)?,
+                    None => today,
+                };
+                Ok(Self::FetchBars {
+                    symbols: parse_symbols(symbols),
+                    range: DateRange::new(start, end).map_err(|detail| anyhow!(detail))?,
+                })
+            }
+            // A bare symbol list used to mean "price these". Rejecting it is
+            // better than guessing, now that a verb could also be a ticker.
+            Some((other, _)) => bail!("unknown command {other:?}\n\n{USAGE}"),
+        }
+    }
+}
+
+fn parse_date(text: &str) -> Result<NaiveDate> {
+    text.parse()
+        .with_context(|| format!("{text:?} is not a YYYY-MM-DD date"))
 }
 
 fn parse_symbols(argument: &str) -> Vec<String> {
@@ -194,6 +313,85 @@ mod tests {
 
     fn mode_of(path: &Path) -> u32 {
         std::fs::metadata(path).unwrap().permissions().mode() & 0o777
+    }
+
+    #[test]
+    fn no_arguments_means_an_account_summary() {
+        let command = Command::parse(vec![]).unwrap();
+        assert_eq!(
+            command,
+            Command::Summary {
+                symbols: vec!["AAPL".to_owned()]
+            }
+        );
+    }
+
+    #[test]
+    fn prices_takes_a_symbol_list() {
+        let command = Command::parse(vec!["prices".to_owned(), "AAPL,MSFT".to_owned()]).unwrap();
+        assert_eq!(
+            command,
+            Command::Summary {
+                symbols: vec!["AAPL".to_owned(), "MSFT".to_owned()]
+            }
+        );
+    }
+
+    #[test]
+    fn fetch_bars_defaults_to_five_years_ending_today() {
+        let Command::FetchBars { range, symbols } =
+            Command::parse(vec!["fetch-bars".to_owned(), "AAPL".to_owned()]).unwrap()
+        else {
+            panic!("expected FetchBars");
+        };
+        assert_eq!(symbols, vec!["AAPL".to_owned()]);
+        let today = Utc::now().date_naive();
+        assert_eq!(range.end, today);
+        assert_eq!(range.start.year(), today.year() - DEFAULT_HISTORY_YEARS);
+    }
+
+    #[test]
+    fn fetch_bars_accepts_an_explicit_range() {
+        let Command::FetchBars { range, .. } = Command::parse(vec![
+            "fetch-bars".to_owned(),
+            "AAPL".to_owned(),
+            "2020-01-01".to_owned(),
+            "2020-12-31".to_owned(),
+        ])
+        .unwrap() else {
+            panic!("expected FetchBars");
+        };
+        assert_eq!(range.start.to_string(), "2020-01-01");
+        assert_eq!(range.end.to_string(), "2020-12-31");
+    }
+
+    #[test]
+    fn a_backwards_range_is_refused_rather_than_returning_nothing() {
+        assert!(
+            Command::parse(vec![
+                "fetch-bars".to_owned(),
+                "AAPL".to_owned(),
+                "2026-12-31".to_owned(),
+                "2020-01-01".to_owned(),
+            ])
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn unusable_input_is_rejected_with_usage_rather_than_guessed_at() {
+        // A bare symbol list used to mean "price these". Now that a verb could
+        // itself look like a ticker, guessing would be worse than refusing.
+        assert!(Command::parse(vec!["AAPL".to_owned()]).is_err());
+        assert!(Command::parse(vec!["fetch-bars".to_owned()]).is_err());
+        assert!(
+            Command::parse(vec![
+                "fetch-bars".to_owned(),
+                "AAPL".to_owned(),
+                "last-tuesday".to_owned()
+            ])
+            .is_err()
+        );
     }
 
     #[test]

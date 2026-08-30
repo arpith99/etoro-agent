@@ -20,13 +20,29 @@ orders or run a trading strategy.
 Use Demo + Read credentials while developing. By default the program prints
 only response summaries.
 
+## Commands
+
+```sh
+cargo run                              # account summary, and price AAPL
+cargo run -- prices AAPL,MSFT,TSLA     # live bid/ask from eToro
+cargo run -- fetch-bars AAPL,MSFT      # daily bars from Tiingo, last five years
+cargo run -- fetch-bars AAPL 2020-01-01 2024-12-31
+```
+
+`fetch-bars` reaches Tiingo only and needs no eToro credentials — historical
+bars come from a data vendor rather than the broker, for reasons set out in
+[the roadmap](docs/roadmap.md). Series are merged into the store on each run,
+so re-fetching an overlapping range updates rather than duplicates.
+
 ## Configuration
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `ETORO_API_KEY` | yes | Public API key sent as `x-api-key` |
-| `ETORO_USER_KEY` | yes | User key sent as `x-user-key` |
+| `ETORO_API_KEY` | for eToro commands | Public API key sent as `x-api-key` |
+| `ETORO_USER_KEY` | for eToro commands | User key sent as `x-user-key` |
+| `TIINGO_API_KEY` | for `fetch-bars` | Tiingo token, sent as an `Authorization` header |
 | `ETORO_DUMP_RESPONSES` | no | Set to `1`, `true`, or `yes` to write full responses |
+| `ETORO_AGENT_STORE` | no | Bar store root; defaults to `market-data/` |
 
 Full responses can contain sensitive financial data. They are gitignored and,
 on Unix, created with mode `0600`. Anything already at that path (an older
@@ -205,6 +221,7 @@ cargo clippy --all-targets -- -D warnings
 ## Project layout
 
 ```text
+market-data/                # generated: local bar store (gitignored)
 docs/
   architecture.md           # runtime boundaries and safety invariants
   code-walkthrough.md       # guided tour of the implementation
