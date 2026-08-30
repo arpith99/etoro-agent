@@ -268,7 +268,7 @@ pub fn render_html(bars: &[Bar], title: &str, subtitle: &str) -> String {
                 "value": as_f64(value),
                 // Muted, so volume reads as context rather than competing with
                 // the price bars above it.
-                "color": if rising { "#26a69a55" } else { "#ef535055" },
+                "color": if rising { "rgba(38,166,154,0.4)" } else { "rgba(239,83,80,0.4)" },
             }))
         })
         .collect();

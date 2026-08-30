@@ -8,12 +8,21 @@
   const DATA = window.CHART_DATA;
   const el = (id) => document.getElementById(id);
 
+  // The library parses colours itself and rejects CSS keywords such as
+  // currentColor -- it throws out of createChart, which aborts this whole
+  // script and leaves a page with a heading and nothing else. Resolve against
+  // the page so the chart still follows light and dark mode.
+  const pageColor = getComputedStyle(document.body).color;
+
   const chart = LightweightCharts.createChart(el('chart'), {
     // Without this the chart is created 0x0 and stays invisible: the library
     // does not read the container's size unless asked to.
     autoSize: true,
-    layout: { background: { color: 'transparent' }, textColor: 'currentColor' },
-    grid: { vertLines: { color: '#8882' }, horzLines: { color: '#8882' } },
+    layout: { background: { color: 'transparent' }, textColor: pageColor },
+    grid: {
+      vertLines: { color: 'rgba(128,128,128,0.16)' },
+      horzLines: { color: 'rgba(128,128,128,0.16)' },
+    },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
     rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.08, bottom: 0.26 } },
     timeScale: { borderVisible: false, rightOffset: 4 },

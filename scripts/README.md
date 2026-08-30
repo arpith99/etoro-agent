@@ -263,6 +263,33 @@ sets its own; `SPIKE_USER_AGENT` overrides it if that stops being accepted.
 Findings belong in [`../docs/api-observations.md`](../docs/api-observations.md),
 not here.
 
+## Not part of the pipeline: `check_chart_page.sh`
+
+Loads a generated chart page in headless Chrome and fails on console errors.
+
+```sh
+cargo run -- chart AAPL --html /tmp/aapl.html
+./scripts/check_chart_page.sh /tmp/aapl.html
+```
+
+The Rust tests can check that the page *contains* the right strings; they
+cannot check that it *runs*. Two bugs got past them, and both produced a page
+that looked structurally perfect and rendered nothing:
+
+- the chart was created 0x0. Lightweight Charts defaults to `width:0,height:0`
+  and does not read its container's size unless given `autoSize: true`. The
+  series toggle was firing the whole time, redrawing a canvas with no height.
+- `layout.textColor` was set to `currentColor`. The library parses colours
+  itself and rejects CSS keywords, throwing out of `createChart` and aborting
+  the entire script -- so the heading and the warning rendered and nothing else
+  did.
+
+Hence the check is for things only the script creates: at least one `<button>`
+and one `<canvas>`. Static markup survives a thrown script and proves nothing.
+
+Not in the default gate, because it needs a browser installed; it exits 0 with
+a SKIP when none is found.
+
 ## Prerequisites and gotchas
 
 ```sh
