@@ -226,6 +226,43 @@ hiding it. Read the errors before "fixing" the generator.
    shape, and failure behaviour.
 5. Keep live API calls and credentials out of automated tests.
 
+## Not part of the pipeline: `compare_candle_sources.py`
+
+A diagnostic, not a build step. Nothing in `src/types/` depends on it and
+`regenerate-types.sh` never calls it.
+
+It answers one question the OpenAPI document cannot: **are eToro's candles
+adjusted for splits and dividends?** `candlesResponse` carries raw
+open/high/low/close with no adjustment field and the docs are silent, so the
+only way to know is to measure. The script pulls eToro's daily candles and the
+same date range from Tiingo, then compares eToro's closes against *both* Tiingo
+series -- raw `close` and `adjClose`. Whichever it tracks is the convention
+eToro uses.
+
+```sh
+# .env supplies ETORO_API_KEY, ETORO_USER_KEY and TIINGO_API_KEY
+python3 scripts/compare_candle_sources.py NVDA AAPL
+```
+
+This matters more than history depth. Backtesting an unadjusted 4:1 split
+presents a 75% single-bar drawdown that a strategy will trade as though it were
+real, and the result looks plausible rather than broken.
+
+Choose symbols with a **split** inside the roughly four-year window eToro
+exposes; a split moves the price by an integer factor and is unmistakable.
+Without a split or dividend the two Tiingo series are identical, nothing can be
+concluded, and the script says `inconclusive` rather than guessing.
+
+### Trap: eToro 403s the default Python user agent
+
+`urllib` announces itself as `Python-urllib/3.x` and eToro's edge rejects it --
+the same bot protection that 403s a plain `curl`. `reqwest` sends no
+`User-Agent` at all, which is why the Rust client never hit this. The script
+sets its own; `SPIKE_USER_AGENT` overrides it if that stops being accepted.
+
+Findings belong in [`../docs/api-observations.md`](../docs/api-observations.md),
+not here.
+
 ## Prerequisites and gotchas
 
 ```sh
