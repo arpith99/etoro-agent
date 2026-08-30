@@ -105,8 +105,40 @@ pub struct GapStats {
     /// opening prices cancel. The decomposition is an identity, not an
     /// approximation.
     pub total: SideStats,
+    /// Pearson correlation between the two sides, session by session.
+    ///
+    /// This is what separates two series with identical row statistics.
+    /// Negative means gaps partly reverse during the session that follows;
+    /// positive means they continue; near zero means the halves are
+    /// independent, and total variance is then just their sum.
+    ///
+    /// `NaN` when either side never moves, since a constant cannot correlate
+    /// with anything.
+    pub correlation: f64,
     /// Sessions with the largest overnight moves either way, largest first.
     pub largest: Vec<Session>,
+}
+
+/// Pearson correlation coefficient.
+fn correlation(xs: &[f64], ys: &[f64]) -> f64 {
+    if xs.len() != ys.len() || xs.len() < 2 {
+        return f64::NAN;
+    }
+    let n = xs.len() as f64;
+    let (mean_x, mean_y) = (xs.iter().sum::<f64>() / n, ys.iter().sum::<f64>() / n);
+    let mut covariance = 0.0;
+    let (mut var_x, mut var_y) = (0.0, 0.0);
+    for (x, y) in xs.iter().zip(ys) {
+        let (dx, dy) = (x - mean_x, y - mean_y);
+        covariance += dx * dy;
+        var_x += dx * dx;
+        var_y += dy * dy;
+    }
+    // A side that never moves has no variance to share.
+    if var_x <= 0.0 || var_y <= 0.0 {
+        return f64::NAN;
+    }
+    covariance / (var_x * var_y).sqrt()
 }
 
 /// Splits each session's return into overnight and intraday parts.
@@ -160,6 +192,7 @@ pub fn gaps(bars: &[Bar], series: SeriesChoice, largest_count: usize) -> Option<
         overnight: SideStats::from(&overnight, count),
         intraday: SideStats::from(&intraday, count),
         total: SideStats::from(&total, count),
+        correlation: correlation(&overnight, &intraday),
         largest,
     })
 }
@@ -212,6 +245,23 @@ impl GapStats {
              subtracted for the risk-free rate, so all three rows overstate equally.\n",
             self.sessions, self.years
         ));
+
+        if self.correlation.is_finite() {
+            // Without this, two series with identical rows above can behave
+            // completely differently: independent halves add their variances,
+            // offsetting ones cancel part of it.
+            let reading = if self.correlation < -0.1 {
+                "gaps partly reverse during the session that follows"
+            } else if self.correlation > 0.1 {
+                "gaps tend to continue during the session that follows"
+            } else {
+                "the two halves move independently, so total variance is their sum"
+            };
+            out.push_str(&format!(
+                "overnight/intraday correlation {:+.2} - {reading}\n",
+                self.correlation
+            ));
+        }
 
         if !self.largest.is_empty() {
             out.push_str("\nlargest overnight moves:\n");
@@ -377,6 +427,57 @@ mod tests {
         assert!(
             stats.overnight.compounded < 0.0,
             "compounded should be a loss"
+        );
+    }
+
+    #[test]
+    fn correlation_detects_gaps_that_reverse() {
+        // Every gap is undone by the session that follows.
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "110", "100"),
+            bar("2026-08-05", "90", "100"),
+            bar("2026-08-06", "105", "100"),
+            bar("2026-08-07", "95", "100"),
+        ];
+        let stats = gaps(&bars, SeriesChoice::Reported, 3).unwrap();
+        assert!(
+            stats.correlation < -0.9,
+            "expected strong reversal, got {}",
+            stats.correlation
+        );
+    }
+
+    #[test]
+    fn correlation_detects_gaps_that_continue() {
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "110", "121"),
+            bar("2026-08-05", "108", "97"),
+            bar("2026-08-06", "115", "126"),
+            bar("2026-08-07", "113", "101"),
+        ];
+        let stats = gaps(&bars, SeriesChoice::Reported, 3).unwrap();
+        assert!(
+            stats.correlation > 0.9,
+            "expected strong continuation, got {}",
+            stats.correlation
+        );
+    }
+
+    #[test]
+    fn a_side_that_never_moves_has_no_correlation_to_report() {
+        // Constant intraday: no variance, so nothing to correlate with.
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "110", "110"),
+            bar("2026-08-05", "90", "90"),
+        ];
+        assert!(
+            gaps(&bars, SeriesChoice::Reported, 3)
+                .unwrap()
+                .correlation
+                .is_nan()
         );
     }
 

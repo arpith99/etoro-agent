@@ -52,6 +52,11 @@ average per session can still end below where it started. `ret/vol` is **not** a
 Sharpe ratio — nothing is subtracted for the risk-free rate — and exists to
 compare the two sides against each other, where the omission affects both.
 
+It also reports the correlation between the two sides, which is what separates
+series with otherwise identical rows: independent halves add their variances,
+while offsetting ones cancel part of it. A negative figure means gaps partly
+reverse during the session that follows.
+
 `--html` writes a self-contained interactive candlestick page — zoom, pan and
 crosshair — with the charting library embedded rather than fetched from a CDN,
 so it opens offline and renders the same a year from now. When the source
