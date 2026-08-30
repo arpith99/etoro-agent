@@ -27,7 +27,14 @@ cargo run                              # account summary, and price AAPL
 cargo run -- prices AAPL,MSFT,TSLA     # live bid/ask from eToro
 cargo run -- fetch-bars AAPL,MSFT      # daily bars from Tiingo, last five years
 cargo run -- fetch-bars AAPL 2020-01-01 2024-12-31
+cargo run -- chart AAPL                # draw a stored series in the terminal
 ```
+
+`chart` reads the local store only — no network and no credentials — and prints
+the series' `PriceBasis` in its header, because two series can look identical
+and mean different things. It reports the largest date gap, which is how a
+vendor outage or a bad date filter becomes visible; a bar count alone looks the
+same whether the fetch worked or not.
 
 `fetch-bars` reaches Tiingo only and needs no eToro credentials — historical
 bars come from a data vendor rather than the broker, for reasons set out in

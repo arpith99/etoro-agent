@@ -35,7 +35,8 @@ pub enum Interval {
 }
 
 impl Interval {
-    fn as_str(self) -> &'static str {
+    /// The directory-name form, which is also what a caller prints.
+    pub fn as_str(self) -> &'static str {
         match self {
             Self::Daily => "1d",
             Self::Weekly => "1w",

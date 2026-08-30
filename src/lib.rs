@@ -6,6 +6,7 @@
 
 // Absolute paths emitted by cargo typify refer back to this crate by name.
 extern crate self as etoro_agent;
+pub mod chart;
 pub mod client;
 pub mod data;
 pub mod error;

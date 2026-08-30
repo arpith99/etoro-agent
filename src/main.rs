@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, anyhow, bail};
 use chrono::{Datelike, NaiveDate, Utc};
+use etoro_agent::chart::{ChartOptions, render, summary};
 use etoro_agent::client::EtoroClient;
 use etoro_agent::data::{
     BarSource, DataError, DateRange,
@@ -16,8 +17,10 @@ usage:
   etoro-agent prices  SYM[,SYM...]             live bid/ask from eToro
   etoro-agent fetch-bars SYM[,SYM...] [FROM] [TO]
                                                daily bars from Tiingo into the store
+  etoro-agent chart   SYM [SOURCE]             draw a stored series
 
 dates are YYYY-MM-DD; FROM defaults to five years ago and TO to today.
+SOURCE defaults to tiingo.
 ";
 
 #[tokio::main]
@@ -26,7 +29,32 @@ async fn main() -> Result<()> {
     match Command::parse(std::env::args().skip(1).collect())? {
         Command::Summary { symbols } => account_summary(symbols).await,
         Command::FetchBars { symbols, range } => fetch_bars(symbols, range).await,
+        Command::Chart { symbol, source } => chart(&symbol, &source),
     }
+}
+
+/// Draws a stored series. Reads the local store only -- no network, no
+/// credentials, so it stays usable when a vendor is down.
+fn chart(symbol: &str, source: &str) -> Result<()> {
+    let store = FileStore::new(store_root());
+    let key = SeriesKey::new(source, symbol, Interval::Daily)?;
+    let Some(series) = store.load(&key)? else {
+        bail!("no stored series for {symbol} from {source}; run: etoro-agent fetch-bars {symbol}");
+    };
+
+    // The basis is printed, not assumed. Two series can look identical and
+    // mean different things, which is the whole reason it is stored.
+    println!(
+        "{} {} ({:?} prices from {})",
+        symbol.to_ascii_uppercase(),
+        Interval::Daily.as_str(),
+        series.basis,
+        source
+    );
+    println!("{}", summary(&series.bars));
+    println!();
+    print!("{}", render(&series.bars, ChartOptions::default()));
+    Ok(())
 }
 
 /// Fetches daily bars into the local store.
@@ -160,6 +188,9 @@ const DEFAULT_SYMBOL: &str = "AAPL";
 /// How far back `fetch-bars` reaches when no start date is given.
 const DEFAULT_HISTORY_YEARS: i32 = 5;
 
+/// Bar source assumed when `chart` is not told one.
+const DEFAULT_SOURCE: &str = "tiingo";
+
 /// What the binary was asked to do.
 #[derive(Debug, PartialEq)]
 enum Command {
@@ -169,6 +200,10 @@ enum Command {
     FetchBars {
         symbols: Vec<String>,
         range: DateRange,
+    },
+    Chart {
+        symbol: String,
+        source: String,
     },
 }
 
@@ -202,6 +237,18 @@ impl Command {
                 Ok(Self::FetchBars {
                     symbols: parse_symbols(symbols),
                     range: DateRange::new(start, end).map_err(|detail| anyhow!(detail))?,
+                })
+            }
+            Some((verb, rest)) if verb == "chart" => {
+                let Some(symbol) = rest.first() else {
+                    bail!("chart needs a symbol\n\n{USAGE}");
+                };
+                Ok(Self::Chart {
+                    symbol: symbol.clone(),
+                    source: rest
+                        .get(1)
+                        .cloned()
+                        .unwrap_or_else(|| DEFAULT_SOURCE.to_owned()),
                 })
             }
             // A bare symbol list used to mean "price these". Rejecting it is
@@ -363,6 +410,30 @@ mod tests {
         };
         assert_eq!(range.start.to_string(), "2020-01-01");
         assert_eq!(range.end.to_string(), "2020-12-31");
+    }
+
+    #[test]
+    fn chart_defaults_to_the_tiingo_store_but_accepts_another() {
+        assert_eq!(
+            Command::parse(vec!["chart".to_owned(), "AAPL".to_owned()]).unwrap(),
+            Command::Chart {
+                symbol: "AAPL".to_owned(),
+                source: "tiingo".to_owned()
+            }
+        );
+        assert_eq!(
+            Command::parse(vec![
+                "chart".to_owned(),
+                "AAPL".to_owned(),
+                "etoro".to_owned()
+            ])
+            .unwrap(),
+            Command::Chart {
+                symbol: "AAPL".to_owned(),
+                source: "etoro".to_owned()
+            }
+        );
+        assert!(Command::parse(vec!["chart".to_owned()]).is_err());
     }
 
     #[test]
