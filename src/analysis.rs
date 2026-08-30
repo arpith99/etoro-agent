@@ -50,8 +50,14 @@ pub struct SideStats {
 }
 
 impl SideStats {
-    fn from(returns: &[f64], sessions: f64) -> Self {
-        let mean = returns.iter().sum::<f64>() / returns.len() as f64;
+    /// Summarises a series of per-session returns.
+    ///
+    /// The window length is taken from `returns` rather than passed in: the
+    /// two must agree for the annualisation to mean anything, and a caller
+    /// that can disagree eventually will.
+    pub fn from_returns(returns: &[f64]) -> Self {
+        let sessions = returns.len() as f64;
+        let mean = returns.iter().sum::<f64>() / sessions;
         let compounded = returns.iter().fold(1.0, |acc, r| acc * (1.0 + r)) - 1.0;
 
         // A total loss cannot be annualised: a real root of a non-positive
@@ -189,9 +195,9 @@ pub fn gaps(bars: &[Bar], series: SeriesChoice, largest_count: usize) -> Option<
     Some(GapStats {
         sessions: sessions.len(),
         years: count / TRADING_YEAR,
-        overnight: SideStats::from(&overnight, count),
-        intraday: SideStats::from(&intraday, count),
-        total: SideStats::from(&total, count),
+        overnight: SideStats::from_returns(&overnight),
+        intraday: SideStats::from_returns(&intraday),
+        total: SideStats::from_returns(&total),
         correlation: correlation(&overnight, &intraday),
         largest,
     })

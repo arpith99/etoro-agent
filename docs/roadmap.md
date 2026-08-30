@@ -179,21 +179,64 @@ column would silently reintroduce the `f64` loss the wire types exist to
 prevent. Revisit at intraday resolution, where a symbol-year is ~100k rows;
 `BarStore` being a trait makes that an implementation swap.
 
-### 3. Backtest engine
+### 3. Backtest engine — **done 2026-08-30**
 
-A `Strategy` trait plus an event loop over stored bars, producing a trade log
-and summary statistics. Entirely offline.
+`src/backtest.rs`: a `Strategy` trait, an event loop over stored bars, and a
+report putting the strategy next to buy-and-hold. Entirely offline, so a run is
+repeatable.
 
-Make the cost model a **required** constructor argument rather than an optional
-one, so a zero-cost backtest is something that must be asked for explicitly.
-The usual failure mode is a backtest that quietly assumed free trading.
+The loop was never the hard part. The three things that make a backtest lie are
+lookahead bias, unadjusted prices, and absent costs, and the design spends
+itself on making each one hard to commit rather than documented as a hazard.
 
-For long-only daily bars this is a few hundred lines; the loop is not where the
-difficulty lives. The traps taken on by writing it rather than using a mature
-framework are lookahead bias, price adjustment, and cost modelling. Buying
-adjusted data removes the worst of the three.
+**Lookahead is prevented by the trait's shape.** `fn target(&mut self, history:
+&[Bar]) -> f64` hands the strategy a *prefix* ending on the decision bar. The
+usual mistake — computing a signal from a column and forgetting to shift it —
+has nothing to act on, because the future is not in the argument. A slice
+rather than "the whole series plus an index" specifically because an index can
+be read past.
 
-**Done when** a known-answer case passes in `cargo test`.
+**Costs are prevented from vanishing by the signature.** `CostModel` is a
+positional argument to `run` with no `Default`, so a free backtest must be
+spelled `CostModel::frictionless()`, and the report says so in its output.
+Charges land on **turnover**, not per trade: going 20% → 30% costs a tenth of
+opening a full position, because that is what changes hands. `from_spread`
+halves the quoted spread, since each leg crosses from mid to one side, and the
+observed 50× range across ordinary names is why the model is per-instrument.
+
+**The fill model turned out to be the one real judgement call.** Two variants,
+and the gap between them is the honest error bar on any result:
+
+- `FillPrice::NextOpen` — decide on a close, fill at the next open. The
+  pessimistic default. The gap between the close you decided on and the open
+  you filled at is unavailable to you, because there was no moment in between
+  at which you could trade. Returns are measured fill-to-fill, open to open, so
+  a position held overnight still eats the gap it could not act on. That is the
+  true cost of open fills rather than an approximation of it.
+- `FillPrice::SameClose` — decide and fill on the same close. This is what the
+  usual `signal.shift(1)` harness actually models, and it hands the strategy
+  every overnight gap that follows a signal.
+
+There is deliberately no "next close": filling a whole session after
+`NextOpen` is strictly more delay, so it bounds nothing. The earlier sketch
+listed one, and it was wrong.
+
+Two smaller decisions. A target outside `[0, 1]`, `NaN` included, aborts the
+run rather than being clamped — a clamp turns a strategy bug into a plausible
+equity curve. And the benchmark is left *uncosted*, flattering it by the one
+spread a real holder pays on entry; that bias runs against the strategy, which
+is the direction to be wrong in when the question is "did this beat doing
+nothing".
+
+Reuse worth noting: `SideStats` from the gap analysis already computed
+annualised return, volatility and `return_over_vol`, so the engine only added
+max drawdown and the trade log. It is now `SideStats::from_returns`, taking its
+window length from the slice — the two must agree for annualisation to mean
+anything, and a caller that can disagree eventually will.
+
+**Done.** Eleven tests, including a three-bar case computed by hand, a proof
+that an always-long strategy reproduces the benchmark bit-for-bit when trading
+is free, and one asserting the exact prefixes a strategy was handed.
 
 ### 4. Strategy #1 — dual SMA crossover
 
