@@ -147,6 +147,12 @@ pub enum ApiErrorKind {
     #[error("response did not match the expected shape: {detail}")]
     Malformed { detail: String },
 
+    /// The caller asked for something the API cannot express, so nothing was
+    /// sent. Distinct from [`Self::Http`]: no request was made and no
+    /// rate-limit budget was spent. Not retryable -- fix the call.
+    #[error("request not sent: {detail}")]
+    InvalidRequest { detail: String },
+
     /// Only reachable from a malformed hardcoded path, i.e. a bug in this crate
     /// rather than anything the API did.
     #[error("invalid API path {path:?}")]
@@ -170,6 +176,7 @@ impl ApiError {
             | ApiErrorKind::Decode(_)
             | ApiErrorKind::ApiFailure { .. }
             | ApiErrorKind::Malformed { .. }
+            | ApiErrorKind::InvalidRequest { .. }
             | ApiErrorKind::InvalidPath { .. } => false,
         }
     }

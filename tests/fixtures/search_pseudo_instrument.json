@@ -1,0 +1,12 @@
+{
+  "page": 1,
+  "pageSize": 20,
+  "totalItems": 1,
+  "items": [
+    {
+      "instrumentId": -100000,
+      "internalSymbolFull": "AAPL",
+      "displayname": "Constructed: a negative-ID pseudo-instrument carrying a real symbol, to exercise the guard"
+    }
+  ]
+}

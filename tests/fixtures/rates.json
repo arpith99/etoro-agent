@@ -1,0 +1,24 @@
+{
+  "rates": [
+    {
+      "instrumentID": 1001,
+      "ask": 100.0000000000000000000001,
+      "bid": 99.9999999999999999999999,
+      "lastExecution": 100.0,
+      "conversionRateAsk": 1.0,
+      "conversionRateBid": 1.0,
+      "priceRateID": 5001,
+      "date": "2026-08-30T09:30:00Z"
+    },
+    {
+      "instrumentID": 1002,
+      "ask": 5.06e-6,
+      "bid": 5.05e-6,
+      "lastExecution": 5.055e-6,
+      "conversionRateAsk": 1.0,
+      "conversionRateBid": 1.0,
+      "priceRateID": 5002,
+      "date": "2026-08-30T09:30:00Z"
+    }
+  ]
+}

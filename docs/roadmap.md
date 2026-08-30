@@ -86,18 +86,42 @@ to the strategy, not diagnostics.
 
 Milestones 2–4 are broker-agnostic and cost nothing if the venue later changes.
 
-### 1. Query parameters and live market data
+### 1. Query parameters and live market data — **done 2026-08-30**
 
-Extend `get_json` to accept query parameters —
-`GET /api/v1/market-data/instruments/rates` needs `?instrumentIds=1,2,3`
-(comma-separated, unexploded, max 100 IDs). Add `rates()` and `instruments()`,
-plus symbol → `instrumentId` resolution via `/api/v1/market-data/search`.
+`get_json` takes query parameters; `rates()`, `search()` and `resolve_symbol()`
+are implemented, and the binary prices a comma-separated symbol list
+(`cargo run -- AAPL,GOOG,MSFT`) as N resolutions plus one batched `rates` call.
+`instruments()` turned out to be unnecessary — `search()` covers symbol
+resolution — and `candles()` is deferred, since the data layer is moving off
+eToro anyway.
 
-Market data operations declare no scopes at all, making this the safest
-possible new surface. `candles()` is worth adding for live use but is no longer
-on the critical path for backtesting.
+Two things this settled that later milestones depend on:
 
-**Done when** the binary prints live bid/ask for a named symbol.
+- **The percent-encoded comma is accepted.** `Url::query_pairs_mut` emits
+  `instrumentIds=1001%2C1002`, and eToro decodes it, so `style: form,
+  explode: false` parameters need no special-casing.
+- **`GET /market-data/search` emits `instrumentId` twice in one item**, which
+  serde's derived `Deserialize` rejects. That endpoint alone decodes through
+  `serde_json::Value`; everything else stays strict, because strictness is what
+  surfaces spec drift. Both findings are in
+  [`api-observations.md`](api-observations.md).
+
+### Observed spreads — an input to milestone 3
+
+Measured live on 2026-08-30, as a fraction of mid:
+
+| Instrument | Spread | % of mid |
+|---|---|---|
+| AAPL | 0.01 on 319.70 | 0.003% |
+| MSFT | 0.03 on 513.59 | 0.006% |
+| INTC | 0.01 on 89.49 | 0.011% |
+| MBLY | 0.01 on 8.60 | 0.116% |
+| (watchlist mid-cap) | 0.02 on 12.27 | 0.163% |
+
+A ~50× range across ordinary large- and mid-caps. A backtest carrying one flat
+spread will be far too pessimistic at the liquid end and dangerously optimistic
+at the thin end, so the cost model should be per-instrument and seeded from
+observed rates rather than a single constant.
 
 ### 2. Candle store
 

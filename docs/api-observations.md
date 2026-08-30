@@ -67,6 +67,18 @@ Spec-vs-reality, all verified empirically:
   return **null unless explicitly listed in `fields=`**.
 - Default `pageSize` is 20; `totalItems` can exceed 11,000. Always paginate or
   filter narrowly.
+- **The comma in `instrumentIds` may be percent-encoded.** `Url::query_pairs_mut`
+  emits `instrumentIds=10560%2C10655` rather than a literal comma, and the API
+  accepts it — verified 2026-08-30, 5 IDs requested, 5 returned. So the
+  `style: form, explode: false` parameters need no special-casing around the
+  standard form encoder.
+- **`GET /api/v1/market-data/search` emits `instrumentId` twice in a single
+  item.** Duplicate keys are legal JSON but serde's derived `Deserialize`
+  rejects them, so the whole response fails to decode -- observed 2026-08-30
+  with `fields=instrumentId,internalSymbolFull,displayname`. The client decodes
+  this endpoint via `serde_json::Value` first (last key wins) and keeps every
+  other endpoint strict. The round trip preserves arbitrary precision, so
+  `Numeric` fields are unaffected.
 - Live rates use `instrumentID` (capital ID), unlike `instrumentId` in the
   search response.
 - Live rates mark several fields obsolete (`unitMargin*`, `*Discounted`).

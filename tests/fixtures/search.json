@@ -1,0 +1,23 @@
+{
+  "page": 1,
+  "pageSize": 20,
+  "totalItems": 3,
+  "items": [
+    {
+      "instrumentId": -100000,
+      "internalSymbolFull": null,
+      "displayname": "Crypto market aggregate (system pseudo-instrument)"
+    },
+    {
+      "instrumentId": 1001,
+      "internalSymbolFull": "AAPL",
+      "instrumentId": 1001,
+      "displayname": "Fixture Instrument One"
+    },
+    {
+      "instrumentId": 1002,
+      "internalSymbolFull": "MSFT",
+      "displayname": "Fixture Instrument Two"
+    }
+  ]
+}

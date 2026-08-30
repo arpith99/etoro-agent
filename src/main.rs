@@ -35,7 +35,82 @@ async fn main() -> Result<()> {
         dump_private("me_response.json", &me)?;
     }
 
+    // Symbols come in as one comma-separated argument. Resolution is one call
+    // per symbol -- the search filter takes a single value -- but pricing is a
+    // single call for the whole set, which is the batching that matters:
+    // `rates` accepts up to 100 IDs at once.
+    let symbols = requested_symbols();
+    let mut resolved: Vec<(String, i64)> = Vec::new();
+    for symbol in &symbols {
+        match client.resolve_symbol(symbol).await? {
+            Some(instrument_id) => resolved.push((symbol.clone(), instrument_id)),
+            None => println!("{symbol}: no instrument matched that symbol."),
+        }
+    }
+
+    if !resolved.is_empty() {
+        let instrument_ids: Vec<i64> = resolved.iter().map(|(_, id)| *id).collect();
+        let rates = client.rates(&instrument_ids).await?;
+        for (symbol, instrument_id) in &resolved {
+            // Join on the ID rather than on position: the API returns rates for
+            // the instruments it recognises, in no guaranteed order, and omits
+            // the rest.
+            match rates
+                .rates
+                .iter()
+                .find(|rate| rate.instrument_id == Some(*instrument_id))
+            {
+                // Every field is optional in the schema, so nothing here is
+                // unwrapped -- a rate with no bid is a real thing the API sends.
+                Some(rate) => println!(
+                    "{symbol} ({instrument_id}): bid {} ask {}",
+                    display(rate.bid.as_ref()),
+                    display(rate.ask.as_ref()),
+                ),
+                // Resolved but unpriced: the instrument exists and the market
+                // data does not, which is not the same as an unknown symbol.
+                None => println!("{symbol} ({instrument_id}): no rate returned."),
+            }
+        }
+        if dump_responses {
+            dump_private("rates_response.json", &rates)?;
+        }
+    }
+
     Ok(())
+}
+
+/// Symbol priced when none is given on the command line.
+const DEFAULT_SYMBOL: &str = "AAPL";
+
+/// Parses the optional `AAPL,TSLA,MSFT` argument.
+///
+/// Duplicates are dropped so a repeated symbol does not cost an extra
+/// resolution call, and order is preserved so the output matches what was
+/// asked for. Case is left as typed: symbol matching is case-insensitive, and
+/// echoing the input back unchanged is less confusing than correcting it.
+fn requested_symbols() -> Vec<String> {
+    parse_symbols(
+        &std::env::args()
+            .nth(1)
+            .unwrap_or_else(|| DEFAULT_SYMBOL.to_owned()),
+    )
+}
+
+fn parse_symbols(argument: &str) -> Vec<String> {
+    let mut seen = std::collections::HashSet::new();
+    argument
+        .split(',')
+        .map(str::trim)
+        .filter(|symbol| !symbol.is_empty())
+        .filter(|symbol| seen.insert(symbol.to_ascii_uppercase()))
+        .map(str::to_owned)
+        .collect()
+}
+
+/// Renders an optional field without unwrapping it.
+fn display<T: std::fmt::Display>(value: Option<&T>) -> String {
+    value.map_or_else(|| "-".to_owned(), T::to_string)
 }
 
 fn env_flag(name: &str) -> bool {
@@ -119,6 +194,24 @@ mod tests {
 
     fn mode_of(path: &Path) -> u32 {
         std::fs::metadata(path).unwrap().permissions().mode() & 0o777
+    }
+
+    #[test]
+    fn symbols_are_split_trimmed_and_deduplicated() {
+        assert_eq!(parse_symbols("AAPL,TSLA,MSFT"), ["AAPL", "TSLA", "MSFT"]);
+        assert_eq!(parse_symbols("  AAPL ,  TSLA  "), ["AAPL", "TSLA"]);
+        // Empty segments come from a trailing or doubled comma, which is a
+        // typo rather than a request for an empty symbol.
+        assert_eq!(parse_symbols("AAPL,,TSLA,"), ["AAPL", "TSLA"]);
+    }
+
+    #[test]
+    fn duplicate_symbols_cost_only_one_lookup() {
+        // Matching is case-insensitive, so these name one instrument and must
+        // not produce two resolution calls.
+        assert_eq!(parse_symbols("AAPL,aapl,AaPl"), ["AAPL"]);
+        // The first spelling is the one echoed back.
+        assert_eq!(parse_symbols("aapl,AAPL"), ["aapl"]);
     }
 
     #[test]

@@ -12,6 +12,9 @@ use std::{
 const WATCHLISTS_FIXTURE: &str = include_str!("fixtures/watchlists.json");
 const PORTFOLIO_FIXTURE: &str = include_str!("fixtures/portfolio.json");
 const ME_FIXTURE: &str = include_str!("fixtures/me.json");
+const RATES_FIXTURE: &str = include_str!("fixtures/rates.json");
+const SEARCH_FIXTURE: &str = include_str!("fixtures/search.json");
+const SEARCH_PSEUDO_FIXTURE: &str = include_str!("fixtures/search_pseudo_instrument.json");
 
 struct MockResponse {
     base_url: String,
@@ -181,6 +184,165 @@ async fn me_missing_required_field_is_rejected_with_the_field_name() {
     assert!(error.contains("request ID"), "{error}");
 
     mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn rates_contract_comma_joins_instrument_ids() {
+    let mock = serve_once("200 OK", RATES_FIXTURE);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let response = client.rates(&[1001, 1002]).await.unwrap();
+    assert_eq!(response.rates.len(), 2);
+    assert_eq!(response.rates[0].instrument_id, Some(1001));
+    // The wire value has 25 significant digits; an f64 round trip would lose
+    // the tail, so this pins the Numeric adapter at the rates boundary too.
+    assert_eq!(
+        response.rates[0].ask.as_ref().unwrap().to_string(),
+        "100.0000000000000000000001"
+    );
+    // Scientific notation, which the same adapter has to accept.
+    assert_eq!(
+        response.rates[1].ask.as_ref().unwrap().to_string(),
+        "0.00000506"
+    );
+
+    let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    // One key, comma-joined -- `style: form, explode: false`. The comma arrives
+    // percent-encoded because `Url::query_pairs_mut` uses form encoding; this
+    // asserts what we actually send, and whether eToro accepts %2C is a
+    // question only a live call can answer.
+    assert!(
+        request.starts_with(
+            "GET /api/v1/market-data/instruments/rates?instrumentIds=1001%2C1002 HTTP/1.1\r\n"
+        ),
+        "unexpected request line: {request}"
+    );
+    assert_auth_and_request_id(&request);
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn rates_without_instruments_makes_no_request() {
+    // Port 1 on loopback has nothing listening, so any request at all fails.
+    // Passing means the empty case short-circuited before the transport.
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", "http://127.0.0.1:1")
+            .unwrap();
+
+    let response = client.rates(&[]).await.unwrap();
+    assert!(response.rates.is_empty());
+}
+
+#[tokio::test]
+async fn rates_refuses_more_instruments_than_the_api_accepts() {
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", "http://127.0.0.1:1")
+            .unwrap();
+
+    let ids: Vec<i64> = (1..=101).collect();
+    let error = client.rates(&ids).await.unwrap_err();
+
+    match &error.kind {
+        ApiErrorKind::InvalidRequest { detail } => {
+            assert!(detail.contains("100"), "should name the limit: {detail}");
+            assert!(detail.contains("101"), "should name the count: {detail}");
+        }
+        other => panic!("expected InvalidRequest, got {other:?}"),
+    }
+    // Nothing was sent, so there is nothing to retry.
+    assert!(!error.is_retryable());
+}
+
+#[tokio::test]
+async fn resolve_symbol_returns_the_matching_instrument_id() {
+    let mock = serve_once("200 OK", SEARCH_FIXTURE);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    assert_eq!(client.resolve_symbol("AAPL").await.unwrap(), Some(1001));
+
+    let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert!(
+        request.starts_with(
+            "GET /api/v1/market-data/search?internalSymbolFull=AAPL\
+             &fields=instrumentId%2CinternalSymbolFull%2Cdisplayname HTTP/1.1\r\n"
+        ),
+        "unexpected request line: {request}"
+    );
+    assert_auth_and_request_id(&request);
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn resolve_symbol_matches_case_insensitively() {
+    let mock = serve_once("200 OK", SEARCH_FIXTURE);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    assert_eq!(client.resolve_symbol("aapl").await.unwrap(), Some(1001));
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn resolve_symbol_reports_no_match_when_the_server_ignored_the_filter() {
+    // This fixture is exactly what an ignored filter looks like: a page of
+    // instruments, none of them the one that was asked for. Reporting the
+    // first item would be the bug this check exists to prevent.
+    let mock = serve_once("200 OK", SEARCH_FIXTURE);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    assert_eq!(client.resolve_symbol("TSLA").await.unwrap(), None);
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn resolve_symbol_never_resolves_the_negative_pseudo_instrument() {
+    let mock = serve_once("200 OK", SEARCH_PSEUDO_FIXTURE);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    // The symbol matches, but a negative ID is a system aggregate that no
+    // order endpoint would accept.
+    assert_eq!(client.resolve_symbol("AAPL").await.unwrap(), None);
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn search_tolerates_the_duplicate_instrument_id_the_api_sends() {
+    // The fixture's AAPL entry carries `instrumentId` twice, as the live
+    // endpoint does. serde's derived Deserialize rejects that outright, so
+    // this pins the two-step decode that works around it.
+    let mock = serve_once("200 OK", SEARCH_FIXTURE);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let response = client
+        .search(&[("internalSymbolFull", "AAPL")])
+        .await
+        .unwrap();
+    let apple = response
+        .items
+        .iter()
+        .find(|item| item.internal_symbol_full.as_deref() == Some("AAPL"))
+        .expect("the duplicated entry must survive decoding");
+    assert_eq!(apple.instrument_id, Some(1001));
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn search_passes_results_through_without_verifying_them() {
+    // The division of responsibility: search() reports what came back, and
+    // resolve_symbol() is where the paranoia lives.
+    let mock = serve_once("200 OK", SEARCH_FIXTURE);
+    let client =
+        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+
+    let response = client.search(&[("noSuchField", "nonsense")]).await.unwrap();
+    assert_eq!(response.items.len(), 3);
+    assert_eq!(response.total_items, Some(3));
     mock.server.join().unwrap();
 }
 
