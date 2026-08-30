@@ -18,8 +18,9 @@ usage:
   etoro-agent prices  SYM[,SYM...]             live bid/ask from eToro
   etoro-agent fetch-bars SYM[,SYM...] [FROM] [TO]
                                                daily bars from Tiingo into the store
-  etoro-agent gaps    SYM [SOURCE]             split returns into overnight
-                                               and intraday parts
+  etoro-agent gaps    SYM[,SYM...] [SOURCE]   split returns into overnight and
+                                               intraday parts; one symbol gives
+                                               detail, several give a table
   etoro-agent chart   SYM [SOURCE] [--html [FILE]]
                                                draw a stored series; --html writes
                                                an interactive candlestick page
@@ -34,7 +35,7 @@ async fn main() -> Result<()> {
     match Command::parse(std::env::args().skip(1).collect())? {
         Command::Summary { symbols } => account_summary(symbols).await,
         Command::FetchBars { symbols, range } => fetch_bars(symbols, range).await,
-        Command::Gaps { symbol, source } => gaps_report(&symbol, &source),
+        Command::Gaps { symbols, source } => gaps_report(&symbols, &source),
         Command::Chart {
             symbol,
             source,
@@ -43,47 +44,101 @@ async fn main() -> Result<()> {
     }
 }
 
-/// Splits a stored series' returns into overnight and intraday parts.
+/// Splits stored series' returns into overnight and intraday parts.
+///
+/// One symbol prints the full report; several print a row each, which is what
+/// answers whether an effect seen in one name is general or idiosyncratic.
 ///
 /// Uses the total-return series when the source has one. On as-traded prices
 /// an ex-dividend date reads as an overnight loss no holder suffered, and a
 /// split reads as an overnight collapse -- both would land straight in the
 /// "largest overnight moves" list and crowd out the real ones.
-fn gaps_report(symbol: &str, source: &str) -> Result<()> {
+fn gaps_report(symbols: &[String], source: &str) -> Result<()> {
     let store = FileStore::new(store_root());
-    let key = SeriesKey::new(source, symbol, Interval::Daily)?;
-    let Some(series) = store.load(&key)? else {
-        bail!("no stored series for {symbol} from {source}; run: etoro-agent fetch-bars {symbol}");
+    let mut rows = Vec::new();
+
+    for symbol in symbols {
+        let key = SeriesKey::new(source, symbol, Interval::Daily)?;
+        // One missing ticker should not abandon the comparison.
+        let Some(series) = store.load(&key)? else {
+            println!("{symbol}: not in the store; run: etoro-agent fetch-bars {symbol}");
+            continue;
+        };
+        let adjusted = series
+            .bars
+            .iter()
+            .any(|bar| bar.total_return_close.is_some());
+        let choice = if adjusted {
+            SeriesChoice::TotalReturn
+        } else {
+            SeriesChoice::Reported
+        };
+        match gaps(&series.bars, choice, GAP_SAMPLE) {
+            Some(stats) => rows.push((symbol.clone(), adjusted, stats)),
+            None => println!("{symbol}: too few bars to measure gaps"),
+        }
+    }
+
+    let Some((first_symbol, first_adjusted, first_stats)) = rows.first() else {
+        bail!("no stored series to report on");
     };
 
-    let adjusted = series
-        .bars
-        .iter()
-        .any(|bar| bar.total_return_close.is_some());
-    let choice = if adjusted {
-        SeriesChoice::TotalReturn
-    } else {
-        SeriesChoice::Reported
-    };
-    let Some(stats) = gaps(&series.bars, choice, GAP_SAMPLE) else {
-        bail!("{symbol} has too few bars to measure gaps");
-    };
-
-    println!(
-        "{} {} ({:?} prices from {source}, {} sessions)",
-        symbol.to_ascii_uppercase(),
-        Interval::Daily.as_str(),
-        choice,
-        stats.sessions
-    );
-    if !adjusted {
+    if rows.len() == 1 {
         println!(
-            "! no adjusted closes in this series, so dividends and splits will \
-             show up as overnight moves"
+            "{} {} ({} prices from {source}, {} sessions)",
+            first_symbol.to_ascii_uppercase(),
+            Interval::Daily.as_str(),
+            if *first_adjusted {
+                "TotalReturn"
+            } else {
+                "Reported"
+            },
+            first_stats.sessions
+        );
+        if !first_adjusted {
+            println!(
+                "! no adjusted closes in this series, so dividends and splits will \
+                 show up as overnight moves"
+            );
+        }
+        println!();
+        print!("{}", first_stats.report());
+        return Ok(());
+    }
+
+    // Annualised throughout, because the windows differ per symbol -- a
+    // compounded figure over 5 years and one over 3.8 are not comparable.
+    println!(
+        "{:<8}{:>9}{:>11}{:>7}{:>10}{:>7}{:>8}{:>9}",
+        "symbol", "sessions", "overnight", "vol", "intraday", "vol", "corr", "total"
+    );
+    let mut any_unadjusted = false;
+    for (symbol, adjusted, stats) in &rows {
+        any_unadjusted |= !adjusted;
+        println!(
+            "{:<8}{:>9}{:>11}{:>7}{:>10}{:>7}{:>8}{:>9}",
+            format!(
+                "{}{}",
+                symbol.to_ascii_uppercase(),
+                if *adjusted { "" } else { "*" }
+            ),
+            stats.sessions,
+            format!("{:+.2}%", stats.overnight.annualised * 100.0),
+            format!("{:.1}%", stats.overnight.volatility * 100.0),
+            format!("{:+.2}%", stats.intraday.annualised * 100.0),
+            format!("{:.1}%", stats.intraday.volatility * 100.0),
+            if stats.correlation.is_finite() {
+                format!("{:+.2}", stats.correlation)
+            } else {
+                "-".to_owned()
+            },
+            format!("{:+.2}%", stats.total.annualised * 100.0),
         );
     }
-    println!();
-    print!("{}", stats.report());
+    println!("\nreturns and volatility are annualised; corr is overnight against intraday.");
+    if any_unadjusted {
+        println!("* no adjusted closes, so dividends and splits appear as overnight moves.");
+    }
     Ok(())
 }
 
@@ -286,7 +341,7 @@ enum Command {
         range: DateRange,
     },
     Gaps {
-        symbol: String,
+        symbols: Vec<String>,
         source: String,
     },
     Chart {
@@ -330,11 +385,11 @@ impl Command {
                 })
             }
             Some((verb, rest)) if verb == "gaps" => {
-                let Some(symbol) = rest.first() else {
-                    bail!("gaps needs a symbol\n\n{USAGE}");
+                let Some(symbols) = rest.first() else {
+                    bail!("gaps needs at least one symbol\n\n{USAGE}");
                 };
                 Ok(Self::Gaps {
-                    symbol: symbol.clone(),
+                    symbols: parse_symbols(symbols),
                     source: rest
                         .get(1)
                         .cloned()
@@ -543,12 +598,25 @@ mod tests {
     }
 
     #[test]
-    fn gaps_takes_a_symbol_and_an_optional_source() {
+    fn gaps_takes_a_symbol_list_and_an_optional_source() {
         assert_eq!(
             Command::parse(vec!["gaps".to_owned(), "AAPL".to_owned()]).unwrap(),
             Command::Gaps {
-                symbol: "AAPL".to_owned(),
+                symbols: vec!["AAPL".to_owned()],
                 source: "tiingo".to_owned()
+            }
+        );
+        assert_eq!(
+            Command::parse(vec![
+                "gaps".to_owned(),
+                "AAPL,MBLY,tsla".to_owned(),
+                "etoro".to_owned()
+            ])
+            .unwrap(),
+            Command::Gaps {
+                // Same splitting, trimming and dedup as everywhere else.
+                symbols: vec!["AAPL".to_owned(), "MBLY".to_owned(), "tsla".to_owned()],
+                source: "etoro".to_owned()
             }
         );
         assert!(Command::parse(vec!["gaps".to_owned()]).is_err());

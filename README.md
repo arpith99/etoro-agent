@@ -28,6 +28,7 @@ cargo run -- prices AAPL,MSFT,TSLA     # live bid/ask from eToro
 cargo run -- fetch-bars AAPL,MSFT      # daily bars from Tiingo, last five years
 cargo run -- fetch-bars AAPL 2020-01-01 2024-12-31
 cargo run -- gaps AAPL                 # overnight vs intraday return split
+cargo run -- gaps AAPL,MSFT,TSLA       # one row per ticker, for comparison
 cargo run -- chart AAPL                # draw a stored series in the terminal
 cargo run -- chart AAPL --html         # interactive candlesticks -> aapl.html
 ```
@@ -56,6 +57,10 @@ It also reports the correlation between the two sides, which is what separates
 series with otherwise identical rows: independent halves add their variances,
 while offsetting ones cancel part of it. A negative figure means gaps partly
 reverse during the session that follows.
+
+Given several symbols it prints a row each, annualised so windows of different
+lengths compare — which is how you tell an effect seen in one name from a
+general one.
 
 `--html` writes a self-contained interactive candlestick page — zoom, pan and
 crosshair — with the charting library embedded rather than fetched from a CDN,
