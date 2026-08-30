@@ -344,14 +344,27 @@ with lead time. **Still outstanding, and it blocks the rest of this milestone.**
   a dozen mutual-exclusion rules and the generated type makes every invalid
   combination expressible.
 
-  **Still to do: closing.** The order endpoint cannot do it — `sell` and
-  `buyToCover` are rejected today — so a long-only strategy needs
-  `POST /api/v1/trading/execution/market-close-orders/positions/{positionId}`
-  as a second path. Details in [`api-observations.md`](api-observations.md).
+  ~~Still to do: closing.~~ **Done**: `close_position` and `ClosePosition`.
+  It is a different *endpoint*, not a different argument — the order endpoint
+  rejects `sell` and `buyToCover` today — so opening and closing genuinely do
+  not share a path, and a long-only strategy drives two. The body is
+  PascalCase (`InstrumentID`, `UnitsToDeduct`) unlike every other request in
+  the API, so it is built by a private type rather than at call sites, and an
+  absent `UnitsToDeduct` means "all of it" where zero would mean "none".
+  A close is asynchronous too: eToro's own documented example returns
+  `statusID: 1` (Received), so it polls exactly like an open.
 - No CLI command places orders yet, deliberately: approval mode and the hard
   limits are milestone 6, and a way to fire an order from a shell prompt should
   not exist before them.
-- The retry policy lands here, now that the idempotency rule is known.
+- ~~The retry policy lands here, now that the idempotency rule is known.~~
+  **Done**: `src/retry.rs`. `with_retry` generates **one** request id and hands
+  the same one to every attempt, so correct reuse is the path of least
+  resistance instead of something to remember — the consequence of forgetting
+  being a duplicate position rather than an error. `delay_before` is pure, so
+  the whole decision is tested without waiting for it. A `Retry-After` from the
+  API overrides the computed backoff in both directions, but is still capped,
+  because an hour-long header would otherwise park an unattended agent. There
+  is no `Default`: `RetryPolicy::once()` and `::standard()` are both named.
 
 Then run it on demo, unattended, for a meaningful period — and compare actual
 demo fills against what the backtest predicted for the same period. That

@@ -180,6 +180,12 @@ Modelling advice that still holds:
 - `orders:lookup` takes `orderId` **or** `referenceId`, documented as mutually
   exclusive. The literal colon in the path survives `Url::join` — it is not
   read as a scheme separator, since the preceding segment contains `/`.
+- **Every response carries the remaining budget.** `RateLimit-Limit`,
+  `RateLimit-Remaining`, `RateLimit-Reset` and `RateLimit-Policy`
+  (`"20;w=60"`) come back on success as well as on 429, and the description
+  states the budget is *"SHARED across 11 endpoints (it is NOT per-endpoint)"*.
+  Nothing reads them yet; a scheduler that wants to pace itself rather than
+  discover the limit by hitting it should.
 - Order execution exists at **v2 and v3** (`/api/v2/trading/execution/orders`
   and `/api/v3/trading/execution/orders`), each with its own demo twin and
   delete route. Which to prefer is unresolved; v2 is what the roadmap's status

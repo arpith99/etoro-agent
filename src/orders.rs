@@ -223,6 +223,12 @@ pub enum OrderError {
 
     #[error("an instrument id must be positive, got {0}")]
     InvalidInstrument(i64),
+
+    /// Refused before the id ever reaches a URL path. It is an integer, so it
+    /// cannot escape the path the way a string could -- but a non-positive id
+    /// is not a position, and sending one asks the API a meaningless question.
+    #[error("a position id must be positive, got {0}")]
+    InvalidPosition(i64),
 }
 
 /// A market order that opens a long position, sized in cash.
@@ -317,6 +323,116 @@ impl MarketBuy {
         }
         Ok(())
     }
+}
+
+/// A request to close all or part of an open position.
+///
+/// A separate type from [`MarketBuy`] because it is a separate *endpoint*, not
+/// merely a separate direction: the unified order endpoint rejects `sell` and
+/// `buyToCover` today, so closing goes through
+/// `POST /api/v1/trading/execution/{demo/}market-close-orders/positions/{id}`.
+/// A long-only strategy therefore needs two paths for its two directions,
+/// which is worth knowing before writing the loop that drives them.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ClosePosition {
+    position_id: i64,
+    instrument_id: i32,
+    units: Option<Numeric>,
+}
+
+/// The body eToro expects, which is **PascalCase** unlike every other request
+/// in this API. Kept private so the casing cannot be got wrong at a call site.
+#[derive(Debug, Serialize)]
+struct ClosePositionBody {
+    #[serde(rename = "InstrumentID")]
+    instrument_id: i32,
+    /// Absent means close the whole position, which is not the same as zero.
+    #[serde(rename = "UnitsToDeduct", skip_serializing_if = "Option::is_none")]
+    units_to_deduct: Option<Numeric>,
+}
+
+impl ClosePosition {
+    /// Closes the entire position.
+    pub fn all(position_id: i64, instrument_id: i32) -> Result<Self, OrderError> {
+        if position_id <= 0 {
+            return Err(OrderError::InvalidPosition(position_id));
+        }
+        if instrument_id <= 0 {
+            return Err(OrderError::InvalidInstrument(i64::from(instrument_id)));
+        }
+        Ok(Self {
+            position_id,
+            instrument_id,
+            units: None,
+        })
+    }
+
+    /// Closes `units` of the position, leaving the rest open.
+    pub fn units(position_id: i64, instrument_id: i32, units: Numeric) -> Result<Self, OrderError> {
+        if units.0 <= rust_decimal::Decimal::ZERO {
+            return Err(OrderError::NotPositive {
+                field: "UnitsToDeduct",
+                value: units.0.to_string(),
+            });
+        }
+        Ok(Self {
+            units: Some(units),
+            ..Self::all(position_id, instrument_id)?
+        })
+    }
+
+    pub fn position_id(&self) -> i64 {
+        self.position_id
+    }
+
+    /// Whether this closes the position outright.
+    pub fn is_full_close(&self) -> bool {
+        self.units.is_none()
+    }
+
+    pub(crate) fn body(&self) -> impl Serialize + use<> {
+        ClosePositionBody {
+            instrument_id: self.instrument_id,
+            units_to_deduct: self.units,
+        }
+    }
+}
+
+/// What came back from a close request.
+///
+/// Hand-written rather than generated: the response is an inline anonymous
+/// object with no component schema, and its casing (`positionID`, `orderID`,
+/// `CID`) does not match the similarly-named `OrderForClose` component.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct ClosedOrder {
+    #[serde(rename = "orderID")]
+    pub order_id: Option<i64>,
+    #[serde(rename = "positionID")]
+    pub position_id: Option<i64>,
+    #[serde(rename = "instrumentID")]
+    pub instrument_id: Option<i32>,
+    #[serde(rename = "unitsToDeduct")]
+    pub units_to_deduct: Option<Numeric>,
+    #[serde(rename = "statusID")]
+    pub status_id: Option<i32>,
+}
+
+impl ClosedOrder {
+    /// The closing order's status, on the same scale as [`OrderStatus`].
+    ///
+    /// A close is asynchronous exactly like an open -- eToro's own example
+    /// returns `statusID: 1` (Received) -- so the same polling applies.
+    pub fn status(&self) -> Option<OrderStatus> {
+        self.status_id.map(OrderStatus::from_id)
+    }
+}
+
+/// The envelope a close request returns.
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct CloseAccepted {
+    #[serde(rename = "orderForClose")]
+    pub order: Option<ClosedOrder>,
+    pub token: Option<String>,
 }
 
 #[cfg(test)]
@@ -460,6 +576,58 @@ mod tests {
         let valid = MarketBuy::new(1001, numeric("100")).unwrap();
         assert!(valid.clone().with_stop_loss(numeric("-1")).is_err());
         assert!(valid.with_take_profit(numeric("-1")).is_err());
+    }
+
+    #[test]
+    fn a_full_close_omits_the_unit_count_rather_than_sending_zero() {
+        let close = ClosePosition::all(2150941015, 1111).unwrap();
+        assert!(close.is_full_close());
+        let json = serde_json::to_string(&close.body()).unwrap();
+        // Absent means "all of it"; zero would mean "close nothing".
+        assert_eq!(json, r#"{"InstrumentID":1111}"#);
+    }
+
+    #[test]
+    fn a_partial_close_sends_the_pascal_case_keys_this_endpoint_wants() {
+        let close = ClosePosition::units(2150941015, 1111, numeric("2.5")).unwrap();
+        assert!(!close.is_full_close());
+        assert_eq!(
+            serde_json::to_string(&close.body()).unwrap(),
+            r#"{"InstrumentID":1111,"UnitsToDeduct":2.5}"#
+        );
+    }
+
+    #[test]
+    fn a_close_that_could_not_refer_to_anything_is_refused() {
+        assert_eq!(
+            ClosePosition::all(0, 1111),
+            Err(OrderError::InvalidPosition(0))
+        );
+        assert!(ClosePosition::all(-1, 1111).is_err());
+        assert!(ClosePosition::all(1, 0).is_err());
+        // Zero units would serialise as a close that closes nothing.
+        assert!(ClosePosition::units(1, 1111, numeric("0")).is_err());
+        assert!(ClosePosition::units(1, 1111, numeric("-2")).is_err());
+    }
+
+    #[test]
+    fn a_close_response_decodes_the_apis_own_example() {
+        // Copied from the endpoint's documented example, casing included.
+        let accepted: CloseAccepted = serde_json::from_str(
+            r#"{"orderForClose":{"positionID":2150941015,"instrumentID":1111,
+                "unitsToDeduct":2,"orderID":13904638,"orderType":19,"statusID":1,
+                "CID":7765437,"openDateTime":"2025-04-02T16:07:54.0880338Z",
+                "lastUpdate":"2025-04-02T16:07:54.0880338Z"},
+                "token":"5fe065bc-f6f9-4897-a2ce-c4fccef73ff8"}"#,
+        )
+        .unwrap();
+        let order = accepted.order.unwrap();
+        assert_eq!(order.order_id, Some(13904638));
+        assert_eq!(order.position_id, Some(2150941015));
+        // Received, not Filled: a close is asynchronous like an open, so this
+        // still has to be polled.
+        assert_eq!(order.status(), Some(OrderStatus::Received));
+        assert!(!order.status().unwrap().is_terminal());
     }
 
     #[test]

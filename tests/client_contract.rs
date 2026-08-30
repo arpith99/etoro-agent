@@ -1,6 +1,6 @@
 use etoro_agent::client::{Environment, EtoroClient};
 use etoro_agent::error::ApiErrorKind;
-use etoro_agent::orders::{MarketBuy, OrderHandle, OrderStatus, status_of};
+use etoro_agent::orders::{ClosePosition, MarketBuy, OrderHandle, OrderStatus, status_of};
 use etoro_agent::types::manual::Numeric;
 use reqwest::StatusCode;
 use std::time::Duration;
@@ -653,5 +653,69 @@ async fn a_status_the_crate_does_not_know_still_decodes() {
     let info = client.lookup_order(OrderHandle::OrderId(1)).await.unwrap();
     assert_eq!(status_of(&info), Some(OrderStatus::Unknown(99)));
     assert!(!status_of(&info).unwrap().is_terminal());
+    mock.server.join().unwrap();
+}
+
+const CLOSED_ORDER_FIXTURE: &str = r#"{
+  "orderForClose": {
+    "positionID": 2150941015,
+    "instrumentID": 1111,
+    "unitsToDeduct": 2,
+    "orderID": 13904638,
+    "orderType": 19,
+    "statusID": 1,
+    "CID": 7765437,
+    "openDateTime": "2025-04-02T16:07:54.0880338Z",
+    "lastUpdate": "2025-04-02T16:07:54.0880338Z"
+  },
+  "token": "5fe065bc-f6f9-4897-a2ce-c4fccef73ff8"
+}"#;
+
+#[tokio::test]
+async fn closing_a_position_uses_its_own_endpoint_with_the_id_in_the_path() {
+    let mock = serve_once("200 OK", CLOSED_ORDER_FIXTURE);
+    let client = client_for(&mock.base_url);
+    let close = ClosePosition::all(2150941015, 1111).unwrap();
+
+    let accepted = client
+        .close_position(&close, fixture_reference())
+        .await
+        .unwrap();
+    let order = accepted.order.unwrap();
+    assert_eq!(order.order_id, Some(13904638));
+    // Received, so the caller still has to poll: a close is asynchronous too.
+    assert_eq!(order.status(), Some(OrderStatus::Received));
+
+    let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert!(
+        request.starts_with(
+            "POST /api/v1/trading/execution/demo/market-close-orders/positions/2150941015 \
+             HTTP/1.1\r\n"
+        ),
+        "{request}"
+    );
+    assert_auth_and_request_id(&request);
+    // PascalCase, unlike every other request body in this API, and no
+    // UnitsToDeduct at all because this closes the whole position.
+    assert!(request.contains(r#"{"InstrumentID":1111}"#), "{request}");
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn a_partial_close_names_the_units_to_deduct() {
+    let mock = serve_once("200 OK", CLOSED_ORDER_FIXTURE);
+    let client = client_for(&mock.base_url);
+    let close = ClosePosition::units(2150941015, 1111, Numeric("2".parse().unwrap())).unwrap();
+
+    client
+        .close_position(&close, fixture_reference())
+        .await
+        .unwrap();
+
+    let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert!(
+        request.contains(r#"{"InstrumentID":1111,"UnitsToDeduct":2}"#),
+        "{request}"
+    );
     mock.server.join().unwrap();
 }

@@ -4,7 +4,7 @@ use reqwest::{StatusCode, Url, header};
 use serde::de::DeserializeOwned;
 
 use crate::error::{ApiError, ApiErrorKind, ClientError, ExceptionDetail, Method};
-use crate::orders::{AcceptedOrder, MarketBuy, OrderHandle};
+use crate::orders::{AcceptedOrder, CloseAccepted, ClosePosition, MarketBuy, OrderHandle};
 use crate::types::{
     // The exception envelope is a nested type generated from an inline object,
     // not a component schema, so it has no tag facade to be re-exported from.
@@ -297,6 +297,41 @@ impl EtoroClient {
             // typify happens to narrow to a UUID.
             token: response.token.map(|token| token.to_string()),
         })
+    }
+
+    /// Closes all or part of an open position.
+    ///
+    /// A different endpoint from [`Self::place_order`], not a different
+    /// argument to it: the unified order endpoint rejects `sell` and
+    /// `buyToCover` today, so opening and closing genuinely do not share a
+    /// path. Both draw on the same 20 requests / 60 s execution pool.
+    ///
+    /// Asynchronous in the same way, too -- eToro's documented example returns
+    /// `statusID: 1` (Received), so a close is confirmed by polling exactly
+    /// like an open.
+    ///
+    /// `request_id` is the idempotency key. Reuse it when retrying, or a
+    /// timed-out close becomes two closes -- which, on a partially filled
+    /// position, is not a no-op.
+    pub async fn close_position(
+        &self,
+        close: &ClosePosition,
+        request_id: uuid::Uuid,
+    ) -> Result<CloseAccepted, ApiError> {
+        // The position id is appended rather than interpolated into either
+        // literal, so both spellings stay visible here and the dynamic part
+        // stays a validated integer.
+        let path = format!(
+            "{}/{}",
+            self.path(
+                "api/v1/trading/execution/demo/market-close-orders/positions",
+                "api/v1/trading/execution/market-close-orders/positions",
+            ),
+            close.position_id(),
+        );
+        let (response, _ctx): (CloseAccepted, _) =
+            self.post_json(&path, &close.body(), request_id).await?;
+        Ok(response)
     }
 
     /// Asks what became of an order.
