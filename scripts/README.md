@@ -263,6 +263,31 @@ sets its own; `SPIKE_USER_AGENT` overrides it if that stops being accepted.
 Findings belong in [`../docs/api-observations.md`](../docs/api-observations.md),
 not here.
 
+## Not part of the pipeline: `compare_close_to_quote.py`
+
+Asks whether eToro's candle close is the bid, the mid, or the last trade.
+
+```sh
+python3 scripts/compare_close_to_quote.py AAPL TSLA MBLY
+```
+
+eToro's daily closes sit about 0.16% *below* Tiingo's, consistently across
+unrelated tickers. That is 25-50x the intraday spreads measured on the same
+instruments and far too small to be a session misalignment, which leaves
+"eToro reports the bid, and spreads widen at the close" as the leading
+explanation. This checks it against eToro's own live quote, sidestepping the
+cross-vendor question entirely.
+
+**Run it while the market is closed.** With the market open, the newest candle
+is a previous session and the live quote has moved since, so the comparison
+measures intraday drift rather than quote convention. The script compares the
+quote's timestamp against the candle's date and says so when they disagree.
+
+Its own caveat, which the tests pin: a tight quote cannot answer the question.
+AAPL's intraday spread is about 0.003%, so bid, mid and ask are all within
+tolerance of each other and every one of them "matches". Prefer instruments
+with a wide quote -- MBLY's is roughly 0.116%.
+
 ## Not part of the pipeline: `check_chart_page.sh`
 
 Loads a generated chart page in headless Chrome and fails on console errors.
