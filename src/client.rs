@@ -355,7 +355,7 @@ impl RequestContext {
 }
 
 /// True for hosts where plaintext HTTP cannot leave the machine.
-fn is_loopback(url: &Url) -> bool {
+pub(crate) fn is_loopback(url: &Url) -> bool {
     url.host_str().is_some_and(|host| {
         host.eq_ignore_ascii_case("localhost")
             || host

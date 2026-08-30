@@ -16,7 +16,11 @@ use std::time::Duration;
 
 use reqwest::StatusCode;
 
-/// Failure while constructing an [`EtoroClient`](crate::client::EtoroClient).
+/// Failure while constructing an HTTP client that carries credentials.
+///
+/// Used by [`EtoroClient`](crate::client::EtoroClient) and by the credentialed
+/// data sources in [`crate::data`]: the failures are identical, and splitting
+/// them would duplicate four variants to no purpose.
 ///
 /// Nothing here is retryable: every variant means the configuration is wrong.
 #[derive(Debug, thiserror::Error)]

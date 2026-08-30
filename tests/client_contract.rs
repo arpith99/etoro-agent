@@ -1,13 +1,10 @@
 use etoro_agent::client::EtoroClient;
 use etoro_agent::error::ApiErrorKind;
 use reqwest::StatusCode;
-use std::{
-    io::{Read, Write},
-    net::TcpListener,
-    sync::mpsc::{self, Receiver},
-    thread::{self, JoinHandle},
-    time::{Duration, Instant},
-};
+use std::time::Duration;
+
+mod common;
+use common::{serve_once, serve_once_with_headers};
 
 const WATCHLISTS_FIXTURE: &str = include_str!("fixtures/watchlists.json");
 const PORTFOLIO_FIXTURE: &str = include_str!("fixtures/portfolio.json");
@@ -15,78 +12,6 @@ const ME_FIXTURE: &str = include_str!("fixtures/me.json");
 const RATES_FIXTURE: &str = include_str!("fixtures/rates.json");
 const SEARCH_FIXTURE: &str = include_str!("fixtures/search.json");
 const SEARCH_PSEUDO_FIXTURE: &str = include_str!("fixtures/search_pseudo_instrument.json");
-
-struct MockResponse {
-    base_url: String,
-    request: Receiver<String>,
-    server: JoinHandle<()>,
-}
-
-fn serve_once(status: &str, body: &'static str) -> MockResponse {
-    serve_once_with_headers(status, &[], body)
-}
-
-fn serve_once_with_headers(
-    status: &str,
-    extra_headers: &[(&str, &str)],
-    body: &'static str,
-) -> MockResponse {
-    let extra_headers: String = extra_headers
-        .iter()
-        .map(|(name, value)| format!("{name}: {value}\r\n"))
-        .collect();
-    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
-    let address = listener.local_addr().unwrap();
-    let (request_sender, request) = mpsc::channel();
-    let status = status.to_owned();
-    let extra_headers = extra_headers.to_owned();
-
-    let server = thread::spawn(move || {
-        // `TcpListener::accept` has no timeout, so a client that never connects
-        // would park this thread forever and turn a failing test into a hang.
-        // Poll in non-blocking mode against a deadline instead.
-        listener.set_nonblocking(true).unwrap();
-        let deadline = Instant::now() + Duration::from_secs(5);
-        let mut stream = loop {
-            match listener.accept() {
-                Ok((stream, _)) => break stream,
-                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-                    assert!(Instant::now() < deadline, "no client connected within 5s");
-                    thread::sleep(Duration::from_millis(5));
-                }
-                Err(error) => panic!("accept failed: {error}"),
-            }
-        };
-        stream.set_nonblocking(false).unwrap();
-        stream
-            .set_read_timeout(Some(Duration::from_secs(5)))
-            .unwrap();
-        let mut bytes = Vec::new();
-        let mut buffer = [0_u8; 1024];
-        while !bytes.windows(4).any(|window| window == b"\r\n\r\n") {
-            let read = stream.read(&mut buffer).unwrap();
-            if read == 0 {
-                break;
-            }
-            bytes.extend_from_slice(&buffer[..read]);
-        }
-        request_sender
-            .send(String::from_utf8(bytes).unwrap())
-            .unwrap();
-
-        let response = format!(
-            "HTTP/1.1 {status}\r\ncontent-type: application/json\r\n{extra_headers}content-length: {}\r\nconnection: close\r\n\r\n{body}",
-            body.len()
-        );
-        stream.write_all(response.as_bytes()).unwrap();
-    });
-
-    MockResponse {
-        base_url: format!("http://{address}"),
-        request,
-        server,
-    }
-}
 
 fn assert_auth_and_request_id(request: &str) {
     let request = request.to_ascii_lowercase();
