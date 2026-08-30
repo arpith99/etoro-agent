@@ -102,13 +102,36 @@ impl RetryPolicy {
 /// # Ok(())
 /// # }
 /// ```
-pub async fn with_retry<T, F, Fut>(policy: &RetryPolicy, mut operation: F) -> Result<T, ApiError>
+pub async fn with_retry<T, F, Fut>(policy: &RetryPolicy, operation: F) -> Result<T, ApiError>
 where
     F: FnMut(uuid::Uuid) -> Fut,
     Fut: Future<Output = Result<T, ApiError>>,
 {
     // Generated once, outside the loop. This line is the whole point.
-    let request_id = uuid::Uuid::new_v4();
+    with_retry_id(policy, uuid::Uuid::new_v4(), operation).await
+}
+
+/// [`with_retry`], with the caller supplying the id.
+///
+/// For when something has to happen *before* the first attempt and needs the
+/// id — writing an audit record, most obviously. An order has to be logged
+/// before it is sent, because that is the only way the log can name an order
+/// whose response never arrived; and that write should be able to abort the
+/// whole operation, which it cannot do from inside the closure.
+///
+/// The id is still used for every attempt. Passing a fresh one per call is the
+/// caller's job and their opportunity to get it wrong, which is why
+/// [`with_retry`] exists and should be preferred when nothing needs the id
+/// early.
+pub async fn with_retry_id<T, F, Fut>(
+    policy: &RetryPolicy,
+    request_id: uuid::Uuid,
+    mut operation: F,
+) -> Result<T, ApiError>
+where
+    F: FnMut(uuid::Uuid) -> Fut,
+    Fut: Future<Output = Result<T, ApiError>>,
+{
     let mut attempt = 1;
     loop {
         let error = match operation(request_id).await {
@@ -272,6 +295,35 @@ mod tests {
             "a fresh id would have made each retry a separate order: {seen:?}"
         );
         assert_ne!(seen[0], uuid::Uuid::nil());
+    }
+
+    #[tokio::test]
+    async fn a_supplied_id_is_the_one_every_attempt_uses() {
+        // The variant that lets an audit record be written before the send.
+        let chosen = uuid::Uuid::new_v4();
+        let seen = std::sync::Mutex::new(Vec::new());
+        let attempts = AtomicU32::new(0);
+        let policy = RetryPolicy {
+            max_attempts: 2,
+            base_delay: Duration::from_millis(1),
+            max_delay: Duration::from_millis(1),
+        };
+
+        let result: Result<(), _> = with_retry_id(&policy, chosen, |request_id| {
+            seen.lock().unwrap().push(request_id);
+            let attempt = attempts.fetch_add(1, Ordering::SeqCst);
+            async move {
+                if attempt == 0 {
+                    Err(server_error())
+                } else {
+                    Ok(())
+                }
+            }
+        })
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(seen.into_inner().unwrap(), vec![chosen, chosen]);
     }
 
     #[tokio::test]

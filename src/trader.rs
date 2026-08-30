@@ -13,6 +13,121 @@
 //! **Nothing in this module places or closes anything.** The safety rails that
 //! have to exist before it can are milestone 6's: hard limits, a cost check, an
 //! audit log, and approval before anything runs unattended.
+//!
+//! # Executing a plan
+//!
+//! No command does this yet, deliberately. The shape it takes is below, and it
+//! compiles — the order of the four steps is the part worth copying.
+//!
+//! ```no_run
+//! use std::time::Duration;
+//!
+//! use chrono::Utc;
+//! use etoro_agent::{
+//!     audit::{AuditLog, Event, Record},
+//!     client::{Environment, EtoroClient},
+//!     data::{Bar, SeriesChoice},
+//!     limits::{Limits, open_exposure},
+//!     orders::OrderHandle,
+//!     retry::{RetryPolicy, with_retry_id},
+//!     strategy::Sma,
+//!     trader::{Action, await_terminal, plan},
+//!     types::manual::Numeric,
+//! };
+//!
+//! # async fn execute(bars: &[Bar], limits: &Limits, symbol: &str) -> anyhow::Result<()> {
+//! let environment = Environment::Demo;
+//! let client = EtoroClient::new("api-key", "user-key", environment)?;
+//! client.verify_environment().await?;
+//!
+//! let instrument_id: i32 = client
+//!     .resolve_symbol(symbol)
+//!     .await?
+//!     .ok_or_else(|| anyhow::anyhow!("unknown symbol"))?
+//!     .try_into()?;
+//!
+//! // 1. Decide. Pure: no writes, and every branch is unit-tested.
+//! let response = client.portfolio().await?;
+//! let exposure = open_exposure(&response);
+//! let portfolio = response
+//!     .client_portfolio
+//!     .ok_or_else(|| anyhow::anyhow!("portfolio omitted clientPortfolio"))?;
+//! let mut strategy = Sma::new(20, 100)?;
+//! let decision = plan(
+//!     &portfolio,
+//!     instrument_id,
+//!     bars,
+//!     SeriesChoice::TotalReturn,
+//!     &mut strategy,
+//!     Numeric("100".parse()?),
+//! )?;
+//!
+//! let audit = AuditLog::new("audit.ndjson");
+//! let submitted_today = audit.submissions_on(Utc::now().date_naive(), environment.as_str())?;
+//!
+//! // 2. Check the rails. A refusal is logged, because it leaves no other
+//! //    trace anywhere -- no order, no position, no balance change.
+//! if let Err(breach) = limits.check(&decision.action, exposure, submitted_today) {
+//!     audit.append(&Record::now(environment.as_str(), Event::Refused {
+//!         symbol: symbol.to_owned(),
+//!         instrument_id,
+//!         action: decision.action.describe(),
+//!         reason: breach.to_string(),
+//!     }))?;
+//!     return Ok(());
+//! }
+//!
+//! // 3. Send. The id is minted here so the audit record can be written
+//! //    *before* the request, and can abort it: an order that goes out
+//! //    unlogged is one nothing can find afterwards.
+//! let reference_id = uuid::Uuid::new_v4();
+//! match &decision.action {
+//!     Action::Hold => return Ok(()),
+//!     Action::Open(order) => {
+//!         audit.append(&Record::now(environment.as_str(), Event::Submitted {
+//!             symbol: symbol.to_owned(),
+//!             instrument_id,
+//!             action: "OPEN".to_owned(),
+//!             reference_id,
+//!             amount: Some(order.amount()),
+//!         }))?;
+//!         // Retries reuse `reference_id`, so at most one order exists.
+//!         with_retry_id(&RetryPolicy::standard(), reference_id, |request_id| {
+//!             client.place_order(order, request_id)
+//!         })
+//!         .await?;
+//!     }
+//!     Action::Close(close) => {
+//!         audit.append(&Record::now(environment.as_str(), Event::Submitted {
+//!             symbol: symbol.to_owned(),
+//!             instrument_id,
+//!             action: "CLOSE".to_owned(),
+//!             reference_id,
+//!             amount: None,
+//!         }))?;
+//!         client.close_position(close, reference_id).await?;
+//!     }
+//! }
+//!
+//! // 4. Acceptance is not execution. Poll until it stops moving, and record
+//! //    what it settled as -- including "still in flight", which is not the
+//! //    same as "did not happen".
+//! let status = await_terminal(
+//!     &client,
+//!     OrderHandle::ReferenceId(reference_id),
+//!     Duration::from_secs(5),
+//!     12,
+//! )
+//! .await?;
+//! audit.append(&Record::now(environment.as_str(), Event::Settled {
+//!     reference_id,
+//!     order_id: None,
+//!     status: status.map(|status| status.to_string()),
+//!     detail: None,
+//! }))?;
+//! # Ok(())
+//! # }
+//! ```
 
 use std::time::Duration;
 

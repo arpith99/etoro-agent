@@ -221,20 +221,28 @@ impl AuditLog {
     /// than settlements on purpose: an order that was sent and whose outcome
     /// was never recorded still consumed a slot, and may well have filled.
     ///
+    /// Counts **distinct `reference_id`s**, not records. A retried write reuses
+    /// its id -- that is the whole idempotency contract -- so it is one order
+    /// however many times it was sent, and logging each attempt is what makes
+    /// the log useful afterwards. Counting records instead would let a flaky
+    /// connection exhaust the day's budget without a single extra position
+    /// being opened.
+    ///
     /// UTC, matching the timestamps, which does not align with any exchange's
     /// trading day. That is deliberate -- the cap is a brake on this program,
     /// not a description of a session, and a boundary that never shifts is
     /// easier to reason about than one that does twice a year.
     pub fn submissions_on(&self, date: NaiveDate, environment: &str) -> Result<usize, AuditError> {
-        Ok(self
-            .read()?
-            .iter()
-            .filter(|record| {
-                record.at.date_naive() == date
-                    && record.environment == environment
-                    && matches!(record.event, Event::Submitted { .. })
-            })
-            .count())
+        let mut orders = std::collections::HashSet::new();
+        for record in self.read()? {
+            if record.at.date_naive() != date || record.environment != environment {
+                continue;
+            }
+            if let Event::Submitted { reference_id, .. } = record.event {
+                orders.insert(reference_id);
+            }
+        }
+        Ok(orders.len())
     }
 }
 
@@ -356,6 +364,29 @@ mod tests {
         .unwrap();
 
         assert_eq!(log.submissions_on(today, "demo").unwrap(), 2);
+    }
+
+    #[test]
+    fn a_retried_order_spends_one_slot_however_many_times_it_was_sent() {
+        // Retries reuse their id -- that is the idempotency contract -- so
+        // they are one order. Counting records would let a flaky connection
+        // exhaust the day's budget without opening a single extra position.
+        let temp = TempLog::new();
+        let log = temp.log();
+        let reference = uuid::Uuid::new_v4();
+        for _ in 0..3 {
+            log.append(&Record::now("demo", submitted(reference)))
+                .unwrap();
+        }
+        log.append(&Record::now("demo", submitted(uuid::Uuid::new_v4())))
+            .unwrap();
+
+        assert_eq!(log.read().unwrap().len(), 4, "every attempt is recorded");
+        assert_eq!(
+            log.submissions_on(Utc::now().date_naive(), "demo").unwrap(),
+            2,
+            "but they are two orders"
+        );
     }
 
     #[test]
