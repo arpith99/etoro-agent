@@ -2,10 +2,10 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, anyhow, bail};
 use chrono::{Datelike, NaiveDate, Utc};
-use etoro_agent::chart::{ChartOptions, render, summary};
+use etoro_agent::chart::{ChartOptions, contains_split, render, render_html, summary};
 use etoro_agent::client::EtoroClient;
 use etoro_agent::data::{
-    BarSource, DataError, DateRange,
+    BarSource, DataError, DateRange, PriceBasis,
     store::{BarStore, FileStore, Interval, SeriesKey},
     tiingo::Tiingo,
 };
@@ -17,7 +17,9 @@ usage:
   etoro-agent prices  SYM[,SYM...]             live bid/ask from eToro
   etoro-agent fetch-bars SYM[,SYM...] [FROM] [TO]
                                                daily bars from Tiingo into the store
-  etoro-agent chart   SYM [SOURCE]             draw a stored series
+  etoro-agent chart   SYM [SOURCE] [--html [FILE]]
+                                               draw a stored series; --html writes
+                                               an interactive candlestick page
 
 dates are YYYY-MM-DD; FROM defaults to five years ago and TO to today.
 SOURCE defaults to tiingo.
@@ -29,13 +31,17 @@ async fn main() -> Result<()> {
     match Command::parse(std::env::args().skip(1).collect())? {
         Command::Summary { symbols } => account_summary(symbols).await,
         Command::FetchBars { symbols, range } => fetch_bars(symbols, range).await,
-        Command::Chart { symbol, source } => chart(&symbol, &source),
+        Command::Chart {
+            symbol,
+            source,
+            html,
+        } => chart(&symbol, &source, html.as_deref()),
     }
 }
 
 /// Draws a stored series. Reads the local store only -- no network, no
 /// credentials, so it stays usable when a vendor is down.
-fn chart(symbol: &str, source: &str) -> Result<()> {
+fn chart(symbol: &str, source: &str, html: Option<&Path>) -> Result<()> {
     let store = FileStore::new(store_root());
     let key = SeriesKey::new(source, symbol, Interval::Daily)?;
     let Some(series) = store.load(&key)? else {
@@ -51,9 +57,36 @@ fn chart(symbol: &str, source: &str) -> Result<()> {
         series.basis,
         source
     );
-    println!("{}", summary(&series.bars));
-    println!();
-    print!("{}", render(&series.bars, ChartOptions::default()));
+    let subtitle = summary(&series.bars, ChartOptions::default().series);
+    println!("{subtitle}");
+
+    // Without this the reader has to know what AsTraded implies. TSLA's 2022
+    // split turns a real +43% into a displayed -52%, and nothing about the
+    // chart says so.
+    if series.basis == PriceBasis::AsTraded && contains_split(&series.bars) {
+        println!(
+            "! this series contains a split and holds as-traded prices, so the \
+             change above is not a return"
+        );
+    }
+
+    match html {
+        Some(path) => {
+            let title = format!(
+                "{} {}",
+                symbol.to_ascii_uppercase(),
+                Interval::Daily.as_str()
+            );
+            let subtitle = format!("{:?} prices from {source} - {subtitle}", series.basis);
+            std::fs::write(path, render_html(&series.bars, &title, &subtitle))
+                .with_context(|| format!("writing {}", path.display()))?;
+            println!("Wrote {}", path.display());
+        }
+        None => {
+            println!();
+            print!("{}", render(&series.bars, ChartOptions::default()));
+        }
+    }
     Ok(())
 }
 
@@ -204,6 +237,8 @@ enum Command {
     Chart {
         symbol: String,
         source: String,
+        /// `None` renders in the terminal; `Some(path)` writes an HTML page.
+        html: Option<PathBuf>,
     },
 }
 
@@ -240,15 +275,43 @@ impl Command {
                 })
             }
             Some((verb, rest)) if verb == "chart" => {
-                let Some(symbol) = rest.first() else {
+                let (mut positional, mut html, mut html_path) = (Vec::new(), false, None);
+                let mut args = rest.iter();
+                while let Some(arg) = args.next() {
+                    match arg.as_str() {
+                        "--html" => {
+                            html = true;
+                            // An optional path follows, but only if the next
+                            // token is not itself a flag.
+                            html_path = args
+                                .clone()
+                                .next()
+                                .filter(|next| !next.starts_with("--"))
+                                .map(|next| {
+                                    args.next();
+                                    PathBuf::from(next)
+                                });
+                        }
+                        other if other.starts_with("--") => {
+                            bail!("unknown option {other:?}\n\n{USAGE}")
+                        }
+                        other => positional.push(other.to_owned()),
+                    }
+                }
+                let Some(symbol) = positional.first() else {
                     bail!("chart needs a symbol\n\n{USAGE}");
                 };
                 Ok(Self::Chart {
                     symbol: symbol.clone(),
-                    source: rest
+                    source: positional
                         .get(1)
                         .cloned()
                         .unwrap_or_else(|| DEFAULT_SOURCE.to_owned()),
+                    html: html.then(|| {
+                        html_path.unwrap_or_else(|| {
+                            PathBuf::from(format!("{}.html", symbol.to_ascii_lowercase()))
+                        })
+                    }),
                 })
             }
             // A bare symbol list used to mean "price these". Rejecting it is
@@ -418,7 +481,8 @@ mod tests {
             Command::parse(vec!["chart".to_owned(), "AAPL".to_owned()]).unwrap(),
             Command::Chart {
                 symbol: "AAPL".to_owned(),
-                source: "tiingo".to_owned()
+                source: "tiingo".to_owned(),
+                html: None
             }
         );
         assert_eq!(
@@ -430,10 +494,52 @@ mod tests {
             .unwrap(),
             Command::Chart {
                 symbol: "AAPL".to_owned(),
-                source: "etoro".to_owned()
+                source: "etoro".to_owned(),
+                html: None
             }
         );
         assert!(Command::parse(vec!["chart".to_owned()]).is_err());
+    }
+
+    #[test]
+    fn html_output_defaults_its_filename_but_takes_one() {
+        let bare = Command::parse(vec![
+            "chart".to_owned(),
+            "AAPL".to_owned(),
+            "--html".to_owned(),
+        ])
+        .unwrap();
+        assert_eq!(
+            bare,
+            Command::Chart {
+                symbol: "AAPL".to_owned(),
+                source: "tiingo".to_owned(),
+                html: Some(PathBuf::from("aapl.html")),
+            }
+        );
+
+        let named = Command::parse(vec![
+            "chart".to_owned(),
+            "AAPL".to_owned(),
+            "--html".to_owned(),
+            "/tmp/x.html".to_owned(),
+        ])
+        .unwrap();
+        let Command::Chart { html, source, .. } = named else {
+            panic!("expected Chart");
+        };
+        // The path must not be mistaken for the source argument.
+        assert_eq!(html, Some(PathBuf::from("/tmp/x.html")));
+        assert_eq!(source, "tiingo");
+
+        assert!(
+            Command::parse(vec![
+                "chart".to_owned(),
+                "AAPL".to_owned(),
+                "--nope".to_owned()
+            ])
+            .is_err()
+        );
     }
 
     #[test]

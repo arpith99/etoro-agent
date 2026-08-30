@@ -28,6 +28,7 @@ cargo run -- prices AAPL,MSFT,TSLA     # live bid/ask from eToro
 cargo run -- fetch-bars AAPL,MSFT      # daily bars from Tiingo, last five years
 cargo run -- fetch-bars AAPL 2020-01-01 2024-12-31
 cargo run -- chart AAPL                # draw a stored series in the terminal
+cargo run -- chart AAPL --html         # interactive candlesticks -> aapl.html
 ```
 
 `chart` reads the local store only — no network and no credentials — and prints
@@ -35,6 +36,15 @@ the series' `PriceBasis` in its header, because two series can look identical
 and mean different things. It reports the largest date gap, which is how a
 vendor outage or a bad date filter becomes visible; a bar count alone looks the
 same whether the fetch worked or not.
+
+`--html` writes a self-contained interactive candlestick page — zoom, pan and
+crosshair — with the charting library embedded rather than fetched from a CDN,
+so it opens offline and renders the same a year from now. When the source
+carries an adjusted close, both series are written into the page and a button
+switches between them: on an as-traded series a split reads as a crash that
+never happened, and being able to flip between the two makes that visible
+rather than a footnote. See [`assets/README.md`](assets/README.md) for the
+vendored library and its licence.
 
 `fetch-bars` reaches Tiingo only and needs no eToro credentials — historical
 bars come from a data vendor rather than the broker, for reasons set out in
@@ -228,6 +238,7 @@ cargo clippy --all-targets -- -D warnings
 ## Project layout
 
 ```text
+assets/                     # vendored: TradingView Lightweight Charts (Apache 2.0)
 market-data/                # generated: local bar store (gitignored)
 docs/
   architecture.md           # runtime boundaries and safety invariants
