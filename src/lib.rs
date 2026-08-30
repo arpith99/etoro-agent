@@ -15,4 +15,5 @@ pub mod error;
 pub mod orders;
 pub mod retry;
 pub mod strategy;
+pub mod trader;
 pub mod types;

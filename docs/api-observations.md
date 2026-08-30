@@ -210,6 +210,14 @@ Modelling advice that still holds:
 
 ## Portfolio
 
+- ⚠️ **`PortfolioResponse` inlines its `clientPortfolio`** rather than
+  referencing the `ClientPortfolio` component, and the inline copy's
+  `positions` are typed **`TradingDemoApiPosition` even on the real
+  endpoint**. So the similarly-named components are not what the response
+  decodes to. Follow the response types (`PortfolioResponseClientPortfolio`,
+  `TradingDemoApiPosition`); the component `ClientPortfolio` /
+  `TradingRealAdminApi_Position` pair is a different shape — `leverage` is an
+  integer in one and a number in the other.
 - `PortfolioResponse` and `PortfolioResponseWithPnl` both wrap a single
   `clientPortfolio`; the WithPnl variant is for endpoints that include P&L.
 - `getUserDailyGainResponse` uses `oneOf`: it is **either** a list of gain

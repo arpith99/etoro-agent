@@ -353,9 +353,33 @@ with lead time. **Still outstanding, and it blocks the rest of this milestone.**
   absent `UnitsToDeduct` means "all of it" where zero would mean "none".
   A close is asynchronous too: eToro's own documented example returns
   `statusID: 1` (Received), so it polls exactly like an open.
-- No CLI command places orders yet, deliberately: approval mode and the hard
+- The decision layer is `src/trader.rs`, and it is **pure**: `holding_for`,
+  `decide` and `plan` take the portfolio as data and return what should happen.
+  Only `await_terminal` talks to the API, and it only reads. The split is not
+  tidiness — the interesting failures here are decision failures, and a
+  decision that can only be exercised by placing a real order never gets
+  tested.
+
+  Three refusals encoded there, each one a case where guessing is expensive:
+  a **fractional target** is rejected rather than rounded, because a live
+  trader that turned 0.4 into "all in" would be running a different strategy
+  from the backtested one while every report still described the backtested
+  one; **more than one position** in an instrument stops the decision, because
+  "go flat" is then ambiguous and closing one of two leaves the account half in
+  a position the strategy believes it exited; and a **short or leveraged
+  position** stops it too, because something else placed that bet and closing
+  it might be exactly wrong. An absent `isBuy` counts as unknown, not as long.
+
+- `etoro-agent plan SYM` reads the live portfolio and prints what the strategy
+  would do. It places nothing and needs no write scope, and it says so in its
+  own output every time. Verified against the demo account.
+- No CLI command places orders, deliberately: approval mode and the hard
   limits are milestone 6, and a way to fire an order from a shell prompt should
   not exist before them.
+- ~~Order status polling~~ **done**: `await_terminal` returns the last status
+  seen, so an order still in flight at the deadline is reported as such rather
+  than mistaken for a failure. An order that has not finished is not an order
+  that did not happen.
 - ~~The retry policy lands here, now that the idempotency rule is known.~~
   **Done**: `src/retry.rs`. `with_retry` generates **one** request id and hands
   the same one to every attempt, so correct reuse is the path of least

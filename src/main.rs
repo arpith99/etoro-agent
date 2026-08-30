@@ -11,7 +11,9 @@ use etoro_agent::data::{
     store::{BarStore, FileStore, Interval, SeriesKey},
     tiingo::Tiingo,
 };
-use etoro_agent::strategy::{backtest_sma, sweep_sma};
+use etoro_agent::strategy::{Sma, backtest_sma, sweep_sma};
+use etoro_agent::trader::plan as plan_action;
+use etoro_agent::types::manual::Numeric;
 use serde::Serialize;
 
 const USAGE: &str = "\
@@ -30,6 +32,10 @@ usage:
                        [--spread PCT] [--close-fill] [--sweep] [--trades]
                                                dual moving-average crossover over
                                                stored bars, against buy & hold
+  etoro-agent plan    SYM [SOURCE] [--fast N] [--slow N] [--allocation USD]
+                                               what the strategy would do right
+                                               now, against your live portfolio.
+                                               Reads only; places nothing.
 
 dates are YYYY-MM-DD; FROM defaults to five years ago and TO to today.
 SOURCE defaults to tiingo.
@@ -60,6 +66,13 @@ async fn main() -> Result<()> {
             html,
         } => chart(&symbol, &source, html.as_deref()),
         Command::Backtest(options) => backtest(&options),
+        Command::Plan {
+            symbol,
+            source,
+            fast,
+            slow,
+            allocation,
+        } => plan(&symbol, &source, fast, slow, allocation).await,
     }
 }
 
@@ -161,6 +174,107 @@ fn gaps_report(symbols: &[String], source: &str) -> Result<()> {
     Ok(())
 }
 
+/// Says what the strategy would do right now, and does none of it.
+///
+/// The only command that reads the live account and mentions orders in the
+/// same breath, so it is worth being exact about what it does not do: it
+/// places nothing, cancels nothing, and needs no write scope. The hard limits,
+/// the cost check and the audit log that have to exist before anything acts on
+/// this output are milestone 6.
+async fn plan(
+    symbol: &str,
+    source: &str,
+    fast: usize,
+    slow: usize,
+    allocation: Numeric,
+) -> Result<()> {
+    let store = FileStore::new(store_root());
+    let key = SeriesKey::new(source, symbol, Interval::Daily)?;
+    let Some(series) = store.load(&key)? else {
+        bail!("no stored series for {symbol} from {source}; run: etoro-agent fetch-bars {symbol}");
+    };
+    let choice = if series
+        .bars
+        .iter()
+        .any(|bar| bar.total_return_close.is_some())
+    {
+        SeriesChoice::TotalReturn
+    } else {
+        SeriesChoice::Reported
+    };
+
+    let api_key = std::env::var("ETORO_API_KEY")?;
+    let environment = environment()?;
+    let client = EtoroClient::new(&api_key, &user_key(environment)?, environment)?;
+    client.verify_environment().await?;
+
+    let Some(instrument_id) = client.resolve_symbol(symbol).await? else {
+        bail!("{symbol}: no instrument matched that symbol");
+    };
+    let instrument_id = i32::try_from(instrument_id)
+        .with_context(|| format!("instrument id {instrument_id} does not fit an int32"))?;
+
+    let portfolio = client.portfolio().await?;
+    let portfolio = portfolio
+        .client_portfolio
+        .ok_or_else(|| anyhow!("portfolio response omitted clientPortfolio"))?;
+
+    let mut strategy = Sma::new(fast, slow)?;
+    let plan = plan_action(
+        &portfolio,
+        instrument_id,
+        &series.bars,
+        choice,
+        &mut strategy,
+        allocation,
+    )?;
+
+    let last = series.bars.last().map(|bar| bar.date);
+    println!(
+        "{} (instrument {instrument_id}) on the {environment} account",
+        symbol.to_ascii_uppercase()
+    );
+    println!(
+        "  strategy   sma {fast}/{slow} over {} stored bars, last {}",
+        series.bars.len(),
+        last.map_or_else(|| "-".to_owned(), |date| date.to_string()),
+    );
+    println!("  target     {:.0}% of allocation", plan.target * 100.0);
+    match &plan.held {
+        Some(holding) => println!(
+            "  held       position {} - {} units{}",
+            holding.position_id,
+            holding.units.0,
+            holding
+                .amount
+                .map_or_else(String::new, |amount| format!(", ${}", amount.0)),
+        ),
+        None => println!("  held       nothing"),
+    }
+    println!("  allocation ${}", allocation.0);
+    println!("\n  -> {}", plan.action.describe());
+
+    // Said plainly, every time. The distance between "here is what I would do"
+    // and "I did it" is the entire safety margin at this stage.
+    println!(
+        "\nNothing was sent. This command only reads; no order path is wired to \
+         the command line yet."
+    );
+
+    // The store is a snapshot, and a stale one silently plans against last
+    // week's prices. Cheap to check, and invisible if it is not checked.
+    if let Some(last) = last {
+        let age = (Utc::now().date_naive() - last).num_days();
+        if age > STALE_BARS_DAYS {
+            println!(
+                "! the newest stored bar is {age} days old; run: etoro-agent fetch-bars {symbol}"
+            );
+        }
+    }
+    Ok(())
+}
+
+/// Backtests a dual moving-average crossover over stored bars.
 /// Backtests a dual moving-average crossover over stored bars.
 ///
 /// Offline by construction: it reads the local store and nothing else. That is
@@ -575,6 +689,19 @@ const DEFAULT_SLOW: usize = 100;
 /// implied.
 const DEFAULT_SPREAD_PCT: f64 = 0.02;
 
+/// How stale the newest stored bar may be before `plan` says so.
+///
+/// Three days covers an ordinary weekend plus a public holiday, so a warning
+/// means something is actually wrong rather than that it is Sunday.
+const STALE_BARS_DAYS: i64 = 3;
+
+/// Cash committed to a new position when `--allocation` is not given, in USD.
+///
+/// The low end of the range this project set out to trade. Printed on every
+/// plan rather than assumed, because it is the number that decides how much
+/// money an eventual order moves.
+const DEFAULT_ALLOCATION_USD: u32 = 100;
+
 /// Window pairs the sweep walks, following the reference harness.
 const SWEEP_FAST: [usize; 5] = [5, 10, 20, 40, 60];
 const SWEEP_SLOW: [usize; 5] = [50, 100, 150, 200, 250];
@@ -602,6 +729,14 @@ enum Command {
     /// Boxed into its own struct because the option list is long enough that
     /// inlining it would swamp the other variants.
     Backtest(BacktestOptions),
+    Plan {
+        symbol: String,
+        source: String,
+        fast: usize,
+        slow: usize,
+        /// Cash to put into a new position, in USD.
+        allocation: Numeric,
+    },
 }
 
 #[derive(Debug, PartialEq)]
@@ -745,6 +880,41 @@ impl Command {
                 }
                 Ok(Self::Backtest(options))
             }
+            Some((verb, rest)) if verb == "plan" => {
+                let (mut fast, mut slow) = (DEFAULT_FAST, DEFAULT_SLOW);
+                let mut allocation = Numeric(DEFAULT_ALLOCATION_USD.into());
+                let mut positional = Vec::new();
+                let mut args = rest.iter();
+                while let Some(arg) = args.next() {
+                    let mut value = |flag: &str| -> Result<String> {
+                        args.next()
+                            .cloned()
+                            .ok_or_else(|| anyhow!("{flag} needs a value\n\n{USAGE}"))
+                    };
+                    match arg.as_str() {
+                        "--fast" => fast = parse_window(&value("--fast")?, "--fast")?,
+                        "--slow" => slow = parse_window(&value("--slow")?, "--slow")?,
+                        "--allocation" => allocation = parse_allocation(&value("--allocation")?)?,
+                        other if other.starts_with("--") => {
+                            bail!("unknown option {other:?}\n\n{USAGE}")
+                        }
+                        other => positional.push(other.to_owned()),
+                    }
+                }
+                let Some(symbol) = positional.first() else {
+                    bail!("plan needs a symbol\n\n{USAGE}");
+                };
+                Ok(Self::Plan {
+                    symbol: symbol.clone(),
+                    source: positional
+                        .get(1)
+                        .cloned()
+                        .unwrap_or_else(|| DEFAULT_SOURCE.to_owned()),
+                    fast,
+                    slow,
+                    allocation,
+                })
+            }
             // A bare symbol list used to mean "price these". Rejecting it is
             // better than guessing, now that a verb could also be a ticker.
             Some((other, _)) => bail!("unknown command {other:?}\n\n{USAGE}"),
@@ -783,6 +953,21 @@ fn parse_spread(text: &str) -> Result<f64> {
         );
     }
     Ok(percent / 100.0)
+}
+
+/// Cash for one position, in USD.
+///
+/// Parsed as a decimal and never through `f64`: this is the number that
+/// becomes an order amount, and the whole wire layer exists to keep such
+/// numbers exact.
+fn parse_allocation(text: &str) -> Result<Numeric> {
+    let amount: rust_decimal::Decimal = text
+        .parse()
+        .with_context(|| format!("--allocation takes a USD amount, not {text:?}"))?;
+    if amount <= rust_decimal::Decimal::ZERO {
+        bail!("--allocation must be greater than zero, got {amount}");
+    }
+    Ok(Numeric(amount))
 }
 
 fn parse_date(text: &str) -> Result<NaiveDate> {
@@ -1164,6 +1349,46 @@ mod tests {
             .unwrap_err()
             .to_string();
         assert!(error.contains("--turbo"), "{error}");
+    }
+
+    #[test]
+    fn plan_defaults_to_the_smallest_allocation_this_project_set_out_to_trade() {
+        let Command::Plan {
+            symbol,
+            source,
+            fast,
+            slow,
+            allocation,
+        } = parse(&["plan", "AAPL"]).unwrap()
+        else {
+            panic!("expected a plan");
+        };
+        assert_eq!((symbol.as_str(), source.as_str()), ("AAPL", "tiingo"));
+        assert_eq!((fast, slow), (20, 100));
+        assert_eq!(allocation.0.to_string(), "100");
+    }
+
+    #[test]
+    fn an_allocation_is_parsed_as_a_decimal_and_never_through_a_float() {
+        let Command::Plan { allocation, .. } =
+            parse(&["plan", "AAPL", "--allocation", "250.75"]).unwrap()
+        else {
+            panic!("expected a plan");
+        };
+        // Exactly, scale included: this becomes an order amount.
+        assert_eq!(allocation.0.to_string(), "250.75");
+
+        // Money that could not buy anything is not a size.
+        assert!(parse(&["plan", "AAPL", "--allocation", "0"]).is_err());
+        assert!(parse(&["plan", "AAPL", "--allocation", "-5"]).is_err());
+        assert!(parse(&["plan", "AAPL", "--allocation", "lots"]).is_err());
+    }
+
+    #[test]
+    fn plan_needs_a_symbol_and_rejects_unknown_options() {
+        assert!(parse(&["plan"]).is_err());
+        assert!(parse(&["plan", "AAPL", "--execute"]).is_err());
+        assert!(parse(&["plan", "AAPL", "--allocation"]).is_err());
     }
 
     #[test]
