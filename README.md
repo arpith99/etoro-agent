@@ -46,6 +46,11 @@ never happened, and being able to flip between the two makes that visible
 rather than a footnote. See [`assets/README.md`](assets/README.md) for the
 vendored library and its licence.
 
+The page has a crosshair OHLC legend, a volume pane, SMA overlays (20/50/200),
+range presets and a log-scale toggle. Its CSS and JavaScript are real files
+under `assets/` rather than strings inside `format!`, so they can be linted and
+read; `render_html` only fills in the data and the title.
+
 `fetch-bars` reaches Tiingo only and needs no eToro credentials — historical
 bars come from a data vendor rather than the broker, for reasons set out in
 [the roadmap](docs/roadmap.md). Series are merged into the store on each run,
@@ -238,7 +243,7 @@ cargo clippy --all-targets -- -D warnings
 ## Project layout
 
 ```text
-assets/                     # vendored: TradingView Lightweight Charts (Apache 2.0)
+assets/                     # chart page CSS/JS + vendored Lightweight Charts (Apache 2.0)
 market-data/                # generated: local bar store (gitignored)
 docs/
   architecture.md           # runtime boundaries and safety invariants

@@ -1,0 +1,27 @@
+:root { color-scheme: light dark; --line: #8884; }
+* { box-sizing: border-box; }
+body { font: 14px/1.5 system-ui, sans-serif; margin: 0; padding: 16px; }
+h1 { font-size: 18px; margin: 0 0 2px; }
+.sub { opacity: .7; margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+.warn {
+  background: #fff3cd; color: #664d03; border-left: 3px solid #ffc107;
+  padding: 8px 12px; margin-bottom: 12px; border-radius: 3px;
+}
+.bar { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 8px; }
+.group { display: flex; gap: 4px; align-items: center; }
+.group > .label { opacity: .6; font-size: 12px; margin-right: 2px; }
+button {
+  font: inherit; font-size: 13px; padding: 3px 9px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: inherit;
+  border-radius: 4px;
+}
+button:hover { border-color: #2962ff; }
+button[aria-pressed="true"] { background: #2962ff; border-color: #2962ff; color: #fff; }
+#legend {
+  font-variant-numeric: tabular-nums; font-size: 13px; min-height: 22px;
+  opacity: .85; margin-bottom: 4px;
+}
+#legend .up { color: #26a69a; }
+#legend .down { color: #ef5350; }
+/* The chart sizes itself to this box, so the box must have a real height. */
+#chart { height: 68vh; min-height: 380px; }

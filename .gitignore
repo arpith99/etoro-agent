@@ -12,6 +12,10 @@ docs/spec/.staging/
 # .ndjson files would not match the *.json rule above, so name the root.
 /market-data/
 
+# Generated chart pages: `chart --html` writes <symbol>.html into the working
+# directory, and each embeds the ~160 KB charting library.
+/*.html
+
 # Python bytecode from scripts/
 __pycache__/
 *.pyc

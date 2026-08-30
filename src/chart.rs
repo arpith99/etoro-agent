@@ -80,10 +80,14 @@ pub fn contains_split(bars: &[Bar]) -> bool {
     })
 }
 
-/// True when every bar carries an adjusted close, so [`SeriesChoice::TotalReturn`]
-/// is meaningful rather than a silent fallback.
+/// True when the series carries adjusted closes, so [`SeriesChoice::TotalReturn`]
+/// shows something different rather than silently falling back.
+///
+/// `any` rather than `all`: a vendor omitting one session's adjusted close is
+/// not a reason to hide the whole comparison, and [`prices`] already falls back
+/// per bar for the ones that lack it.
 pub fn has_total_return(bars: &[Bar]) -> bool {
-    !bars.is_empty() && bars.iter().all(|bar| bar.total_return_close.is_some())
+    bars.iter().any(|bar| bar.total_return_close.is_some())
 }
 
 /// Draws a high-low bar chart.
@@ -226,113 +230,99 @@ fn as_f64(value: &crate::types::manual::Numeric) -> f64 {
 
 /// A self-contained interactive candlestick page.
 ///
-/// The charting library is embedded rather than linked from a CDN, so the file
-/// works offline, renders identically later, and does not announce to a third
-/// party every time somebody looks at their own portfolio.
+/// Zoom, pan, crosshair with an OHLC legend, a volume pane, moving-average
+/// overlays, range presets and a log-scale toggle. The charting library is
+/// embedded rather than linked from a CDN, so the file works offline, renders
+/// identically later, and does not announce to a third party every time
+/// somebody looks at their own portfolio.
 ///
-/// Both series are written into the page when the source carries an adjusted
-/// close, and the page can switch between them. That is the point rather than
+/// Both series are written into the page when the source carries adjusted
+/// closes, and the page can switch between them. That is the point rather than
 /// a flourish: an as-traded chart of a stock that split shows a crash that did
 /// not happen, and being able to flip between the two makes the difference
 /// visible instead of a footnote.
+///
+/// The page's CSS and JavaScript live in `assets/` rather than inside this
+/// format string. Both are brace-heavy, and doubling every one of them to
+/// satisfy `format!` made them unreadable and uncheckable.
 pub fn render_html(bars: &[Bar], title: &str, subtitle: &str) -> String {
-    let candles = |series: SeriesChoice| -> String {
-        let points: Vec<serde_json::Value> = bars
-            .iter()
+    let points = |series: SeriesChoice| -> Vec<serde_json::Value> {
+        bars.iter()
             .map(|bar| {
                 let [open, high, low, close] = prices(bar, series);
                 serde_json::json!({
                     "time": bar.date.to_string(),
-                    "open": open,
-                    "high": high,
-                    "low": low,
-                    "close": close,
+                    "open": open, "high": high, "low": low, "close": close,
                 })
             })
-            .collect();
-        serde_json::to_string(&points).unwrap_or_else(|_| "[]".to_owned())
+            .collect()
     };
 
-    let reported = candles(SeriesChoice::Reported);
-    let adjusted = if has_total_return(bars) {
-        candles(SeriesChoice::TotalReturn)
+    let volume: Vec<serde_json::Value> = bars
+        .iter()
+        .filter_map(|bar| {
+            let value = bar.volume.as_ref()?;
+            let rising = as_f64(&bar.close) >= as_f64(&bar.open);
+            Some(serde_json::json!({
+                "time": bar.date.to_string(),
+                "value": as_f64(value),
+                // Muted, so volume reads as context rather than competing with
+                // the price bars above it.
+                "color": if rising { "#26a69a55" } else { "#ef535055" },
+            }))
+        })
+        .collect();
+
+    let data = serde_json::json!({
+        "reported": points(SeriesChoice::Reported),
+        "adjusted": if has_total_return(bars) {
+            serde_json::Value::from(points(SeriesChoice::TotalReturn))
+        } else {
+            serde_json::Value::Null
+        },
+        "volume": volume,
+    });
+    // `</script>` inside a script block would end it early. The values here are
+    // numbers and dates, but escaping the sequence costs nothing and removes
+    // the need to keep believing that.
+    let data = serde_json::to_string(&data)
+        .unwrap_or_else(|_| "{}".to_owned())
+        .replace("</", r"<\/");
+
+    let warning = if contains_split(bars) {
+        format!(
+            "<div class=\"warn\">{}</div>",
+            html_escape(
+                "This series contains a split. On as-traded prices the split reads as a \
+                 crash that never happened - switch to total return to see the real path."
+            )
+        )
     } else {
-        "null".to_owned()
-    };
-    let split_note = if contains_split(bars) {
-        "This series contains a split. On as-traded prices the split reads as a \
-         crash that never happened -- switch to total return to see the real path."
-    } else {
-        ""
+        String::new()
     };
 
     format!(
-        r#"<!doctype html>
-<meta charset="utf-8">
-<title>{title}</title>
-<style>
-  :root {{ color-scheme: light dark; }}
-  body {{ font: 14px/1.5 system-ui, sans-serif; margin: 0; padding: 16px; }}
-  h1 {{ font-size: 18px; margin: 0 0 4px; }}
-  .sub {{ opacity: .7; margin-bottom: 8px; }}
-  .warn {{ background: #fff3cd; color: #664d03; border-left: 3px solid #ffc107;
-           padding: 8px 12px; margin-bottom: 12px; border-radius: 3px; }}
-  button {{ font: inherit; padding: 4px 10px; margin-right: 6px; cursor: pointer; }}
-  button[aria-pressed="true"] {{ font-weight: 600; outline: 2px solid #2962ff; }}
-  #chart {{ height: 70vh; min-height: 360px; margin-top: 12px; }}
-</style>
-<h1>{title}</h1>
-<div class="sub">{subtitle}</div>
-{warning}
-<div id="controls"></div>
-<div id="chart"></div>
-<script>{library}</script>
-<script>
-const reported = {reported};
-const adjusted = {adjusted};
-
-const chart = LightweightCharts.createChart(document.getElementById('chart'), {{
-  timeScale: {{ timeVisible: false, borderVisible: true }},
-  crosshair: {{ mode: LightweightCharts.CrosshairMode.Normal }},
-  rightPriceScale: {{ borderVisible: true }},
-}});
-const candles = chart.addCandlestickSeries();
-candles.setData(reported);
-chart.timeScale().fitContent();
-
-// Only offer the toggle when there is a second series to toggle to.
-if (adjusted) {{
-  const controls = document.getElementById('controls');
-  const make = (label, data, pressed) => {{
-    const button = document.createElement('button');
-    button.textContent = label;
-    button.setAttribute('aria-pressed', String(pressed));
-    button.onclick = () => {{
-      candles.setData(data);
-      for (const other of controls.children)
-        other.setAttribute('aria-pressed', String(other === button));
-    }};
-    controls.append(button);
-  }};
-  make('As reported', reported, true);
-  make('Total return', adjusted, false);
-}}
-
-new ResizeObserver(() =>
-  chart.applyOptions({{ width: document.getElementById('chart').clientWidth }})
-).observe(document.getElementById('chart'));
-</script>
-"#,
+        "<!doctype html>\n\
+         <meta charset=\"utf-8\">\n\
+         <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n\
+         <title>{title}</title>\n\
+         <style>{css}</style>\n\
+         <h1>{title}</h1>\n\
+         <div class=\"sub\">{subtitle}</div>\n\
+         {warning}\
+         <div class=\"bar\" id=\"controls\"></div>\n\
+         <div id=\"legend\"></div>\n\
+         <div id=\"chart\"></div>\n\
+         <script>window.CHART_DATA = {data};</script>\n\
+         <script>{library}</script>\n\
+         <script>{app}</script>\n",
         title = html_escape(title),
         subtitle = html_escape(subtitle),
-        warning = if split_note.is_empty() {
-            String::new()
-        } else {
-            format!("<div class=\"warn\">{}</div>", html_escape(split_note))
-        },
+        warning = warning,
+        css = include_str!("../assets/chart.css"),
+        data = data,
         library = include_str!("../assets/lightweight-charts.standalone.production.js"),
-        reported = reported,
-        adjusted = adjusted,
+        app = include_str!("../assets/chart.js"),
     )
 }
 
@@ -365,6 +355,112 @@ mod tests {
             dividend_cash: None,
             split_factor: None,
         }
+    }
+
+    fn bar_with(date: &str, close: &str, adjusted: Option<&str>, split: Option<&str>) -> Bar {
+        let mut b = bar(date, close, close);
+        b.total_return_close = adjusted.map(|v| Numeric(v.parse().unwrap()));
+        b.split_factor = split.map(|v| Numeric(v.parse().unwrap()));
+        b
+    }
+
+    #[test]
+    fn total_return_scales_the_whole_bar_by_the_close_ratio() {
+        // Only the adjusted close is stored; open/high/low follow from the
+        // ratio, which is the session's cumulative adjustment factor.
+        let mut b = bar("2026-08-03", "50", "50");
+        b.open = Numeric("40".parse().unwrap());
+        b.high = Numeric("60".parse().unwrap());
+        b.low = Numeric("30".parse().unwrap());
+        b.close = Numeric("50".parse().unwrap());
+        b.total_return_close = Some(Numeric("25".parse().unwrap()));
+
+        let [open, high, low, close] = prices(&b, SeriesChoice::TotalReturn);
+        assert_eq!((open, high, low, close), (20.0, 30.0, 15.0, 25.0));
+    }
+
+    #[test]
+    fn a_bar_without_an_adjusted_close_falls_back_instead_of_inventing_one() {
+        let b = bar_with("2026-08-03", "50", None, None);
+        assert_eq!(
+            prices(&b, SeriesChoice::TotalReturn),
+            prices(&b, SeriesChoice::Reported)
+        );
+    }
+
+    #[test]
+    fn a_split_is_detected_and_a_factor_of_one_is_not() {
+        assert!(contains_split(&[bar_with(
+            "2026-08-03",
+            "50",
+            None,
+            Some("3")
+        )]));
+        assert!(!contains_split(&[bar_with(
+            "2026-08-03",
+            "50",
+            None,
+            Some("1")
+        )]));
+        assert!(!contains_split(&[bar_with("2026-08-03", "50", None, None)]));
+    }
+
+    #[test]
+    fn one_missing_adjusted_close_does_not_disable_the_comparison() {
+        // `all` here would let a single vendor gap hide the toggle entirely.
+        let bars = [
+            bar_with("2026-08-03", "50", Some("25"), None),
+            bar_with("2026-08-04", "51", None, None),
+        ];
+        assert!(has_total_return(&bars));
+        assert!(!has_total_return(&[bar_with(
+            "2026-08-03",
+            "50",
+            None,
+            None
+        )]));
+    }
+
+    #[test]
+    fn the_page_embeds_its_library_and_both_series() {
+        let bars = [
+            bar_with("2026-08-03", "400", Some("100"), None),
+            bar_with("2026-08-04", "100", Some("100"), Some("4")),
+        ];
+        let html = render_html(&bars, "AAPL 1d", "test");
+
+        // Self-contained: nothing is loaded from elsewhere. Asserting on the
+        // absence of URLs would be wrong -- the vendored library's licence
+        // header contains several, and they are text rather than requests.
+        assert!(
+            !html.contains("<script src"),
+            "page must not fetch a script"
+        );
+        assert!(!html.contains("<link "), "page must not fetch a stylesheet");
+        assert!(html.contains("LightweightCharts"));
+        // Sizing: the bug that made the chart invisible.
+        assert!(html.contains("autoSize: true"));
+        // Both series, and the warning the split earns.
+        assert!(html.contains("\"reported\""));
+        assert!(html.contains("\"adjusted\""));
+        assert!(html.contains("contains a split"));
+        // Exactly three script blocks: data, library, page logic.
+        assert_eq!(html.matches("</script>").count(), 3);
+    }
+
+    #[test]
+    fn a_series_without_adjusted_closes_offers_no_toggle() {
+        let bars = [bar_with("2026-08-03", "400", None, None)];
+        let html = render_html(&bars, "AAPL 1d", "test");
+        assert!(html.contains("\"adjusted\":null"));
+        assert!(!html.contains("contains a split"));
+    }
+
+    #[test]
+    fn interpolated_text_is_escaped() {
+        let html = render_html(&[bar("2026-08-03", "1", "1")], "<script>x</script>", "s");
+        assert!(html.contains("&lt;script&gt;"));
+        assert_eq!(html.matches("</script>").count(), 3);
     }
 
     #[test]
