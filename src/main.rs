@@ -15,7 +15,7 @@ use etoro_agent::data::{
     tiingo::Tiingo,
 };
 use etoro_agent::limits::{Breach, Limits, open_exposure};
-use etoro_agent::orders::OrderHandle;
+use etoro_agent::orders::{MarketBuy, MarketShort, OrderHandle, OrderRequest};
 use etoro_agent::retry::{RetryPolicy, with_retry_id};
 use etoro_agent::strategy::{Sma, backtest_sma, sweep_sma};
 use etoro_agent::trader::Action;
@@ -49,6 +49,11 @@ usage:
                                                every limit, then asks before
                                                sending. --unattended skips the
                                                prompt and is refused on real.
+  etoro-agent cost    SYM [--allocation USD] [--short [--stop PRICE]]
+                                               what eToro would charge for an
+                                               order it never places. --short
+                                               prices a short, which is how the
+                                               daily financing rate is measured.
 
 dates are YYYY-MM-DD; FROM defaults to five years ago and TO to today.
 SOURCE defaults to tiingo.
@@ -91,6 +96,12 @@ async fn main() -> Result<()> {
             allocation,
         } => plan(&symbol, &source, fast, slow, allocation).await,
         Command::Trade(options) => trade(&options).await,
+        Command::Cost {
+            symbol,
+            allocation,
+            short,
+            stop,
+        } => cost(&symbol, allocation, short, stop).await,
     }
 }
 
@@ -436,6 +447,114 @@ async fn plan(
     report_plan(&prepared)?;
     println!("\nNothing was sent. `plan` only reads; use `trade` to act on this.");
     Ok(())
+}
+
+/// Prices an order eToro never sees placed.
+///
+/// The point of it is `--short`: an unleveraged long quotes no financing, so
+/// the only way to learn the daily rate a short would pay is to ask about a
+/// short. Nothing is placed, and nothing here can place anything — the costs
+/// endpoint is a query.
+async fn cost(symbol: &str, allocation: Numeric, short: bool, stop: Option<Numeric>) -> Result<()> {
+    let api_key = std::env::var("ETORO_API_KEY")?;
+    let environment = environment()?;
+    let client = EtoroClient::new(&api_key, &user_key(environment)?, environment)?;
+
+    let Some(instrument_id) = client.resolve_symbol(symbol).await? else {
+        bail!("{symbol}: no instrument matched that symbol");
+    };
+
+    let header = |order: &dyn Fn() -> String| {
+        println!(
+            "{} on the {environment} account\n  {}",
+            symbol.to_ascii_uppercase(),
+            order()
+        );
+    };
+
+    // Branching rather than boxing: `OrderRequest: Serialize`, and `Serialize`
+    // has a generic method, so the trait is not dyn compatible.
+    let estimate = if short {
+        let stop = match stop {
+            Some(stop) => stop,
+            None => {
+                // A short's stop sits above the entry, so it is derived from
+                // the live ask rather than guessed at. Printed, because a
+                // derived number that is never shown is a number nobody checks.
+                let rates = client.rates(&[instrument_id]).await?;
+                let ask = rates
+                    .rates
+                    .iter()
+                    .find(|rate| rate.instrument_id == Some(instrument_id))
+                    .and_then(|rate| rate.ask)
+                    .ok_or_else(|| anyhow!("{symbol}: no live ask to derive a stop from"))?;
+                let derived = Numeric(ask.0 * stop_above_ask());
+                println!("Derived stop {} from an ask of {}", derived.0, ask.0);
+                derived
+            }
+        };
+        let order = MarketShort::new(instrument_id, allocation, stop)?;
+        header(&|| order.describe());
+        client.order_cost(&order).await?
+    } else {
+        let order = MarketBuy::new(instrument_id, allocation)?;
+        header(&|| order.describe());
+        client.order_cost(&order).await?
+    };
+
+    println!("\n  quoted cost:");
+    print!("{}", estimate.report());
+
+    match estimate.upfront_fraction_of(allocation) {
+        Ok(Some(fraction)) => println!(
+            "    {:<16}{:>12} USD  ({:.4}% of the order)",
+            "up-front total",
+            estimate.upfront()?.0,
+            fraction * rust_decimal::Decimal::ONE_HUNDRED,
+        ),
+        Ok(None) => {}
+        Err(error) => println!("    could not total the quote: {error}"),
+    }
+
+    let per_day = estimate.per_day()?;
+    if per_day.0 == rust_decimal::Decimal::ZERO {
+        println!("\n  No daily financing on this order.");
+        return Ok(());
+    }
+
+    // The number the backtest needs, in the units the backtest takes.
+    let daily_fraction = per_day.0 / allocation.0;
+    let daily_percent = daily_fraction * rust_decimal::Decimal::ONE_HUNDRED;
+    println!(
+        "\n  {} USD per day held = {:.4}% of the position, per day.",
+        per_day.0, daily_percent
+    );
+    // Compounded rather than multiplied by 365: a daily charge on a position
+    // that stays open is a compounding cost, and stating it as a simple
+    // multiple understates a rate this size.
+    let annual = ((1.0 + to_f64(daily_fraction)).powi(365) - 1.0) * 100.0;
+    println!("  Roughly {annual:.1}% a year if held continuously.");
+    println!(
+        "\n  Feed it back in with:  etoro-agent backtest {} --carry {:.4}",
+        symbol.to_ascii_uppercase(),
+        daily_percent
+    );
+    Ok(())
+}
+
+/// How far above the live ask a derived short stop is placed.
+///
+/// Ten percent. Wide enough not to be triggered by ordinary noise on the names
+/// this project trades, and only used for *pricing* — a real short would set
+/// this deliberately rather than accept a round number.
+fn stop_above_ask() -> rust_decimal::Decimal {
+    rust_decimal::Decimal::new(11, 1)
+}
+
+/// Statistics and display only; never storage or the wire.
+fn to_f64(value: rust_decimal::Decimal) -> f64 {
+    use rust_decimal::prelude::ToPrimitive;
+    value.to_f64().unwrap_or(f64::NAN)
 }
 
 /// Acts on a plan, after saying exactly what it is about to do.
@@ -1185,6 +1304,13 @@ enum Command {
         allocation: Numeric,
     },
     Trade(TradeOptions),
+    Cost {
+        symbol: String,
+        allocation: Numeric,
+        short: bool,
+        /// Stop-loss price for a short. Derived from the live ask if absent.
+        stop: Option<Numeric>,
+    },
 }
 
 #[derive(Debug, PartialEq)]
@@ -1380,6 +1506,39 @@ impl Command {
                     fast,
                     slow,
                     allocation,
+                })
+            }
+            Some((verb, rest)) if verb == "cost" => {
+                let mut allocation = Numeric(DEFAULT_ALLOCATION_USD.into());
+                let (mut short, mut stop, mut positional) = (false, None, Vec::new());
+                let mut args = rest.iter();
+                while let Some(arg) = args.next() {
+                    let mut value = |flag: &str| -> Result<String> {
+                        args.next()
+                            .cloned()
+                            .ok_or_else(|| anyhow!("{flag} needs a value\n\n{USAGE}"))
+                    };
+                    match arg.as_str() {
+                        "--allocation" => allocation = parse_allocation(&value("--allocation")?)?,
+                        "--short" => short = true,
+                        "--stop" => stop = Some(parse_allocation(&value("--stop")?)?),
+                        other if other.starts_with('-') => {
+                            bail!("unknown option {other:?}\n\n{USAGE}")
+                        }
+                        other => positional.push(other.to_owned()),
+                    }
+                }
+                let Some(symbol) = positional.first() else {
+                    bail!("cost needs a symbol\n\n{USAGE}");
+                };
+                if stop.is_some() && !short {
+                    bail!("--stop only applies to --short\n\n{USAGE}");
+                }
+                Ok(Self::Cost {
+                    symbol: symbol.clone(),
+                    allocation,
+                    short,
+                    stop,
                 })
             }
             Some((verb, rest)) if verb == "trade" => {

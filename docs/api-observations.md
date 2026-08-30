@@ -180,6 +180,16 @@ Modelling advice that still holds:
 - `orders:lookup` takes `orderId` **or** `referenceId`, documented as mutually
   exclusive. The literal colon in the path survives `Url::join` — it is not
   read as a scheme separator, since the preceding segment contains `/`.
+- ⚠️ **The DEMO cost endpoint returns an all-zero quote.** Measured 2026-08-30:
+  `POST /api/v2/trading/info/demo/costs` returns a structurally valid
+  `GetCostResponse` with `transactionFee`, `markup`, `marketSpread` and
+  `overnightFee` **all exactly 0**, for every instrument tried (AAPL, INTC,
+  MBLY) and for shorts as well as longs. MBLY's quoted spread is 0.116% of mid,
+  so `marketSpread: 0` cannot be real, and a short is a CFD, which always
+  carries financing. **Demo cannot be used to validate cost assumptions**, and
+  a paper-trading run on demo will therefore overstate net returns by the whole
+  cost of trading. Re-measure against `/api/v2/trading/info/costs` on the real
+  environment before believing any cost figure.
 - **Every response carries the remaining budget.** `RateLimit-Limit`,
   `RateLimit-Remaining`, `RateLimit-Reset` and `RateLimit-Policy`
   (`"20;w=60"`) come back on success as well as on 429, and the description

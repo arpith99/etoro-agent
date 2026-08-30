@@ -325,6 +325,143 @@ impl MarketBuy {
     }
 }
 
+/// An order the API can price or place.
+///
+/// Deliberately small: enough for [`order_cost`] and the audit log to describe
+/// an order without knowing which kind it is, and not enough to build one.
+///
+/// [`order_cost`]: crate::client::EtoroClient::order_cost
+pub trait OrderRequest: Serialize {
+    fn instrument_id(&self) -> i64;
+    fn amount(&self) -> Numeric;
+    /// A one-line description, for prompts and audit entries.
+    fn describe(&self) -> String;
+}
+
+impl OrderRequest for MarketBuy {
+    fn instrument_id(&self) -> i64 {
+        self.instrument_id
+    }
+
+    fn amount(&self) -> Numeric {
+        self.amount
+    }
+
+    fn describe(&self) -> String {
+        format!(
+            "OPEN LONG instrument {} for ${}",
+            self.instrument_id, self.amount.0
+        )
+    }
+}
+
+/// A market order that opens a **short** position, sized in cash.
+///
+/// Separate from [`MarketBuy`] rather than a direction field on it, because the
+/// two are not the same shape: `stopLossRate` is documented as *"Required …
+/// when transaction is sellShort"*, so a short without one is not an order the
+/// API will accept. Making it a constructor argument rather than an `Option`
+/// puts that in the type instead of in a validation message.
+///
+/// The asymmetry is real rather than bureaucratic. A long's worst case is
+/// −100%; a short's loss is unbounded, which is why the stop is not optional.
+///
+/// **`settlementType` is left unset**, which v2 permits. Which value a short
+/// actually needs comes from `POST /api/v2/trading/info/eligibility` →
+/// `leverageConfigs[].settlementType`, since the spec says valid values differ
+/// *"per instrument, direction and leverage"*. Until that is read, this can be
+/// **priced** but is deliberately not placeable — see
+/// [`place_order`](crate::client::EtoroClient::place_order).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MarketShort {
+    action: &'static str,
+    transaction: &'static str,
+    #[serde(rename = "instrumentId")]
+    instrument_id: i64,
+    #[serde(rename = "orderType")]
+    order_type: &'static str,
+    amount: Numeric,
+    #[serde(rename = "orderCurrency")]
+    order_currency: &'static str,
+    /// Not an `Option`: the API requires it for a short.
+    #[serde(rename = "stopLossRate")]
+    stop_loss_rate: Numeric,
+    #[serde(rename = "takeProfitRate", skip_serializing_if = "Option::is_none")]
+    take_profit_rate: Option<Numeric>,
+}
+
+impl MarketShort {
+    /// Short `instrument_id` with `amount`, stopping out at `stop_loss_rate`.
+    ///
+    /// The stop must sit *above* the entry price for a short, which cannot be
+    /// checked here -- the entry price is not known until the order executes.
+    /// The API validates the relationship; this validates that a price was
+    /// given at all and that it is one.
+    pub fn new(
+        instrument_id: i64,
+        amount: Numeric,
+        stop_loss_rate: Numeric,
+    ) -> Result<Self, OrderError> {
+        if instrument_id <= 0 {
+            return Err(OrderError::InvalidInstrument(instrument_id));
+        }
+        if amount.0 <= rust_decimal::Decimal::ZERO {
+            return Err(OrderError::NotPositive {
+                field: "amount",
+                value: amount.0.to_string(),
+            });
+        }
+        if stop_loss_rate.0 <= rust_decimal::Decimal::ZERO {
+            return Err(OrderError::NotPositive {
+                field: "stopLossRate",
+                value: stop_loss_rate.0.to_string(),
+            });
+        }
+        Ok(Self {
+            action: "open",
+            transaction: "sellShort",
+            instrument_id,
+            order_type: "mkt",
+            amount,
+            order_currency: "usd",
+            stop_loss_rate,
+            take_profit_rate: None,
+        })
+    }
+
+    pub fn with_take_profit(mut self, rate: Numeric) -> Result<Self, OrderError> {
+        if rate.0 < rust_decimal::Decimal::ZERO {
+            return Err(OrderError::Negative {
+                field: "takeProfitRate",
+                value: rate.0.to_string(),
+            });
+        }
+        self.take_profit_rate = Some(rate);
+        Ok(self)
+    }
+
+    pub fn stop_loss_rate(&self) -> Numeric {
+        self.stop_loss_rate
+    }
+}
+
+impl OrderRequest for MarketShort {
+    fn instrument_id(&self) -> i64 {
+        self.instrument_id
+    }
+
+    fn amount(&self) -> Numeric {
+        self.amount
+    }
+
+    fn describe(&self) -> String {
+        format!(
+            "OPEN SHORT instrument {} for ${}, stop {}",
+            self.instrument_id, self.amount.0, self.stop_loss_rate.0
+        )
+    }
+}
+
 /// A request to close all or part of an open position.
 ///
 /// A separate type from [`MarketBuy`] because it is a separate *endpoint*, not
@@ -576,6 +713,59 @@ mod tests {
         let valid = MarketBuy::new(1001, numeric("100")).unwrap();
         assert!(valid.clone().with_stop_loss(numeric("-1")).is_err());
         assert!(valid.with_take_profit(numeric("-1")).is_err());
+    }
+
+    #[test]
+    fn a_short_cannot_be_built_without_a_stop() {
+        // Not a validation message but a signature: the API documents
+        // stopLossRate as required for sellShort, and a short's loss is
+        // unbounded, so there is no sensible default to fall back to.
+        let short = MarketShort::new(1001, numeric("100"), numeric("120")).unwrap();
+        assert_eq!(short.stop_loss_rate(), numeric("120"));
+
+        assert!(MarketShort::new(1001, numeric("100"), numeric("0")).is_err());
+        assert!(MarketShort::new(1001, numeric("100"), numeric("-5")).is_err());
+        assert!(MarketShort::new(1001, numeric("0"), numeric("120")).is_err());
+        assert!(MarketShort::new(0, numeric("100"), numeric("120")).is_err());
+    }
+
+    #[test]
+    fn a_short_serialises_as_sell_short_with_its_stop() {
+        let short = MarketShort::new(1001, numeric("2500"), numeric("351.67")).unwrap();
+        let expected: serde_json::Value = serde_json::from_str(
+            r#"{"action":"open","transaction":"sellShort","instrumentId":1001,
+                "orderType":"mkt","amount":2500,"orderCurrency":"usd",
+                "stopLossRate":351.67}"#,
+        )
+        .unwrap();
+        assert_eq!(serde_json::to_value(&short).unwrap(), expected);
+        // settlementType is deliberately absent: v2 allows that, and which
+        // value a short needs comes from the eligibility endpoint.
+        assert!(
+            !serde_json::to_string(&short)
+                .unwrap()
+                .contains("settlement")
+        );
+    }
+
+    #[test]
+    fn both_order_kinds_describe_their_direction() {
+        // The description reaches an approval prompt and an audit entry, so
+        // "long" and "short" have to be visible in it.
+        let long = MarketBuy::new(1001, numeric("100")).unwrap();
+        let short = MarketShort::new(1001, numeric("100"), numeric("120")).unwrap();
+        assert!(long.describe().contains("LONG"), "{}", long.describe());
+        assert!(short.describe().contains("SHORT"), "{}", short.describe());
+        assert!(
+            short.describe().contains("stop 120"),
+            "{}",
+            short.describe()
+        );
+        assert_eq!(long.amount(), short.amount());
+        assert_eq!(
+            OrderRequest::instrument_id(&long),
+            OrderRequest::instrument_id(&short)
+        );
     }
 
     #[test]

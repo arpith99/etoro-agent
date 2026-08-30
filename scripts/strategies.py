@@ -9,7 +9,8 @@ The strategies are ordered roughly by how much published evidence supports them.
 That ordering is the most useful thing in this file. Read STRATEGY_NOTES.
 
 Install:
-    pip install pandas numpy pandas-datareader
+    pip install pandas numpy
+    # market_data.py must sit in the same folder
     # optional fallback:  pip install yfinance
 
 Run:
@@ -43,37 +44,8 @@ ANNUAL = 252
 
 def load_panel(tickers=UNIVERSE, start=START, end=END) -> pd.DataFrame:
     """Return a dates x tickers panel of close prices."""
-    series = {}
-    for t in tickers:
-        px = None
-        try:
-            from pandas_datareader import data as pdr
-            df = pdr.DataReader(t, "stooq", start, end)
-            if not df.empty:
-                px = df["Close"].sort_index()
-        except Exception:  # noqa: BLE001
-            pass
-
-        if px is None:
-            try:
-                import yfinance as yf
-                df = yf.download(t, start=start, end=end,
-                                 auto_adjust=True, progress=False)
-                if not df.empty:
-                    px = df["Close"]
-                    if isinstance(px, pd.DataFrame):
-                        px = px.iloc[:, 0]
-                    px = px.sort_index()
-            except Exception:  # noqa: BLE001
-                pass
-
-        if px is None:
-            print(f"  could not load {t}, skipping")
-            continue
-        series[t] = px
-
-    panel = pd.DataFrame(series).sort_index()
-    return panel.dropna(how="all").ffill()
+    from market_data import load_panel as _lp
+    return _lp(tickers, start=start, end=end).dropna(how="all")
 
 
 # ----------------------------- strategies --------------------------------

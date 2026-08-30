@@ -5,7 +5,9 @@ use serde::de::DeserializeOwned;
 
 use crate::costs::CostEstimate;
 use crate::error::{ApiError, ApiErrorKind, ClientError, ExceptionDetail, Method};
-use crate::orders::{AcceptedOrder, CloseAccepted, ClosePosition, MarketBuy, OrderHandle};
+use crate::orders::{
+    AcceptedOrder, CloseAccepted, ClosePosition, MarketBuy, OrderHandle, OrderRequest,
+};
 use crate::types::{
     // The exception envelope is a nested type generated from an inline object,
     // not a component schema, so it has no tag facade to be re-exported from.
@@ -257,6 +259,12 @@ impl EtoroClient {
     /// The outcome comes from [`Self::lookup_order`], and the returned
     /// [`AcceptedOrder`] carries the handle for asking.
     ///
+    /// Takes a [`MarketBuy`] specifically, not any [`OrderRequest`]. A short
+    /// needs a `settlementType` this crate does not yet read from the
+    /// eligibility endpoint, and an order rejected *after* acceptance -- which
+    /// is what a wrong settlement type produces -- is the worst failure this
+    /// path has. Shorts can be priced; they cannot yet be sent.
+    ///
     /// `request_id` is the idempotency key and belongs to the caller. Reuse it
     /// verbatim when retrying a failed submission; mint a fresh one only for a
     /// genuinely new order. Getting that backwards is how one intended trade
@@ -315,7 +323,11 @@ impl EtoroClient {
     ///
     /// Its own 20 requests / 60 s quota, not shared with order execution — so
     /// pricing an order does not spend the budget needed to place it.
-    pub async fn order_cost(&self, order: &MarketBuy) -> Result<CostEstimate, ApiError> {
+    /// Generic over [`OrderRequest`] while [`Self::place_order`] is not: an
+    /// order this crate cannot yet place safely can still be *priced*, and
+    /// pricing one is how the financing rate a short would pay gets measured
+    /// before anything is built to place it.
+    pub async fn order_cost(&self, order: &impl OrderRequest) -> Result<CostEstimate, ApiError> {
         let path = self.path(
             "api/v2/trading/info/demo/costs",
             "api/v2/trading/info/costs",
