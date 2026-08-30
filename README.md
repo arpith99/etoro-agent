@@ -45,6 +45,13 @@ because the opening prices cancel — so it is a decomposition, not an estimate.
 It uses the total-return series where one exists, since on as-traded prices an
 ex-dividend date reads as an overnight loss no holder suffered.
 
+Each side reports median, mean, annualised return, annualised volatility and
+compounded return. Both a mean and a compounded figure appear because they
+disagree in a way that matters: compounding is multiplicative, so a positive
+average per session can still end below where it started. `ret/vol` is **not** a
+Sharpe ratio — nothing is subtracted for the risk-free rate — and exists to
+compare the two sides against each other, where the omission affects both.
+
 `--html` writes a self-contained interactive candlestick page — zoom, pan and
 crosshair — with the charting library embedded rather than fetched from a CDN,
 so it opens offline and renders the same a year from now. When the source

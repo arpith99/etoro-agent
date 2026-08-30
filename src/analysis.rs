@@ -23,23 +23,88 @@ pub struct Session {
     pub intraday: f64,
 }
 
+impl Session {
+    /// The close-to-close return, which the two parts compound to exactly.
+    pub fn total(&self) -> f64 {
+        (1.0 + self.overnight) * (1.0 + self.intraday) - 1.0
+    }
+}
+
+/// Sessions in a trading year, for annualising.
+///
+/// The conventional US equity figure. Both halves get the same divisor: a year
+/// contains 252 overnight moves and 252 sessions.
+pub const TRADING_YEAR: f64 = 252.0;
+
+/// Summary statistics for one side of the split.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SideStats {
+    pub median: f64,
+    pub mean: f64,
+    /// Compounded, not summed: what holding only this part would have returned.
+    pub compounded: f64,
+    /// Compound annual growth rate, so windows of different lengths compare.
+    pub annualised: f64,
+    /// Sample standard deviation of session returns, scaled by `sqrt(252)`.
+    pub volatility: f64,
+}
+
+impl SideStats {
+    fn from(returns: &[f64], sessions: f64) -> Self {
+        let mean = returns.iter().sum::<f64>() / returns.len() as f64;
+        let compounded = returns.iter().fold(1.0, |acc, r| acc * (1.0 + r)) - 1.0;
+
+        // A total loss cannot be annualised: a real root of a non-positive
+        // growth factor does not exist, so report the loss rather than NaN.
+        let growth = 1.0 + compounded;
+        let annualised = if growth <= 0.0 {
+            -1.0
+        } else {
+            growth.powf(TRADING_YEAR / sessions) - 1.0
+        };
+
+        let variance = if returns.len() > 1 {
+            returns.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / (returns.len() - 1) as f64
+        } else {
+            0.0
+        };
+
+        Self {
+            median: median(returns),
+            mean,
+            compounded,
+            annualised,
+            volatility: variance.sqrt() * TRADING_YEAR.sqrt(),
+        }
+    }
+
+    /// Annualised return per unit of annualised volatility.
+    ///
+    /// **Not a Sharpe ratio**: nothing is subtracted for the risk-free rate, so
+    /// it overstates by roughly `risk_free / volatility`. It is here to compare
+    /// the two sides against each other, where the omission affects both.
+    pub fn return_over_vol(&self) -> f64 {
+        if self.volatility > 0.0 {
+            self.annualised / self.volatility
+        } else {
+            f64::NAN
+        }
+    }
+}
+
 /// The decomposition over a whole series.
 #[derive(Debug, Clone, PartialEq)]
 pub struct GapStats {
     pub sessions: usize,
-    pub overnight_median: f64,
-    pub intraday_median: f64,
-    pub overnight_mean: f64,
-    pub intraday_mean: f64,
-    /// Compounded, not summed: what holding only that part would have returned.
-    pub overnight_compounded: f64,
-    pub intraday_compounded: f64,
+    pub years: f64,
+    pub overnight: SideStats,
+    pub intraday: SideStats,
     /// The whole close-to-close return over the same window.
     ///
     /// `(1 + overnight) * (1 + intraday) == 1 + total`, exactly, because the
-    /// opening prices cancel. The decomposition is an identity rather than an
+    /// opening prices cancel. The decomposition is an identity, not an
     /// approximation.
-    pub total_compounded: f64,
+    pub total: SideStats,
     /// Sessions with the largest overnight moves either way, largest first.
     pub largest: Vec<Session>,
 }
@@ -75,10 +140,10 @@ pub fn gaps(bars: &[Bar], series: SeriesChoice, largest_count: usize) -> Option<
         return None;
     }
 
-    let compound = |values: &[f64]| values.iter().fold(1.0, |acc, r| acc * (1.0 + r)) - 1.0;
-    let mean = |values: &[f64]| values.iter().sum::<f64>() / values.len() as f64;
+    let count = sessions.len() as f64;
     let overnight: Vec<f64> = sessions.iter().map(|s| s.overnight).collect();
     let intraday: Vec<f64> = sessions.iter().map(|s| s.intraday).collect();
+    let total: Vec<f64> = sessions.iter().map(Session::total).collect();
 
     let mut largest = sessions.clone();
     largest.sort_by(|a, b| {
@@ -91,13 +156,10 @@ pub fn gaps(bars: &[Bar], series: SeriesChoice, largest_count: usize) -> Option<
 
     Some(GapStats {
         sessions: sessions.len(),
-        overnight_median: median(&overnight),
-        intraday_median: median(&intraday),
-        overnight_mean: mean(&overnight),
-        intraday_mean: mean(&intraday),
-        overnight_compounded: compound(&overnight),
-        intraday_compounded: compound(&intraday),
-        total_compounded: (1.0 + compound(&overnight)) * (1.0 + compound(&intraday)) - 1.0,
+        years: count / TRADING_YEAR,
+        overnight: SideStats::from(&overnight, count),
+        intraday: SideStats::from(&intraday, count),
+        total: SideStats::from(&total, count),
         largest,
     })
 }
@@ -116,31 +178,39 @@ impl GapStats {
     /// A fixed-width report.
     pub fn report(&self) -> String {
         let pct = |v: f64| format!("{:+.2}%", v * 100.0);
+        let vol = |v: f64| format!("{:.1}%", v * 100.0);
+        let ratio = |v: f64| {
+            if v.is_finite() {
+                format!("{v:.2}")
+            } else {
+                "-".to_owned()
+            }
+        };
+        let row = |name: &str, side: &SideStats| {
+            format!(
+                "{:<11}{:>9}{:>9}{:>10}{:>9}{:>9}{:>13}\n",
+                name,
+                pct(side.median),
+                pct(side.mean),
+                pct(side.annualised),
+                vol(side.volatility),
+                ratio(side.return_over_vol()),
+                pct(side.compounded),
+            )
+        };
+
         let mut out = format!(
-            "{:<12}{:>10}{:>10}{:>14}\n",
-            "", "median", "mean", "compounded"
+            "{:<11}{:>9}{:>9}{:>10}{:>9}{:>9}{:>13}\n",
+            "", "median", "mean", "annual", "vol", "ret/vol", "compounded"
         );
+        out.push_str(&row("overnight", &self.overnight));
+        out.push_str(&row("intraday", &self.intraday));
+        out.push_str(&format!("{}\n", "-".repeat(70)));
+        out.push_str(&row("total", &self.total));
         out.push_str(&format!(
-            "{:<12}{:>10}{:>10}{:>14}\n",
-            "overnight",
-            pct(self.overnight_median),
-            pct(self.overnight_mean),
-            pct(self.overnight_compounded),
-        ));
-        out.push_str(&format!(
-            "{:<12}{:>10}{:>10}{:>14}\n",
-            "intraday",
-            pct(self.intraday_median),
-            pct(self.intraday_mean),
-            pct(self.intraday_compounded),
-        ));
-        out.push_str(&format!("{}\n", "-".repeat(46)));
-        out.push_str(&format!(
-            "{:<12}{:>10}{:>10}{:>14}\n",
-            "total",
-            "",
-            "",
-            pct(self.total_compounded)
+            "\n{} sessions, {:.1} years. ret/vol is not a Sharpe ratio: nothing is\n\
+             subtracted for the risk-free rate, so all three rows overstate equally.\n",
+            self.sessions, self.years
         ));
 
         if !self.largest.is_empty() {
@@ -204,12 +274,12 @@ mod tests {
 
         let expected = 110.0 / 100.0 - 1.0;
         assert!(
-            (stats.total_compounded - expected).abs() < 1e-12,
+            (stats.total.compounded - expected).abs() < 1e-12,
             "{} vs {expected}",
-            stats.total_compounded
+            stats.total.compounded
         );
         let recombined =
-            (1.0 + stats.overnight_compounded) * (1.0 + stats.intraday_compounded) - 1.0;
+            (1.0 + stats.overnight.compounded) * (1.0 + stats.intraday.compounded) - 1.0;
         assert!((recombined - expected).abs() < 1e-12);
     }
 
@@ -222,8 +292,8 @@ mod tests {
         ];
         let stats = gaps(&bars, SeriesChoice::Reported, 3).unwrap();
         assert_eq!(stats.sessions, 1);
-        assert!((stats.overnight_compounded - 0.05).abs() < 1e-12);
-        assert!((stats.intraday_compounded - (102.0 / 105.0 - 1.0)).abs() < 1e-12);
+        assert!((stats.overnight.compounded - 0.05).abs() < 1e-12);
+        assert!((stats.intraday.compounded - (102.0 / 105.0 - 1.0)).abs() < 1e-12);
     }
 
     #[test]
@@ -236,7 +306,78 @@ mod tests {
         // The first bar's own +100% session is excluded, keeping both parts
         // over the same window.
         assert_eq!(stats.sessions, 1);
-        assert!((stats.total_compounded - 0.1).abs() < 1e-12);
+        assert!((stats.total.compounded - 0.1).abs() < 1e-12);
+    }
+
+    #[test]
+    fn annualising_scales_by_the_length_of_the_window() {
+        // One session of +1%: annualised is that compounded 252 times.
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "101", "101"),
+        ];
+        let stats = gaps(&bars, SeriesChoice::Reported, 3).unwrap();
+        let expected = 1.01_f64.powf(252.0) - 1.0;
+        assert!((stats.overnight.annualised - expected).abs() < 1e-9);
+        assert!((stats.years - 1.0 / 252.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn a_total_loss_reports_minus_one_rather_than_nan() {
+        // Annualising needs a real root of the growth factor, and a wipe-out
+        // leaves none.
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "0.0001", "0.0001"),
+        ];
+        let stats = gaps(&bars, SeriesChoice::Reported, 3).unwrap();
+        assert!(stats.overnight.annualised.is_finite());
+    }
+
+    #[test]
+    fn volatility_is_zero_for_a_perfectly_steady_series_and_positive_otherwise() {
+        let steady = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "100", "100"),
+            bar("2026-08-05", "100", "100"),
+        ];
+        assert_eq!(
+            gaps(&steady, SeriesChoice::Reported, 3)
+                .unwrap()
+                .overnight
+                .volatility,
+            0.0
+        );
+
+        let choppy = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "110", "110"),
+            bar("2026-08-05", "95", "95"),
+        ];
+        assert!(
+            gaps(&choppy, SeriesChoice::Reported, 3)
+                .unwrap()
+                .overnight
+                .volatility
+                > 0.0
+        );
+    }
+
+    #[test]
+    fn a_positive_mean_can_still_compound_to_a_loss() {
+        // Volatility drag, which is why the report shows both. +50% then -40%
+        // averages +5% a session and ends down 10%.
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "150", "150"),
+            bar("2026-08-05", "90", "90"),
+        ];
+        let stats = gaps(&bars, SeriesChoice::Reported, 3).unwrap();
+        assert!(stats.overnight.mean > 0.0, "mean should be positive");
+        assert!(
+            stats.overnight.compounded < 0.0,
+            "compounded should be a loss"
+        );
     }
 
     #[test]
@@ -262,6 +403,6 @@ mod tests {
         ];
         let stats = gaps(&bars, SeriesChoice::Reported, 3).unwrap();
         assert_eq!(stats.sessions, 1);
-        assert!(stats.total_compounded.is_finite());
+        assert!(stats.total.compounded.is_finite());
     }
 }
