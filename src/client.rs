@@ -3,6 +3,7 @@ use std::{net::IpAddr, time::Duration};
 use reqwest::{StatusCode, Url, header};
 use serde::de::DeserializeOwned;
 
+use crate::costs::CostEstimate;
 use crate::error::{ApiError, ApiErrorKind, ClientError, ExceptionDetail, Method};
 use crate::orders::{AcceptedOrder, CloseAccepted, ClosePosition, MarketBuy, OrderHandle};
 use crate::types::{
@@ -96,7 +97,8 @@ impl Environment {
 
 impl std::fmt::Display for Environment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.as_str())
+        // See `CostType`: `write_str` would ignore any width specifier.
+        f.pad(self.as_str())
     }
 }
 
@@ -297,6 +299,30 @@ impl EtoroClient {
             // typify happens to narrow to a UUID.
             token: response.token.map(|token| token.to_string()),
         })
+    }
+
+    /// What eToro would charge for `order`, without placing it.
+    ///
+    /// Takes the **same body** as [`Self::place_order`], so the thing priced is
+    /// the exact order about to be sent rather than an approximation. At the
+    /// sizes this project trades, spread and fees can be a large fraction of
+    /// any edge a simple strategy produces, so this is an input to the decision
+    /// rather than a diagnostic.
+    ///
+    /// A POST that is a **query**: it changes nothing, so it mints its own
+    /// request id and takes no idempotency argument. Retrying it is free in
+    /// every sense that matters.
+    ///
+    /// Its own 20 requests / 60 s quota, not shared with order execution — so
+    /// pricing an order does not spend the budget needed to place it.
+    pub async fn order_cost(&self, order: &MarketBuy) -> Result<CostEstimate, ApiError> {
+        let path = self.path(
+            "api/v2/trading/info/demo/costs",
+            "api/v2/trading/info/costs",
+        );
+        let (estimate, _ctx): (CostEstimate, _) =
+            self.post_json(path, order, uuid::Uuid::new_v4()).await?;
+        Ok(estimate)
     }
 
     /// Closes all or part of an open position.

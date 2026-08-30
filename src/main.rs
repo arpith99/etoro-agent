@@ -14,6 +14,7 @@ use etoro_agent::data::{
 };
 use etoro_agent::limits::{Limits, open_exposure};
 use etoro_agent::strategy::{Sma, backtest_sma, sweep_sma};
+use etoro_agent::trader::Action;
 use etoro_agent::trader::plan as plan_action;
 use etoro_agent::types::manual::Numeric;
 use serde::Serialize;
@@ -267,6 +268,43 @@ async fn plan(
         exposure.0
     );
     println!("\n  -> {}", plan.action.describe());
+
+    // Only for an open: the costs endpoint prices an order request, and a
+    // close is a different endpoint with no such body. Its own 20/60s quota,
+    // so asking does not spend the budget needed to place the order.
+    if let Action::Open(order) = &plan.action {
+        match client.order_cost(order).await {
+            Ok(estimate) => {
+                println!("\n  quoted cost:");
+                print!("{}", estimate.report());
+                match estimate.upfront_fraction_of(allocation) {
+                    Ok(Some(fraction)) => println!(
+                        "    {:<16}{:>12} USD  ({:.3}% of the order)",
+                        "up-front total",
+                        estimate.upfront()?.0,
+                        fraction * rust_decimal::Decimal::ONE_HUNDRED,
+                    ),
+                    Ok(None) => {}
+                    Err(error) => println!("    could not total the quote: {error}"),
+                }
+                let per_day = estimate.per_day().unwrap_or(Numeric(0.into()));
+                if per_day.0 != rust_decimal::Decimal::ZERO {
+                    // The backtest charges costs on turnover only, so this is
+                    // a cost it does not model at all.
+                    println!(
+                        "  ! ${} per day held, which the backtest does not model",
+                        per_day.0
+                    );
+                }
+                if let Err(breach) = limits.check_cost(&estimate, allocation) {
+                    println!("  cost       REFUSED - {breach}");
+                }
+            }
+            // A quote that cannot be had is not a reason to hide the plan, but
+            // it is a reason not to act on it.
+            Err(error) => println!("\n  ! could not price the order: {error}"),
+        }
+    }
 
     match &verdict {
         Ok(()) => println!("  limits     ok"),
@@ -738,6 +776,17 @@ fn limits() -> Result<Limits> {
         max_orders_per_day: orders
             .parse()
             .with_context(|| format!("ETORO_MAX_ORDERS_PER_DAY takes a count, not {orders:?}"))?,
+        max_cost_fraction: {
+            let raw = std::env::var("ETORO_MAX_COST_FRACTION")
+                .unwrap_or_else(|_| DEFAULT_MAX_COST_FRACTION.to_owned());
+            let fraction: rust_decimal::Decimal = raw.parse().with_context(|| {
+                format!("ETORO_MAX_COST_FRACTION takes a fraction of order value, not {raw:?}")
+            })?;
+            if fraction < rust_decimal::Decimal::ZERO || fraction > rust_decimal::Decimal::ONE {
+                bail!("ETORO_MAX_COST_FRACTION is a fraction between 0 and 1, got {fraction}");
+            }
+            fraction
+        },
         kill_switch: std::env::var("ETORO_KILL_SWITCH")
             .unwrap_or_else(|_| DEFAULT_KILL_SWITCH.to_owned())
             .into(),
@@ -757,6 +806,14 @@ const DEFAULT_KILL_SWITCH: &str = "STOP";
 /// Append-only record of intents and outcomes. Contains account activity, so
 /// it is gitignored and written 0600.
 const DEFAULT_AUDIT_LOG: &str = "audit.ndjson";
+
+/// Share of an order's value that may go on up-front cost, when unset.
+///
+/// One percent. Chosen against the measured spreads rather than picked round:
+/// the widest half-spread observed across ordinary names was 0.08% of mid, so
+/// 1% leaves generous room for fees on top while still refusing an instrument
+/// whose costs would eat most of a simple strategy's edge.
+const DEFAULT_MAX_COST_FRACTION: &str = "0.01";
 
 /// Orders per UTC day when `ETORO_MAX_ORDERS_PER_DAY` is unset.
 ///

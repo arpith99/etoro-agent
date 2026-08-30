@@ -15,6 +15,7 @@ use std::path::{Path, PathBuf};
 
 use rust_decimal::Decimal;
 
+use crate::costs::CostEstimate;
 use crate::trader::Action;
 use crate::types::manual::Numeric;
 use crate::types::tags::trading_real::PortfolioResponse;
@@ -32,6 +33,13 @@ pub struct Limits {
     pub max_exposure_usd: Numeric,
     /// Most orders that may be **submitted** in one UTC day.
     pub max_orders_per_day: u32,
+    /// Most of an order's value that may be consumed by up-front cost.
+    ///
+    /// A fraction rather than an amount, because the same $0.50 of spread is
+    /// negligible on $2500 and half a percent on $100. Checked separately from
+    /// [`Self::check`] because it needs a live quote, and the rest of the rules
+    /// deliberately need nothing at all.
+    pub max_cost_fraction: Decimal,
     /// While this file exists, nothing is sent at all.
     ///
     /// A file rather than a config flag or an environment variable, because
@@ -69,6 +77,25 @@ pub enum Breach {
         submitted: usize,
         max: u32,
     },
+    CostTooHigh {
+        cost: Numeric,
+        notional: Numeric,
+        fraction: Decimal,
+        max: Decimal,
+    },
+    /// The quote contained a component this crate could not classify.
+    ///
+    /// Refused rather than assumed harmless: an unrecognised component may be
+    /// a daily fee being counted as a one-off, and the whole point of the
+    /// check is knowing what is being paid.
+    UnclassifiedCost {
+        name: String,
+    },
+    /// A cost that could not be totalled -- see
+    /// [`CostError`](crate::costs::CostError).
+    CostNotComparable {
+        detail: String,
+    },
 }
 
 impl std::fmt::Display for Breach {
@@ -95,6 +122,27 @@ impl std::fmt::Display for Breach {
             ),
             Self::TooManyOrdersToday { submitted, max } => {
                 write!(f, "{submitted} orders already submitted today, limit {max}")
+            }
+            Self::CostTooHigh {
+                cost,
+                notional,
+                fraction,
+                max,
+            } => write!(
+                f,
+                "${} of cost on a ${} order is {:.3}% of it, over the {:.3}% limit",
+                cost.0,
+                notional.0,
+                fraction * Decimal::ONE_HUNDRED,
+                max * Decimal::ONE_HUNDRED
+            ),
+            Self::UnclassifiedCost { name } => write!(
+                f,
+                "the quote contains an unrecognised cost component {name:?}; refusing until \
+                 it is known whether it is charged once or daily"
+            ),
+            Self::CostNotComparable { detail } => {
+                write!(f, "the quoted cost could not be totalled: {detail}")
             }
         }
     }
@@ -152,6 +200,54 @@ impl Limits {
         Ok(())
     }
 
+    /// Whether the quoted cost of an order is acceptable.
+    ///
+    /// Separate from [`Self::check`] because it needs a live quote from
+    /// `POST /trading/info/costs`, while every other rule here is pure. Call
+    /// both: this one says nothing about size, exposure or the kill switch.
+    ///
+    /// Only up-front cost is compared. The carried cost is reported by
+    /// [`CostEstimate::per_day`] and deliberately not gated here, because a
+    /// daily fee is not comparable to a one-off without knowing the holding
+    /// period — and the backtest that would supply it does not model carry at
+    /// all yet. A non-zero `per_day` should be surfaced to a human rather than
+    /// silently accepted or silently refused.
+    pub fn check_cost(&self, estimate: &CostEstimate, notional: Numeric) -> Result<(), Breach> {
+        if let Some(component) = estimate
+            .components
+            .iter()
+            .find(|component| matches!(component.kind, crate::costs::CostType::Unknown(_)))
+        {
+            return Err(Breach::UnclassifiedCost {
+                name: component.kind.name().to_owned(),
+            });
+        }
+
+        let fraction =
+            estimate
+                .upfront_fraction_of(notional)
+                .map_err(|error| Breach::CostNotComparable {
+                    detail: error.to_string(),
+                })?;
+        // No notional means no fraction to compare; size is `check`'s job.
+        let Some(fraction) = fraction else {
+            return Ok(());
+        };
+        if fraction > self.max_cost_fraction {
+            return Err(Breach::CostTooHigh {
+                cost: estimate
+                    .upfront()
+                    .map_err(|error| Breach::CostNotComparable {
+                        detail: error.to_string(),
+                    })?,
+                notional,
+                fraction,
+                max: self.max_cost_fraction,
+            });
+        }
+        Ok(())
+    }
+
     /// Whether the kill switch is currently engaged.
     pub fn stopped(&self) -> bool {
         self.kill_switch.exists()
@@ -198,6 +294,7 @@ mod tests {
             max_position_usd: numeric("500"),
             max_exposure_usd: numeric("1000"),
             max_orders_per_day: 4,
+            max_cost_fraction: "0.01".parse().unwrap(),
             // A path nothing creates, so the switch reads as disengaged.
             kill_switch: std::env::temp_dir()
                 .join(format!("etoro-agent-absent-{}", uuid::Uuid::new_v4())),
@@ -319,6 +416,85 @@ mod tests {
             .to_string();
         assert!(message.contains("5000"), "{message}");
         assert!(message.contains("500"), "{message}");
+    }
+
+    fn quote(components: &[(&str, &str)]) -> CostEstimate {
+        CostEstimate {
+            instrument_id: Some(1001),
+            symbol: Some("AAPL".to_owned()),
+            components: components
+                .iter()
+                .map(|(kind, amount)| crate::costs::CostComponent {
+                    kind: match *kind {
+                        "marketSpread" => crate::costs::CostType::MarketSpread,
+                        "overnightFee" => crate::costs::CostType::OvernightFee,
+                        other => crate::costs::CostType::Unknown(other.to_owned()),
+                    },
+                    amount: numeric(amount),
+                    currency: "USD".to_owned(),
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn a_cost_that_would_eat_the_edge_is_refused() {
+        let limits = limits();
+        // $0.30 on $100 is 0.3%, inside the 1% default.
+        assert_eq!(
+            limits.check_cost(&quote(&[("marketSpread", "0.30")]), numeric("100")),
+            Ok(())
+        );
+        // The same $2 on $100 is 2%, and is not.
+        let breach = limits
+            .check_cost(&quote(&[("marketSpread", "2.00")]), numeric("100"))
+            .unwrap_err();
+        assert!(matches!(breach, Breach::CostTooHigh { .. }), "{breach}");
+        // The message has to name both numbers to be worth reading.
+        assert!(breach.to_string().contains("2.000%"), "{breach}");
+
+        // And the same absolute cost passes on a larger order, which is the
+        // whole reason the limit is a fraction.
+        assert_eq!(
+            limits.check_cost(&quote(&[("marketSpread", "2.00")]), numeric("2500")),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn a_daily_fee_does_not_count_against_the_up_front_gate() {
+        // Carry is real but is not comparable to a one-off without a holding
+        // period, and the backtest does not model it. It must be surfaced,
+        // not silently gated.
+        let estimate = quote(&[("marketSpread", "0.30"), ("overnightFee", "0.50")]);
+        assert_eq!(limits().check_cost(&estimate, numeric("100")), Ok(()));
+        assert_eq!(estimate.per_day().unwrap(), numeric("0.50"));
+    }
+
+    #[test]
+    fn an_unrecognised_cost_component_stops_the_order() {
+        // It may be a daily fee counted as a one-off. Knowing what is being
+        // paid is the entire point of asking.
+        let breach = limits()
+            .check_cost(&quote(&[("borrowFee", "0.01")]), numeric("100"))
+            .unwrap_err();
+        assert_eq!(
+            breach,
+            Breach::UnclassifiedCost {
+                name: "borrowFee".to_owned()
+            }
+        );
+        assert!(breach.to_string().contains("borrowFee"), "{breach}");
+    }
+
+    #[test]
+    fn costs_that_cannot_be_totalled_refuse_rather_than_pass() {
+        let mut estimate = quote(&[("marketSpread", "0.30"), ("marketSpread", "1.00")]);
+        estimate.components[1].currency = "GBP".to_owned();
+        assert!(matches!(
+            limits().check_cost(&estimate, numeric("100")),
+            Err(Breach::CostNotComparable { .. })
+        ));
     }
 
     #[test]

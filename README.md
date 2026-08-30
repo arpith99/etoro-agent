@@ -110,6 +110,7 @@ so re-fetching an overlapping range updates rather than duplicates.
 | `ETORO_MAX_POSITION_USD` | no | Cap on one new position; defaults to `100` |
 | `ETORO_MAX_EXPOSURE_USD` | no | Cap on all positions at once; defaults to `500` |
 | `ETORO_MAX_ORDERS_PER_DAY` | no | Submissions per UTC day; defaults to `4` |
+| `ETORO_MAX_COST_FRACTION` | no | Share of order value allowed on up-front cost; defaults to `0.01` |
 | `ETORO_KILL_SWITCH` | no | While this file exists nothing is sent; defaults to `STOP` |
 | `ETORO_AUDIT_LOG` | no | Append-only record; defaults to `audit.ndjson` |
 

@@ -112,7 +112,7 @@ pub enum Method {
 
 impl std::fmt::Display for Method {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
+        f.pad(match self {
             Self::Get => "GET",
             Self::Post => "POST",
         })

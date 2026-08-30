@@ -430,8 +430,36 @@ Only after milestone 5 has produced that comparison. Prerequisites:
   Refusals are logged as loudly as submissions: "did nothing today" and "was
   stopped twelve times" look identical in a portfolio and are not the same
   situation.
-- A cost check via `POST /api/v2/trading/info/costs` before every order, with a
-  refusal path when cost is large relative to expected edge.
+- ~~A cost check via `POST /api/v2/trading/info/costs` before every order, with
+  a refusal path when cost is large relative to expected edge.~~
+  **Done 2026-08-30**: `src/costs.rs`, `EtoroClient::order_cost`, and
+  `Limits::check_cost`.
+
+  The endpoint takes **the same body as the order endpoint**, so what is priced
+  is the exact order about to be sent rather than an approximation. It is a
+  POST that is a *query*, so it mints its own request id and stays outside the
+  idempotency discipline, and it has its own 20/60s quota — pricing an order
+  does not spend the budget needed to place it.
+
+  **The breakdown splits one-off from carried cost**, and that distinction
+  matters beyond this check: `markup`, `marketSpread`, `transactionFee` and
+  `sdrt` are paid once and are what the backtest's `CostModel` already models;
+  `overnightFee` and `overWeekendFee` are charged for every day a position
+  stays open and **the backtest does not model them at all**. `plan` prints a
+  warning when `per_day` is non-zero, because a strategy holding such a
+  position is being measured optimistically by an amount that grows with the
+  holding period. This is also the exact gap that has to be closed before
+  shorting can be backtested honestly.
+
+  The gate is a **fraction** of order value, not an amount: the same $0.50 of
+  spread is half a percent on $100 and negligible on $2500. Only up-front cost
+  is gated — carry is not comparable to a one-off without a holding period, so
+  it is surfaced to a human rather than silently accepted or refused. An
+  unrecognised cost component is refused outright, since it may be a daily fee
+  being counted as a one-off.
+
+  Live on demo, a $2500 AAPL buy quotes four components, all zero. ⚠️ Demo may
+  not quote realistic costs; re-check on real before relying on the figures.
 - Approval mode first — print the intended order and require confirmation —
   before anything runs unattended.
 - Audit logging of every submitted order and its resolved outcome.

@@ -719,3 +719,38 @@ async fn a_partial_close_names_the_units_to_deduct() {
     );
     mock.server.join().unwrap();
 }
+
+const COST_FIXTURE: &str = r#"{
+  "instrumentId": 1001,
+  "symbol": "AAPL",
+  "lastUpdated": "2026-08-30T12:00:00Z",
+  "costs": [
+    { "costType": "marketSpread", "amount": 0.30, "currency": "USD" },
+    { "costType": "overnightFee", "amount": 0.0125, "currency": "USD" }
+  ]
+}"#;
+
+#[tokio::test]
+async fn an_order_can_be_priced_without_being_placed() {
+    let mock = serve_once("200 OK", COST_FIXTURE);
+    let client = client_for(&mock.base_url);
+    let order = MarketBuy::new(1001, Numeric("100".parse().unwrap())).unwrap();
+
+    let estimate = client.order_cost(&order).await.unwrap();
+    assert_eq!(estimate.symbol.as_deref(), Some("AAPL"));
+    // The split that matters: one-off versus per-day-held.
+    assert_eq!(estimate.upfront().unwrap().0.to_string(), "0.30");
+    assert_eq!(estimate.per_day().unwrap().0.to_string(), "0.0125");
+    assert!(!estimate.has_unclassified());
+
+    let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert!(
+        request.starts_with("POST /api/v2/trading/info/demo/costs HTTP/1.1\r\n"),
+        "{request}"
+    );
+    // The body is the order itself, which is the point: what is priced is
+    // exactly what would be sent, not an approximation of it.
+    assert!(request.contains(r#""action":"open""#), "{request}");
+    assert!(request.contains(r#""amount":100"#), "{request}");
+    mock.server.join().unwrap();
+}

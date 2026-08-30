@@ -11,6 +11,7 @@ pub mod audit;
 pub mod backtest;
 pub mod chart;
 pub mod client;
+pub mod costs;
 pub mod data;
 pub mod error;
 pub mod limits;
