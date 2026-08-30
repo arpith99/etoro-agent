@@ -238,14 +238,55 @@ anything, and a caller that can disagree eventually will.
 that an always-long strategy reproduces the benchmark bit-for-bit when trading
 is free, and one asserting the exact prefixes a strategy was handed.
 
-### 4. Strategy #1 — dual SMA crossover
+### 4. Strategy #1 — dual SMA crossover — **done 2026-08-30**
 
-Long-only, daily bars, a handful of large caps.
+`src/strategy.rs` holds `Sma` — long while the fast average is above the slow
+one, flat otherwise — plus `sweep_sma` for the parameter grid.
+`etoro-agent backtest SYM[,SYM...]` runs it.
 
-This is scaffolding, not an edge. Its purpose is to exercise the engine end to
-end so that a real idea later lands on a harness that has been proven.
+```
+etoro-agent backtest AAPL                     one full report
+etoro-agent backtest AAPL,MSFT,NVDA           one row per name
+etoro-agent backtest NVDA --sweep --trades    the grid, and every fill
+etoro-agent backtest MBLY --spread 0.116      the spread actually quoted
+```
 
-**Done when** an equity curve and trade log can be produced from stored data.
+Scaffolding, not an edge, and it behaved like scaffolding. Over five years of
+stored total-return bars at 0.02% spread, filled at the next open, SMA 20/100
+beat buy-and-hold on return per unit of volatility in **4 of 8** names
+(NVDA 1.26 vs 1.10, GOOG 0.82 vs 0.57, AMD 0.83 vs 0.59, INTC 0.48 vs 0.23)
+and lost in the other four, badly on AAPL (0.23 vs 0.56) and TSLA (−0.23 vs
+0.13). That is the expected shape: a trend rule in a five-year window that
+mostly trended up, thinning both the returns and the drawdowns.
+
+**The sweep is the part worth having.** A 5×5 grid of window pairs turns "this
+cell worked" into a question about the neighbourhood:
+
+- NVDA: median 1.29 across 24 pairs against 1.10 for holding — a broad region,
+  not a lucky cell, with 20/100 sitting *below* its own grid median.
+- AAPL: median 0.26 against 0.56 — broadly and consistently worse, which is a
+  cleaner verdict than any single cell could give.
+
+Neither is evidence about the strategy in general. Eight US large-cap tech
+names over one regime, chosen with hindsight, are nowhere near eight
+independent observations, and the roadmap's survivorship warning applies in
+full. What the exercise establishes is that the harness reports losses as
+losses, which was the point.
+
+**One design hole closed while building this.** `Strategy::target` now takes
+`SeriesChoice` as an argument rather than letting a strategy pick its own. A
+strategy that chose could signal on total-return prices while the engine filled
+on as-traded ones, and the two series are indistinguishable from the outside —
+exactly the failure mode `PriceBasis` exists to prevent, reintroduced one layer
+up. Same fix as `SideStats::from_returns`: if two things must agree, do not
+give callers two places to say them.
+
+`--spread` takes a percentage and rejects anything above 1%, because
+`--spread 20` meaning twenty basis points would otherwise charge twenty percent
+and produce a plausible-looking disaster.
+
+**Done.** Equity curve, trade log and sweep all come out of stored data, with
+no network access anywhere in the path.
 
 ### 5. Demo key and paper trading
 

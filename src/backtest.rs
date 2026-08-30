@@ -41,12 +41,18 @@ pub trait Strategy {
     /// lookahead bias, and it is why this takes a slice rather than the whole
     /// series plus an index — an index can be read past.
     ///
+    /// `series` is handed over rather than chosen here, and for the same kind
+    /// of reason: a strategy that picked its own could signal on total-return
+    /// prices while the engine filled on as-traded ones, and the two series
+    /// look identical from the outside. Passing it makes them impossible to
+    /// disagree about. Read prices with [`Bar::ohlc`], never the raw fields.
+    ///
     /// `&mut self` so a strategy may carry state between bars (a running mean,
     /// a cooldown counter) instead of recomputing from the prefix each time.
     ///
     /// Returning anything outside `[0, 1]`, including `NaN`, aborts the run.
     /// Clamping would turn a strategy bug into a plausible equity curve.
-    fn target(&mut self, history: &[Bar]) -> f64;
+    fn target(&mut self, history: &[Bar], series: SeriesChoice) -> f64;
 }
 
 /// Always fully invested. The benchmark, expressed as a strategy.
@@ -62,7 +68,7 @@ impl Strategy for BuyAndHold {
         "buy & hold".to_owned()
     }
 
-    fn target(&mut self, _history: &[Bar]) -> f64 {
+    fn target(&mut self, _history: &[Bar], _series: SeriesChoice) -> f64 {
         1.0
     }
 }
@@ -295,7 +301,7 @@ pub fn run(
         // The bar this decision may see up to. Everything after it is, at this
         // point in the simulation, the future.
         let decision = i - lag;
-        let target = strategy.target(&bars[..=decision]);
+        let target = strategy.target(&bars[..=decision], series);
         if !(0.0..=1.0).contains(&target) {
             // Also catches NaN, since every comparison against it is false.
             return Err(BacktestError::BadTarget {
@@ -504,7 +510,7 @@ mod tests {
             "fixed".to_owned()
         }
 
-        fn target(&mut self, _history: &[Bar]) -> f64 {
+        fn target(&mut self, _history: &[Bar], _series: SeriesChoice) -> f64 {
             let target = self.targets[self.next];
             self.next += 1;
             target
@@ -522,7 +528,7 @@ mod tests {
             "recorder".to_owned()
         }
 
-        fn target(&mut self, history: &[Bar]) -> f64 {
+        fn target(&mut self, history: &[Bar], _series: SeriesChoice) -> f64 {
             self.seen
                 .push((history.len(), history.last().unwrap().date));
             0.0

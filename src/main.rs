@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, anyhow, bail};
 use chrono::{Datelike, NaiveDate, Utc};
 use etoro_agent::analysis::gaps;
+use etoro_agent::backtest::{Backtest, CostModel, FillPrice};
 use etoro_agent::chart::{ChartOptions, contains_split, render, render_html, summary};
 use etoro_agent::client::EtoroClient;
 use etoro_agent::data::{
@@ -10,6 +11,7 @@ use etoro_agent::data::{
     store::{BarStore, FileStore, Interval, SeriesKey},
     tiingo::Tiingo,
 };
+use etoro_agent::strategy::{backtest_sma, sweep_sma};
 use serde::Serialize;
 
 const USAGE: &str = "\
@@ -24,9 +26,25 @@ usage:
   etoro-agent chart   SYM [SOURCE] [--html [FILE]]
                                                draw a stored series; --html writes
                                                an interactive candlestick page
+  etoro-agent backtest SYM[,SYM...] [SOURCE] [--fast N] [--slow N]
+                       [--spread PCT] [--close-fill] [--sweep] [--trades]
+                                               dual moving-average crossover over
+                                               stored bars, against buy & hold
 
 dates are YYYY-MM-DD; FROM defaults to five years ago and TO to today.
 SOURCE defaults to tiingo.
+
+backtest options:
+  --fast N       fast moving-average window in sessions (default 20)
+  --slow N       slow window; must exceed the fast one (default 100)
+  --spread PCT   quoted spread as a percentage of mid (default 0.02). Half is
+                 charged per leg. Get the real figure from `prices SYM`: the
+                 observed range across ordinary names is ~50x, so one constant
+                 is far too harsh on AAPL and far too kind on a thin mid-cap.
+  --close-fill   fill at the deciding close instead of the next open. Optimistic:
+                 it hands the strategy every overnight gap following a signal.
+  --sweep        print return/volatility across a grid of window pairs
+  --trades       print every fill
 ";
 
 #[tokio::main]
@@ -41,6 +59,7 @@ async fn main() -> Result<()> {
             source,
             html,
         } => chart(&symbol, &source, html.as_deref()),
+        Command::Backtest(options) => backtest(&options),
     }
 }
 
@@ -140,6 +159,173 @@ fn gaps_report(symbols: &[String], source: &str) -> Result<()> {
         println!("* no adjusted closes, so dividends and splits appear as overnight moves.");
     }
     Ok(())
+}
+
+/// Backtests a dual moving-average crossover over stored bars.
+///
+/// Offline by construction: it reads the local store and nothing else. That is
+/// deliberate rather than incidental -- a backtest whose result depends on
+/// what a vendor served that afternoon is not reproducible, and the whole
+/// value of one is being able to re-run it and get the same answer.
+fn backtest(options: &BacktestOptions) -> Result<()> {
+    let store = FileStore::new(store_root());
+    let costs = CostModel::from_spread(options.spread);
+    let mut rows = Vec::new();
+
+    for symbol in &options.symbols {
+        let key = SeriesKey::new(&options.source, symbol, Interval::Daily)?;
+        // One missing ticker should not abandon the rest of the basket.
+        let Some(series) = store.load(&key)? else {
+            println!("{symbol}: not in the store; run: etoro-agent fetch-bars {symbol}");
+            continue;
+        };
+        // Total return where the source carries it. On a price-return series
+        // a dividend reads as a fall the holder never suffered, and the
+        // crossover would trade it.
+        let adjusted = series
+            .bars
+            .iter()
+            .any(|bar| bar.total_return_close.is_some());
+        let choice = if adjusted {
+            SeriesChoice::TotalReturn
+        } else {
+            SeriesChoice::Reported
+        };
+
+        let result = backtest_sma(
+            &series.bars,
+            choice,
+            &costs,
+            options.fill,
+            options.fast,
+            options.slow,
+        )?;
+        rows.push((symbol.clone(), adjusted, choice, series.bars, result));
+    }
+
+    let Some((first_symbol, first_adjusted, _, _, first_result)) = rows.first() else {
+        bail!("no stored series to backtest");
+    };
+
+    if rows.len() == 1 {
+        println!(
+            "{} {} ({} prices from {})",
+            first_symbol.to_ascii_uppercase(),
+            Interval::Daily.as_str(),
+            if *first_adjusted {
+                "TotalReturn"
+            } else {
+                "Reported"
+            },
+            options.source,
+        );
+        if !first_adjusted {
+            println!(
+                "! no adjusted closes in this series, so dividends and splits will \
+                 move the averages"
+            );
+        }
+        println!();
+        print!("{}", first_result.report());
+    } else {
+        print_basket(&rows);
+    }
+
+    if options.trades {
+        for (symbol, _, _, _, result) in &rows {
+            print_trades(symbol, result);
+        }
+    }
+
+    if options.sweep {
+        for (symbol, _, choice, bars, _) in &rows {
+            let sweep = sweep_sma(
+                bars,
+                *choice,
+                &costs,
+                options.fill,
+                &SWEEP_FAST,
+                &SWEEP_SLOW,
+            )?;
+            println!(
+                "\n{} return/volatility by window pair:",
+                symbol.to_ascii_uppercase()
+            );
+            print!("{}", sweep.grid());
+        }
+    }
+    Ok(())
+}
+
+/// One row per ticker, for telling an effect from an idiosyncrasy.
+fn print_basket(
+    rows: &[(
+        String,
+        bool,
+        SeriesChoice,
+        Vec<etoro_agent::data::Bar>,
+        Backtest,
+    )],
+) {
+    println!(
+        "{:<8}{:>9}{:>10}{:>8}{:>9}{:>10}{:>8}{:>8}",
+        "symbol", "sessions", "annual", "vol", "ret/vol", "maxDD", "bench", "in mkt"
+    );
+    let mut any_unadjusted = false;
+    let mut beaten = 0;
+    for (symbol, adjusted, _, _, result) in rows {
+        any_unadjusted |= !adjusted;
+        beaten += usize::from(result.beats_benchmark());
+        println!(
+            "{:<8}{:>9}{:>10}{:>8}{:>9}{:>10}{:>8}{:>8}",
+            format!(
+                "{}{}",
+                symbol.to_ascii_uppercase(),
+                if *adjusted { "" } else { "*" }
+            ),
+            result.segments,
+            format!("{:+.2}%", result.strategy.annualised * 100.0),
+            format!("{:.1}%", result.strategy.volatility * 100.0),
+            ratio(result.strategy.return_over_vol()),
+            format!("{:+.2}%", result.max_drawdown * 100.0),
+            ratio(result.benchmark.return_over_vol()),
+            format!("{:.0}%", result.exposure * 100.0),
+        );
+    }
+    println!(
+        "\nbench is buy & hold's return per unit of volatility over the same window.\n\
+         beat it in {beaten} of {} names.",
+        rows.len()
+    );
+    if any_unadjusted {
+        println!("* no adjusted closes, so dividends and splits move the averages.");
+    }
+}
+
+fn print_trades(symbol: &str, result: &Backtest) {
+    println!(
+        "\n{} fills ({}):",
+        symbol.to_ascii_uppercase(),
+        result.strategy_name
+    );
+    for trade in &result.trades {
+        println!(
+            "  {}  {:>5.0}% -> {:>3.0}%  at {:>10.4}  cost {:.4}%",
+            trade.date,
+            trade.from * 100.0,
+            trade.to * 100.0,
+            trade.price,
+            trade.cost * 100.0,
+        );
+    }
+}
+
+fn ratio(value: f64) -> String {
+    if value.is_finite() {
+        format!("{value:.2}")
+    } else {
+        "-".to_owned()
+    }
 }
 
 /// Draws a stored series. Reads the local store only -- no network, no
@@ -330,6 +516,22 @@ const DEFAULT_SOURCE: &str = "tiingo";
 /// How many outlier sessions `gaps` lists.
 const GAP_SAMPLE: usize = 8;
 
+/// Default crossover windows, in sessions.
+const DEFAULT_FAST: usize = 20;
+const DEFAULT_SLOW: usize = 100;
+
+/// Assumed spread, as a percentage of mid, when none is given.
+///
+/// A placeholder between the extremes actually measured -- 0.003% on AAPL,
+/// 0.163% on a watchlist mid-cap -- and wrong for every specific instrument,
+/// which is why the report prints what it charged rather than leaving it
+/// implied.
+const DEFAULT_SPREAD_PCT: f64 = 0.02;
+
+/// Window pairs the sweep walks, following the reference harness.
+const SWEEP_FAST: [usize; 5] = [5, 10, 20, 40, 60];
+const SWEEP_SLOW: [usize; 5] = [50, 100, 150, 200, 250];
+
 /// What the binary was asked to do.
 #[derive(Debug, PartialEq)]
 enum Command {
@@ -350,6 +552,22 @@ enum Command {
         /// `None` renders in the terminal; `Some(path)` writes an HTML page.
         html: Option<PathBuf>,
     },
+    /// Boxed into its own struct because the option list is long enough that
+    /// inlining it would swamp the other variants.
+    Backtest(BacktestOptions),
+}
+
+#[derive(Debug, PartialEq)]
+struct BacktestOptions {
+    symbols: Vec<String>,
+    source: String,
+    fast: usize,
+    slow: usize,
+    /// Quoted spread as a fraction of mid, halved per leg by the cost model.
+    spread: f64,
+    fill: FillPrice,
+    sweep: bool,
+    trades: bool,
 }
 
 impl Command {
@@ -436,11 +654,88 @@ impl Command {
                     }),
                 })
             }
+            Some((verb, rest)) if verb == "backtest" => {
+                let mut options = BacktestOptions {
+                    symbols: Vec::new(),
+                    source: DEFAULT_SOURCE.to_owned(),
+                    fast: DEFAULT_FAST,
+                    slow: DEFAULT_SLOW,
+                    spread: DEFAULT_SPREAD_PCT / 100.0,
+                    fill: FillPrice::NextOpen,
+                    sweep: false,
+                    trades: false,
+                };
+                let mut positional = Vec::new();
+                let mut args = rest.iter();
+                while let Some(arg) = args.next() {
+                    // Every value-taking flag reports the flag it belongs to
+                    // rather than "missing argument", so a truncated command
+                    // line says which part was truncated.
+                    let mut value = |flag: &str| -> Result<String> {
+                        args.next()
+                            .cloned()
+                            .ok_or_else(|| anyhow!("{flag} needs a value\n\n{USAGE}"))
+                    };
+                    match arg.as_str() {
+                        "--fast" => options.fast = parse_window(&value("--fast")?, "--fast")?,
+                        "--slow" => options.slow = parse_window(&value("--slow")?, "--slow")?,
+                        "--spread" => options.spread = parse_spread(&value("--spread")?)?,
+                        "--close-fill" => options.fill = FillPrice::SameClose,
+                        "--sweep" => options.sweep = true,
+                        "--trades" => options.trades = true,
+                        other if other.starts_with("--") => {
+                            bail!("unknown option {other:?}\n\n{USAGE}")
+                        }
+                        other => positional.push(other.to_owned()),
+                    }
+                }
+                let Some(symbols) = positional.first() else {
+                    bail!("backtest needs at least one symbol\n\n{USAGE}");
+                };
+                options.symbols = parse_symbols(symbols);
+                if let Some(source) = positional.get(1) {
+                    options.source.clone_from(source);
+                }
+                Ok(Self::Backtest(options))
+            }
             // A bare symbol list used to mean "price these". Rejecting it is
             // better than guessing, now that a verb could also be a ticker.
             Some((other, _)) => bail!("unknown command {other:?}\n\n{USAGE}"),
         }
     }
+}
+
+/// A moving-average window, which is a count of sessions.
+fn parse_window(text: &str, flag: &str) -> Result<usize> {
+    let window: usize = text
+        .parse()
+        .with_context(|| format!("{flag} takes a whole number of sessions, not {text:?}"))?;
+    if window == 0 {
+        bail!("{flag} must span at least one session");
+    }
+    Ok(window)
+}
+
+/// A spread quoted as a percentage of mid, stored as a fraction.
+///
+/// Rejecting negatives and anything above a whole percent: a spread wider than
+/// 1% of mid is not an instrument this harness should be pretending to trade,
+/// and a typo like `--spread 20` meaning twenty basis points would otherwise
+/// silently charge twenty percent and produce a plausible-looking disaster.
+fn parse_spread(text: &str) -> Result<f64> {
+    let percent: f64 = text
+        .parse()
+        .with_context(|| format!("--spread takes a percentage, not {text:?}"))?;
+    if !percent.is_finite() || percent < 0.0 {
+        bail!("--spread must be a percentage of mid that is zero or more, got {percent}");
+    }
+    if percent > 1.0 {
+        bail!(
+            "--spread is a percentage of mid, and {percent}% is wider than any instrument \
+             worth backtesting; 0.02 means two basis points"
+        );
+    }
+    Ok(percent / 100.0)
 }
 
 fn parse_date(text: &str) -> Result<NaiveDate> {
@@ -734,6 +1029,94 @@ mod tests {
         assert_eq!(parse_symbols("AAPL,aapl,AaPl"), ["AAPL"]);
         // The first spelling is the one echoed back.
         assert_eq!(parse_symbols("aapl,AAPL"), ["aapl"]);
+    }
+
+    fn parse(args: &[&str]) -> Result<Command> {
+        Command::parse(args.iter().map(|a| (*a).to_owned()).collect())
+    }
+
+    fn backtest_options(args: &[&str]) -> BacktestOptions {
+        match parse(args).unwrap() {
+            Command::Backtest(options) => options,
+            other => panic!("expected a backtest, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn backtest_defaults_to_the_pessimistic_fill_and_a_stated_spread() {
+        let options = backtest_options(&["backtest", "AAPL"]);
+        assert_eq!(options.symbols, ["AAPL"]);
+        assert_eq!(options.source, "tiingo");
+        assert_eq!((options.fast, options.slow), (20, 100));
+        // Filling at the next open cannot capture the gap after a signal,
+        // which is the assumption to make by default rather than opt into.
+        assert_eq!(options.fill, FillPrice::NextOpen);
+        assert!(!options.sweep && !options.trades);
+        assert!((options.spread - 0.0002).abs() < 1e-12, "0.02% of mid");
+    }
+
+    #[test]
+    fn backtest_reads_every_option() {
+        let options = backtest_options(&[
+            "backtest",
+            "AAPL,MSFT",
+            "tiingo",
+            "--fast",
+            "5",
+            "--slow",
+            "50",
+            "--spread",
+            "0.116",
+            "--close-fill",
+            "--sweep",
+            "--trades",
+        ]);
+        assert_eq!(options.symbols, ["AAPL", "MSFT"]);
+        assert_eq!((options.fast, options.slow), (5, 50));
+        assert_eq!(options.fill, FillPrice::SameClose);
+        assert!(options.sweep && options.trades);
+        assert!((options.spread - 0.00116).abs() < 1e-12, "MBLY's spread");
+    }
+
+    #[test]
+    fn a_flag_missing_its_value_names_the_flag() {
+        let error = parse(&["backtest", "AAPL", "--slow"])
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("--slow needs a value"), "{error}");
+    }
+
+    #[test]
+    fn a_spread_that_is_probably_basis_points_is_refused() {
+        // `--spread 20` meaning twenty basis points would otherwise charge
+        // twenty percent and produce a plausible-looking disaster.
+        let error = parse(&["backtest", "AAPL", "--spread", "20"])
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("percentage of mid"), "{error}");
+
+        assert!(parse(&["backtest", "AAPL", "--spread", "-1"]).is_err());
+        assert!(parse(&["backtest", "AAPL", "--spread", "wide"]).is_err());
+        // Zero is a real choice, and one the report calls out as frictionless.
+        assert!(parse(&["backtest", "AAPL", "--spread", "0"]).is_ok());
+    }
+
+    #[test]
+    fn a_zero_length_window_is_refused_before_the_engine_sees_it() {
+        let error = parse(&["backtest", "AAPL", "--fast", "0"])
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("at least one session"), "{error}");
+        assert!(parse(&["backtest", "AAPL", "--fast", "2.5"]).is_err());
+    }
+
+    #[test]
+    fn backtest_needs_a_symbol_and_rejects_unknown_options() {
+        assert!(parse(&["backtest"]).is_err());
+        let error = parse(&["backtest", "AAPL", "--turbo"])
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("--turbo"), "{error}");
     }
 
     #[test]
