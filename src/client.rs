@@ -3,7 +3,8 @@ use std::{net::IpAddr, time::Duration};
 use reqwest::{StatusCode, Url, header};
 use serde::de::DeserializeOwned;
 
-use crate::error::{ApiError, ApiErrorKind, ClientError, ExceptionDetail};
+use crate::error::{ApiError, ApiErrorKind, ClientError, ExceptionDetail, Method};
+use crate::orders::{AcceptedOrder, MarketBuy, OrderHandle};
 use crate::types::{
     // The exception envelope is a nested type generated from an inline object,
     // not a component schema, so it has no tag facade to be re-exported from.
@@ -11,7 +12,7 @@ use crate::types::{
     tags::{
         identity::MeResponse,
         market_data::{InstrumentSearchResponse, LiveRatesResponse},
-        trading_real::PortfolioResponse,
+        trading_real::{GetOrderInfoResponse, PortfolioResponse, UnifiedOrderResponse},
         watchlists::WatchlistsResponse,
     },
 };
@@ -247,6 +248,83 @@ impl EtoroClient {
         Ok(response)
     }
 
+    /// Submits a market order to open a long position.
+    ///
+    /// **Acceptance is not execution.** A success here means eToro has the
+    /// order, and nothing about whether it filled, at what price, or at all.
+    /// The outcome comes from [`Self::lookup_order`], and the returned
+    /// [`AcceptedOrder`] carries the handle for asking.
+    ///
+    /// `request_id` is the idempotency key and belongs to the caller. Reuse it
+    /// verbatim when retrying a failed submission; mint a fresh one only for a
+    /// genuinely new order. Getting that backwards is how one intended trade
+    /// becomes two.
+    ///
+    /// Draws on the 20 requests / 60 s execution pool, shared with nine other
+    /// endpoints -- a far tighter budget than the read paths.
+    pub async fn place_order(
+        &self,
+        order: &MarketBuy,
+        request_id: uuid::Uuid,
+    ) -> Result<AcceptedOrder, ApiError> {
+        let path = self.path(
+            "api/v2/trading/execution/demo/orders",
+            "api/v2/trading/execution/orders",
+        );
+        let (response, ctx): (UnifiedOrderResponse, _) =
+            self.post_json(path, order, request_id).await?;
+
+        // If the API echoes a reference that is not the one we sent, our
+        // recovery handle is wrong -- and an order we cannot reliably look up
+        // is worse than one that failed outright. Report it loudly, and say
+        // plainly that the order may exist, because it may.
+        if let Some(echoed) = response.reference_id
+            && echoed != request_id
+        {
+            return Err(ctx.malformed(format!(
+                "order may have been placed: sent x-request-id {request_id} but the response \
+                 echoed referenceId {echoed}; look up both before retrying"
+            )));
+        }
+
+        Ok(AcceptedOrder {
+            order_id: response.order_id,
+            // Ours, not the API's: we chose it before sending, so it exists
+            // even when the response omitted every field.
+            reference_id: request_id,
+            // Rendered to a string so this type does not inherit the
+            // generated field's shape, which the spec calls a plain string and
+            // typify happens to narrow to a UUID.
+            token: response.token.map(|token| token.to_string()),
+        })
+    }
+
+    /// Asks what became of an order.
+    ///
+    /// The other half of asynchronous submission. Read the status with
+    /// [`status_of`](crate::orders::status_of) and poll until
+    /// [`OrderStatus::is_terminal`](crate::orders::OrderStatus::is_terminal).
+    ///
+    /// Draws on a 60 / 60 s pool shared with two other lookup endpoints.
+    pub async fn lookup_order(
+        &self,
+        handle: OrderHandle,
+    ) -> Result<GetOrderInfoResponse, ApiError> {
+        let path = self.path(
+            "api/v2/trading/info/demo/orders:lookup",
+            "api/v2/trading/info/orders:lookup",
+        );
+        // The API documents the two as mutually exclusive, and `OrderHandle`
+        // is what makes sending both impossible.
+        let (name, value) = match handle {
+            OrderHandle::OrderId(id) => ("orderId", id.to_string()),
+            OrderHandle::ReferenceId(reference) => ("referenceId", reference.to_string()),
+        };
+        let (response, _ctx): (GetOrderInfoResponse, _) =
+            self.get_json(path, &[(name, value.as_str())]).await?;
+        Ok(response)
+    }
+
     /// The authenticated user's profile.
     ///
     /// No envelope validation: upstream marks `gcid`, `realCid`, `demoCid`,
@@ -315,6 +393,7 @@ impl EtoroClient {
         }
         if instrument_ids.len() > MAX_RATE_INSTRUMENTS {
             return Err(self.not_sent(
+                Method::Get,
                 PATH,
                 format!(
                     "instrumentIds accepts at most {MAX_RATE_INSTRUMENTS} IDs, got {}",
@@ -407,12 +486,14 @@ impl EtoroClient {
     /// from every route rather than only from [`Self::get_json`].
     fn context(
         &self,
+        method: Method,
         path: &str,
         query: &[(&str, &str)],
+        request_id: uuid::Uuid,
     ) -> Result<(Url, RequestContext), ApiError> {
-        let request_id = uuid::Uuid::new_v4().to_string();
         let mut url = self.base_url.join(path).map_err(|_| ApiError {
-            request_id: request_id.clone(),
+            request_id,
+            method,
             url: self.base_url.to_string(),
             kind: ApiErrorKind::InvalidPath {
                 path: path.to_owned(),
@@ -425,6 +506,7 @@ impl EtoroClient {
         }
         let ctx = RequestContext {
             request_id,
+            method,
             url: url.to_string(),
         };
         Ok((url, ctx))
@@ -436,8 +518,8 @@ impl EtoroClient {
     /// error carries the same shape as one that did reach the API. The `kind`
     /// says "request not sent" precisely because the surrounding `Display`
     /// would otherwise read as though it had.
-    fn not_sent(&self, path: &str, detail: impl Into<String>) -> ApiError {
-        match self.context(path, &[]) {
+    fn not_sent(&self, method: Method, path: &str, detail: impl Into<String>) -> ApiError {
+        match self.context(method, path, &[], uuid::Uuid::new_v4()) {
             Ok((_, ctx)) => ctx.error(ApiErrorKind::InvalidRequest {
                 detail: detail.into(),
             }),
@@ -451,12 +533,47 @@ impl EtoroClient {
         path: &str,
         query: &[(&str, &str)],
     ) -> Result<(T, RequestContext), ApiError> {
-        let (url, ctx) = self.context(path, query)?;
-
-        let response = self
+        let (url, ctx) = self.context(Method::Get, path, query, uuid::Uuid::new_v4())?;
+        let request = self
             .http
-            .get(url.clone())
-            .header("x-request-id", &ctx.request_id)
+            .get(url)
+            .header("x-request-id", ctx.request_id.to_string());
+        self.finish(request, ctx).await
+    }
+
+    /// Sends a write, with the caller supplying the idempotency key.
+    ///
+    /// `request_id` is an argument rather than generated here, and that is the
+    /// whole difference between this and [`Self::get_json`]. eToro documents
+    /// `x-request-id` as the idempotency key and echoes it back as
+    /// `referenceId`, so a **retry of a failed write must reuse its original
+    /// id** -- minting a fresh one turns "did that order go through?" into a
+    /// second order. Generating it here would make that impossible to get
+    /// right, because the retry would be a different call.
+    async fn post_json<B: serde::Serialize, T: DeserializeOwned>(
+        &self,
+        path: &str,
+        body: &B,
+        request_id: uuid::Uuid,
+    ) -> Result<(T, RequestContext), ApiError> {
+        let (url, ctx) = self.context(Method::Post, path, &[], request_id)?;
+        let request = self
+            .http
+            .post(url)
+            .header("x-request-id", ctx.request_id.to_string())
+            .json(body);
+        self.finish(request, ctx).await
+    }
+
+    /// Sends a prepared request and decodes the result, so status handling,
+    /// rate-limit parsing and decode errors live in one place rather than one
+    /// per verb.
+    async fn finish<T: DeserializeOwned>(
+        &self,
+        request: reqwest::RequestBuilder,
+        ctx: RequestContext,
+    ) -> Result<(T, RequestContext), ApiError> {
+        let response = request
             .send()
             .await
             .map_err(|source| ctx.error(ApiErrorKind::Transport(source)))?;
@@ -498,14 +615,16 @@ impl EtoroClient {
 /// Per-request context, so endpoint methods can raise envelope errors carrying
 /// the same request ID and URL that `get_json` would have used.
 struct RequestContext {
-    request_id: String,
+    request_id: uuid::Uuid,
+    method: Method,
     url: String,
 }
 
 impl RequestContext {
     fn error(&self, kind: ApiErrorKind) -> ApiError {
         ApiError {
-            request_id: self.request_id.clone(),
+            request_id: self.request_id,
+            method: self.method,
             url: self.url.clone(),
             kind,
         }

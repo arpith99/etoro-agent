@@ -323,8 +323,34 @@ with lead time. **Still outstanding, and it blocks the rest of this milestone.**
   was declared and what the token carries. Neutral scopes answer "no
   environment" rather than being guessed at, so a key with read-only feed
   access cannot pass the check by accident.
-- Order submission plus the asynchronous status state machine above, using
-  `referenceId` as the recovery handle when a response is lost.
+- ~~Order submission plus the asynchronous status state machine above, using
+  `referenceId` as the recovery handle when a response is lost.~~
+  **Done 2026-08-30** for opening: `src/orders.rs` and
+  `EtoroClient::{place_order, lookup_order}`.
+
+  Three things this settled. **`x-request-id` is a caller argument on writes**,
+  not generated inside the client — a retry must reuse its original id, and
+  that is impossible to express if the client mints its own. **Both identifiers
+  on an accepted order are optional** in the schema, so `AcceptedOrder` carries
+  the reference *we* chose and is guaranteed to have a handle even when the
+  response body is empty; the contract tests cover the empty-`{}` case
+  explicitly. And **`OrderStatus` is deliberately open** where every other enum
+  in the crate is closed: by the time a status is being read the write has
+  happened, so refusing to decode an unrecognised id would make a live order
+  invisible.
+
+  `MarketBuy` is far narrower than the API — one order shape, market, long,
+  sized in cash — because the unified schema has fifteen optional fields under
+  a dozen mutual-exclusion rules and the generated type makes every invalid
+  combination expressible.
+
+  **Still to do: closing.** The order endpoint cannot do it — `sell` and
+  `buyToCover` are rejected today — so a long-only strategy needs
+  `POST /api/v1/trading/execution/market-close-orders/positions/{positionId}`
+  as a second path. Details in [`api-observations.md`](api-observations.md).
+- No CLI command places orders yet, deliberately: approval mode and the hard
+  limits are milestone 6, and a way to fire an order from a shell prompt should
+  not exist before them.
 - The retry policy lands here, now that the idempotency rule is known.
 
 Then run it on demo, unattended, for a meaningful period — and compare actual

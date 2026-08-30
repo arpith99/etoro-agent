@@ -1,5 +1,7 @@
 use etoro_agent::client::{Environment, EtoroClient};
 use etoro_agent::error::ApiErrorKind;
+use etoro_agent::orders::{MarketBuy, OrderHandle, OrderStatus, status_of};
+use etoro_agent::types::manual::Numeric;
 use reqwest::StatusCode;
 use std::time::Duration;
 
@@ -509,5 +511,147 @@ async fn a_key_scoped_to_the_declared_environment_is_accepted() {
 
     let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
     assert!(request.starts_with("GET /api/v1/me HTTP/1.1\r\n"));
+    mock.server.join().unwrap();
+}
+
+const ACCEPTED_ORDER_FIXTURE: &str = r#"{
+  "token": "3ffb2f1e-1d47-41f9-9ffa-764153e340bb",
+  "orderId": 987654321,
+  "referenceId": "1d1f1976-5eb1-4fd4-aa5d-fef856f04dba"
+}"#;
+
+const FILLED_ORDER_FIXTURE: &str = r#"{
+  "orderId": 987654321,
+  "action": "open",
+  "transaction": "buy",
+  "type": "mkt",
+  "status": { "id": 3, "name": "Filled", "errorCode": 0 },
+  "orderCurrency": "usd",
+  "requestedAmount": 100.50,
+  "requestType": "byAmount"
+}"#;
+
+/// The id the fixtures echo, so a submission can be made to match it.
+fn fixture_reference() -> uuid::Uuid {
+    "1d1f1976-5eb1-4fd4-aa5d-fef856f04dba".parse().unwrap()
+}
+
+#[tokio::test]
+async fn an_order_is_posted_to_the_environments_path_with_the_callers_request_id() {
+    let mock = serve_once("200 OK", ACCEPTED_ORDER_FIXTURE);
+    let client = client_for(&mock.base_url);
+    let order = MarketBuy::new(1001, Numeric("100.50".parse().unwrap())).unwrap();
+
+    let accepted = client
+        .place_order(&order, fixture_reference())
+        .await
+        .unwrap();
+    assert_eq!(accepted.order_id, Some(987654321));
+    assert_eq!(accepted.reference_id, fixture_reference());
+    assert_eq!(accepted.handle(), OrderHandle::OrderId(987654321));
+
+    let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert!(
+        request.starts_with("POST /api/v2/trading/execution/demo/orders HTTP/1.1\r\n"),
+        "{request}"
+    );
+    assert_auth_and_request_id(&request);
+    // The idempotency key is the caller's, not a fresh one: a retry has to be
+    // able to reuse it, and that is impossible if the client mints its own.
+    assert!(
+        request
+            .to_ascii_lowercase()
+            .contains("x-request-id: 1d1f1976-5eb1-4fd4-aa5d-fef856f04dba"),
+        "{request}"
+    );
+    // And the amount keeps its scale all the way onto the wire.
+    assert!(request.contains(r#""amount":100.50"#), "{request}");
+    assert!(request.contains(r#""action":"open""#), "{request}");
+    assert!(request.contains(r#""orderType":"mkt""#), "{request}");
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn an_accepted_order_is_still_findable_when_the_response_is_empty() {
+    // The dangerous case: eToro took the order and told us almost nothing. The
+    // reference we generated is what keeps it findable.
+    let mock = serve_once("202 Accepted", "{}");
+    let client = client_for(&mock.base_url);
+    let order = MarketBuy::new(1001, Numeric("100".parse().unwrap())).unwrap();
+
+    let accepted = client
+        .place_order(&order, fixture_reference())
+        .await
+        .unwrap();
+    assert_eq!(accepted.order_id, None);
+    assert_eq!(
+        accepted.handle(),
+        OrderHandle::ReferenceId(fixture_reference())
+    );
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn an_echoed_reference_that_is_not_ours_is_reported_as_possibly_placed() {
+    let mock = serve_once("200 OK", ACCEPTED_ORDER_FIXTURE);
+    let client = client_for(&mock.base_url);
+    let order = MarketBuy::new(1001, Numeric("100".parse().unwrap())).unwrap();
+
+    // Submit under a different id than the fixture echoes.
+    let sent = uuid::Uuid::nil();
+    let error = client.place_order(&order, sent).await.unwrap_err();
+
+    // The message must not read as a clean failure: the order may exist.
+    assert!(
+        error.to_string().contains("may have been placed"),
+        "{error}"
+    );
+    assert!(error.to_string().contains("POST "), "{error}");
+    assert!(!error.is_retryable());
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn an_order_can_be_looked_up_by_either_handle() {
+    for (handle, expected_query) in [
+        (OrderHandle::OrderId(987654321), "orderId=987654321"),
+        (
+            OrderHandle::ReferenceId(fixture_reference()),
+            "referenceId=1d1f1976-5eb1-4fd4-aa5d-fef856f04dba",
+        ),
+    ] {
+        let mock = serve_once("200 OK", FILLED_ORDER_FIXTURE);
+        let client = client_for(&mock.base_url);
+
+        let info = client.lookup_order(handle).await.unwrap();
+        assert_eq!(status_of(&info), Some(OrderStatus::Filled));
+        assert!(status_of(&info).unwrap().is_terminal());
+        // Decimal scale survives the response too.
+        assert_eq!(info.requested_amount.unwrap().to_string(), "100.50");
+
+        let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+        // The colon in `orders:lookup` must survive URL joining rather than
+        // being read as a scheme separator.
+        assert!(
+            request.starts_with(&format!(
+                "GET /api/v2/trading/info/demo/orders:lookup?{expected_query} HTTP/1.1\r\n"
+            )),
+            "{request}"
+        );
+        // Exactly one identifier: the API rejects both together.
+        assert!(!request.contains("orderId=") || !request.contains("referenceId="));
+        mock.server.join().unwrap();
+    }
+}
+
+#[tokio::test]
+async fn a_status_the_crate_does_not_know_still_decodes() {
+    // An unknown status must never make a live order unreadable.
+    let mock = serve_once("200 OK", r#"{"orderId": 1, "status": {"id": 99}}"#);
+    let client = client_for(&mock.base_url);
+
+    let info = client.lookup_order(OrderHandle::OrderId(1)).await.unwrap();
+    assert_eq!(status_of(&info), Some(OrderStatus::Unknown(99)));
+    assert!(!status_of(&info).unwrap().is_terminal());
     mock.server.join().unwrap();
 }

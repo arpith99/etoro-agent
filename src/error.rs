@@ -99,10 +99,38 @@ impl std::fmt::Display for ExceptionDetail {
 /// into their variants' `Display` rather than left to `source()`: without a
 /// chain to walk, `serde`'s "missing field `gcid`" -- the only actionable part
 /// of a decode failure -- would otherwise never reach the reader.
+/// The HTTP method a failed request used.
+///
+/// An enum rather than a `&'static str` for two reasons: only these are ever
+/// sent, and a fat pointer would push [`ApiError`] past the size at which
+/// returning it by value starts costing more than it is worth.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Method {
+    Get,
+    Post,
+}
+
+impl std::fmt::Display for Method {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Get => "GET",
+            Self::Post => "POST",
+        })
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
-#[error("{kind} (GET {url}, request ID {request_id})")]
+#[error("{kind} ({method} {url}, request ID {request_id})")]
 pub struct ApiError {
-    pub request_id: String,
+    /// The `x-request-id` sent with the request. A `Uuid` rather than a
+    /// `String` because it always is one, and because it is the handle a write
+    /// is recovered by -- a type that can hold anything else would be inviting
+    /// something else.
+    pub request_id: uuid::Uuid,
+    /// So a failed write is never reported as a failed read. This matters more
+    /// than it looks: "did that order go out?" is the first question after a
+    /// write fails, and a message saying `GET` answers it wrongly.
+    pub method: Method,
     pub url: String,
     pub kind: ApiErrorKind,
 }

@@ -441,6 +441,30 @@ fn environment() -> Result<Environment> {
     raw.parse().map_err(Into::into)
 }
 
+/// The user key for `environment`, read from a variable named after it.
+///
+/// One `ETORO_API_KEY` identifies the application and does not change; the
+/// *user* key is what eToro scopes to a single environment, so there is one per
+/// environment rather than one that gets edited in place.
+///
+/// Deliberately no fallback to a generic `ETORO_USER_KEY`. A fallback is
+/// exactly the hazard this exists to remove: it would let a real key be used
+/// against demo paths, and the failure would arrive as an unexplained 403
+/// instead of a sentence naming the variable to set.
+fn user_key(environment: Environment) -> Result<String> {
+    let name = match environment {
+        Environment::Demo => "ETORO_DEMO_USER_KEY",
+        Environment::Real => "ETORO_REAL_USER_KEY",
+    };
+    std::env::var(name).map_err(|_| {
+        anyhow!(
+            "{name} is not set, and ETORO_ENVIRONMENT={environment} needs it. \
+             eToro issues one user key per environment, so keep both in .env: \
+             ETORO_DEMO_USER_KEY and ETORO_REAL_USER_KEY."
+        )
+    })
+}
+
 /// Where series are written. Market data, not account data, so it carries no
 /// special permissions -- but it is gitignored, being derived and large.
 fn store_root() -> PathBuf {
@@ -451,11 +475,10 @@ fn store_root() -> PathBuf {
 
 async fn account_summary(symbols: Vec<String>) -> Result<()> {
     let api_key = std::env::var("ETORO_API_KEY")?;
-    let user_key = std::env::var("ETORO_USER_KEY")?;
     let dump_responses = env_flag("ETORO_DUMP_RESPONSES");
 
     let environment = environment()?;
-    let client = EtoroClient::new(&api_key, &user_key, environment)?;
+    let client = EtoroClient::new(&api_key, &user_key(environment)?, environment)?;
 
     // Before anything else, and before the first write path ever exists: keys
     // are scoped to one environment, and a mismatch is far cheaper to learn

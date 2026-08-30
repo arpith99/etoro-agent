@@ -149,6 +149,37 @@ Modelling advice that still holds:
   environments are named. Any rule that derives one path from the other needs
   exceptions, and getting one wrong sends a real order — so `EtoroClient::path`
   takes **both** spellings written out at the call site.
+- **You cannot close a position through the order endpoint.** `transaction`
+  accepts four values but the spec says *"currently only `buy` and `sellShort`
+  are supported; `sell` and `buyToCover` are rejected"*, and `action` says
+  *"currently only `open` is supported in this endpoint"*. Closing goes through
+  `POST /api/v1/trading/execution/{demo/}market-close-orders/positions/{positionId}`,
+  whose body is `{"InstrumentID": <int>, "UnitsToDeduct": <number|null>}` —
+  note the **PascalCase** keys, unlike everything else — with a null or absent
+  `UnitsToDeduct` meaning close the whole position. So a long-only strategy
+  needs two different endpoints for its two directions.
+- **Prefer v2 for order creation.** v2 and v3 share the same request and
+  response schemas, but `settlementType` is optional on v2 and on v3 *"must NOT
+  be set for MIT orders … and for all other order types it must be set to an
+  eligible settlement type"*. Worse, a wrong value is *"rejected during
+  execution **after the order has already been accepted with an order id**"* —
+  a failure that arrives asynchronously, past the point where the submission
+  looked successful. Eligible values come from
+  `POST /api/v2/trading/info/eligibility` → `leverageConfigs[].settlementType`
+  and change rarely, so they can be fetched once and cached.
+- ⚠️ **Status id 5 (PartiallyFilled) is of unknown finality.** The docs list it
+  without saying whether the remainder is still working or was killed. Treated
+  as non-terminal here: polling a finished order once more costs one request
+  against a 60/60s pool, while stopping early on a live one loses sight of the
+  rest of a fill. Worth settling on demo.
+- `UnifiedOrderResponse` and `GetOrderInfoResponse` declare **no required
+  fields at all** — `orderId` and `referenceId` are both optional on an
+  accepted order. The `x-request-id` you generated is therefore the only
+  identifier guaranteed to exist, which is what makes it the recovery handle
+  rather than merely an idempotency key.
+- `orders:lookup` takes `orderId` **or** `referenceId`, documented as mutually
+  exclusive. The literal colon in the path survives `Url::join` — it is not
+  read as a scheme separator, since the preceding segment contains `/`.
 - Order execution exists at **v2 and v3** (`/api/v2/trading/execution/orders`
   and `/api/v3/trading/execution/orders`), each with its own demo twin and
   delete route. Which to prefer is unresolved; v2 is what the roadmap's status

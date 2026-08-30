@@ -68,6 +68,28 @@ pub fn serve_once_with_headers(
             }
             bytes.extend_from_slice(&buffer[..read]);
         }
+        // Headers end at the blank line, but a POST body follows it. Read
+        // exactly `content-length` more bytes so write contract tests can
+        // assert on what was actually sent, not merely that something was.
+        let head = String::from_utf8_lossy(&bytes).to_string();
+        let body_start = head.find("\r\n\r\n").map_or(bytes.len(), |at| at + 4);
+        let content_length: usize = head
+            .lines()
+            .find_map(|line| {
+                let (name, value) = line.split_once(':')?;
+                name.trim()
+                    .eq_ignore_ascii_case("content-length")
+                    .then(|| value.trim().parse().ok())?
+            })
+            .unwrap_or(0);
+        while bytes.len() < body_start + content_length {
+            let read = stream.read(&mut buffer).unwrap();
+            if read == 0 {
+                break;
+            }
+            bytes.extend_from_slice(&buffer[..read]);
+        }
+
         request_sender
             .send(String::from_utf8(bytes).unwrap())
             .unwrap();

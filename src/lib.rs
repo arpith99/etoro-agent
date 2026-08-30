@@ -12,5 +12,6 @@ pub mod chart;
 pub mod client;
 pub mod data;
 pub mod error;
+pub mod orders;
 pub mod strategy;
 pub mod types;

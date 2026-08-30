@@ -12,11 +12,17 @@ orders or run a trading strategy.
 2. Copy your keys into `.env` (gitignored):
    ```sh
    ETORO_API_KEY=<from "Public Key" at the top of API Key Management>
-   ETORO_USER_KEY=<from the row of your generated key>
+   ETORO_DEMO_USER_KEY=<the generated key for a Demo environment key>
+   ETORO_REAL_USER_KEY=<the generated key for a Real environment key>
    ETORO_ENVIRONMENT=demo
    ```
 3. `chmod 600 .env`
 4. `cargo run`
+
+One key per environment, named after it, so that flipping `ETORO_ENVIRONMENT`
+switches the credential and the URLs together. There is no generic
+`ETORO_USER_KEY` fallback on purpose: it would allow a real key to be pointed
+at demo paths, which fails as an unexplained 403 rather than as a sentence.
 
 `ETORO_ENVIRONMENT` must match the environment the key was issued for. eToro
 scopes each key to one — *"Each key can only be used for one environment. If
@@ -95,7 +101,8 @@ so re-fetching an overlapping range updates rather than duplicates.
 | Variable | Required | Purpose |
 |---|---|---|
 | `ETORO_API_KEY` | for eToro commands | Public API key sent as `x-api-key` |
-| `ETORO_USER_KEY` | for eToro commands | User key sent as `x-user-key` |
+| `ETORO_DEMO_USER_KEY` | when `ETORO_ENVIRONMENT=demo` | User key sent as `x-user-key` |
+| `ETORO_REAL_USER_KEY` | when `ETORO_ENVIRONMENT=real` | User key sent as `x-user-key` |
 | `ETORO_ENVIRONMENT` | for eToro commands | `demo` or `real`. No default — it selects the account, and neither value is safe to assume |
 | `TIINGO_API_KEY` | for `fetch-bars` | Tiingo token, sent as an `Authorization` header |
 | `ETORO_DUMP_RESPONSES` | no | Set to `1`, `true`, or `yes` to write full responses |
