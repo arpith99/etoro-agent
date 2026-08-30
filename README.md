@@ -13,9 +13,18 @@ orders or run a trading strategy.
    ```sh
    ETORO_API_KEY=<from "Public Key" at the top of API Key Management>
    ETORO_USER_KEY=<from the row of your generated key>
+   ETORO_ENVIRONMENT=demo
    ```
 3. `chmod 600 .env`
 4. `cargo run`
+
+`ETORO_ENVIRONMENT` must match the environment the key was issued for. eToro
+scopes each key to one — *"Each key can only be used for one environment. If
+you need to use both, please create two keys."* — and it also serves the two
+accounts on different paths, so the setting selects URLs rather than merely
+labelling them. A mismatch is caught at startup by `verify_environment`, which
+compares the declared environment against the scopes the token actually
+carries.
 
 Use Demo + Read credentials while developing. By default the program prints
 only response summaries.
@@ -87,6 +96,7 @@ so re-fetching an overlapping range updates rather than duplicates.
 |---|---|---|
 | `ETORO_API_KEY` | for eToro commands | Public API key sent as `x-api-key` |
 | `ETORO_USER_KEY` | for eToro commands | User key sent as `x-user-key` |
+| `ETORO_ENVIRONMENT` | for eToro commands | `demo` or `real`. No default — it selects the account, and neither value is safe to assume |
 | `TIINGO_API_KEY` | for `fetch-bars` | Tiingo token, sent as an `Authorization` header |
 | `ETORO_DUMP_RESPONSES` | no | Set to `1`, `true`, or `yes` to write full responses |
 | `ETORO_AGENT_STORE` | no | Bar store root; defaults to `market-data/` |
@@ -101,13 +111,17 @@ The package exposes `EtoroClient` and all generated wire types as a library:
 
 ```rust,no_run
 use anyhow::Result;
-use etoro_agent::client::EtoroClient;
+use etoro_agent::client::{Environment, EtoroClient};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client = EtoroClient::new("api-key", "user-key")?;
-    let portfolio = client.portfolio().await?;
+    let client = EtoroClient::new("api-key", "user-key", Environment::Demo)?;
 
+    // Optional but cheap: keys are scoped to one environment, and this turns a
+    // mismatch into a startup error rather than a 403 on the first write.
+    client.verify_environment().await?;
+
+    let portfolio = client.portfolio().await?;
     if let Some(portfolio) = portfolio.client_portfolio {
         println!("open positions: {}", portfolio.positions.len());
     }
@@ -115,6 +129,12 @@ async fn main() -> Result<()> {
     Ok(())
 }
 ```
+
+`Environment` is a required argument, and it selects the **URL** rather than
+merely labelling the call: `Demo` reads `/api/v1/trading/info/demo/portfolio`
+and `Real` reads `/api/v1/trading/info/portfolio`. eToro separates the two
+accounts by path as well as by key, so a client built for `Demo` has no way to
+reach a real-money endpoint.
 
 Endpoint methods return [`ApiError`](src/error.rs), which callers can match on
 rather than parse:

@@ -134,6 +134,25 @@ Modelling advice that still holds:
 
 ## Trading
 
+- **Demo and Real are different URLs, not just different keys.** Verified
+  against `docs/spec/operations.json` on 2026-08-30. `POST
+  /api/v2/trading/execution/orders` spends real money; `POST
+  /api/v2/trading/execution/demo/orders` does not. The same split runs through
+  portfolio, costs, eligibility, `orders:lookup`, copy trading and position
+  updates.
+- ⚠️ **The `demo` segment is not inserted at a consistent position, and `real`
+  is sometimes explicit.** Examples: `/trading/info/demo/portfolio` (after
+  `info`), `/trading/execution/demo/orders` (after `execution`),
+  `/trading/demo/positions/{id}` (after `trading`),
+  `/trading/info/trade/demo/history` (after `trade`), and
+  `/trading/info/demo/pnl` paired with `/trading/info/**real**/pnl`, where both
+  environments are named. Any rule that derives one path from the other needs
+  exceptions, and getting one wrong sends a real order — so `EtoroClient::path`
+  takes **both** spellings written out at the call site.
+- Order execution exists at **v2 and v3** (`/api/v2/trading/execution/orders`
+  and `/api/v3/trading/execution/orders`), each with its own demo twin and
+  delete route. Which to prefer is unresolved; v2 is what the roadmap's status
+  state machine was read against.
 - Two parallel naming conventions coexist: the user-facing camelCase set
   (`createOrderRequest`, `getOrderResponse`) and .NET-namespaced internal DTOs
   (`eToro.Trading.DistributedServices.WebApi.API.DTO.Requests.*`). API users

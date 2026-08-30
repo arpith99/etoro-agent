@@ -1,4 +1,4 @@
-use etoro_agent::client::EtoroClient;
+use etoro_agent::client::{Environment, EtoroClient};
 use etoro_agent::error::ApiErrorKind;
 use reqwest::StatusCode;
 use std::time::Duration;
@@ -13,6 +13,18 @@ const RATES_FIXTURE: &str = include_str!("fixtures/rates.json");
 const SEARCH_FIXTURE: &str = include_str!("fixtures/search.json");
 const SEARCH_PSEUDO_FIXTURE: &str = include_str!("fixtures/search_pseudo_instrument.json");
 
+/// A client for the mock server. Demo throughout, so a test that reaches a
+/// real-money path fails on the URL assertion rather than passing quietly.
+fn client_for(base_url: &str) -> EtoroClient {
+    EtoroClient::with_base_url(
+        "fixture-api-key",
+        "fixture-user-key",
+        base_url,
+        Environment::Demo,
+    )
+    .unwrap()
+}
+
 fn assert_auth_and_request_id(request: &str) {
     let request = request.to_ascii_lowercase();
     assert!(request.contains("x-api-key: fixture-api-key\r\n"));
@@ -23,8 +35,7 @@ fn assert_auth_and_request_id(request: &str) {
 #[tokio::test]
 async fn watchlists_contract_uses_expected_path_and_headers() {
     let mock = serve_once("200 OK", WATCHLISTS_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let response = client.watchlists().await.unwrap();
     assert_eq!(response.watchlists.len(), 1);
@@ -39,8 +50,7 @@ async fn watchlists_contract_uses_expected_path_and_headers() {
 #[tokio::test]
 async fn portfolio_contract_preserves_decimal_precision() {
     let mock = serve_once("200 OK", PORTFOLIO_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let response = client.portfolio().await.unwrap();
     let portfolio = response.client_portfolio.unwrap();
@@ -54,7 +64,9 @@ async fn portfolio_contract_preserves_decimal_precision() {
     );
 
     let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
-    assert!(request.starts_with("GET /api/v1/trading/info/portfolio HTTP/1.1\r\n"));
+    // The demo client, so the demo path. See
+    // `the_environment_decides_which_portfolio_is_read` for the pair.
+    assert!(request.starts_with("GET /api/v1/trading/info/demo/portfolio HTTP/1.1\r\n"));
     assert_auth_and_request_id(&request);
     mock.server.join().unwrap();
 }
@@ -62,8 +74,7 @@ async fn portfolio_contract_preserves_decimal_precision() {
 #[tokio::test]
 async fn me_contract_uses_expected_path_and_headers() {
     let mock = serve_once("200 OK", ME_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let response = client.me().await.unwrap();
 
@@ -74,7 +85,13 @@ async fn me_contract_uses_expected_path_and_headers() {
     assert_eq!(response.demo_cid, 222222);
     assert_eq!(response.real_cid, 333333);
     assert_eq!(response.username, "fixture-user");
-    assert_eq!(response.scopes.len(), 2);
+    assert_eq!(response.scopes.len(), 3);
+    // Demo-only, deliberately: the environment tests below rely on this
+    // fixture representing a key that cannot reach real money.
+    assert_eq!(
+        Environment::granted_by(&response.scopes),
+        [Environment::Demo]
+    );
 
     // The API sends an empty string, not null, for an absent middle name --
     // observed on a live response. `nullable: true` in the spec makes this an
@@ -100,8 +117,7 @@ async fn me_missing_required_field_is_rejected_with_the_field_name() {
         r#"{"realCid":333333,"demoCid":222222,"username":"fixture-user","playerLevel":1,
             "gender":0,"language":1,"dateOfBirth":"1970-01-01","scopes":[]}"#,
     );
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let error = format!("{:#}", client.me().await.unwrap_err());
     assert!(error.contains("could not decode response body"), "{error}");
@@ -115,8 +131,7 @@ async fn me_missing_required_field_is_rejected_with_the_field_name() {
 #[tokio::test]
 async fn rates_contract_comma_joins_instrument_ids() {
     let mock = serve_once("200 OK", RATES_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let response = client.rates(&[1001, 1002]).await.unwrap();
     assert_eq!(response.rates.len(), 2);
@@ -152,9 +167,13 @@ async fn rates_contract_comma_joins_instrument_ids() {
 async fn rates_without_instruments_makes_no_request() {
     // Port 1 on loopback has nothing listening, so any request at all fails.
     // Passing means the empty case short-circuited before the transport.
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", "http://127.0.0.1:1")
-            .unwrap();
+    let client = EtoroClient::with_base_url(
+        "fixture-api-key",
+        "fixture-user-key",
+        "http://127.0.0.1:1",
+        Environment::Demo,
+    )
+    .unwrap();
 
     let response = client.rates(&[]).await.unwrap();
     assert!(response.rates.is_empty());
@@ -162,9 +181,13 @@ async fn rates_without_instruments_makes_no_request() {
 
 #[tokio::test]
 async fn rates_refuses_more_instruments_than_the_api_accepts() {
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", "http://127.0.0.1:1")
-            .unwrap();
+    let client = EtoroClient::with_base_url(
+        "fixture-api-key",
+        "fixture-user-key",
+        "http://127.0.0.1:1",
+        Environment::Demo,
+    )
+    .unwrap();
 
     let ids: Vec<i64> = (1..=101).collect();
     let error = client.rates(&ids).await.unwrap_err();
@@ -183,8 +206,7 @@ async fn rates_refuses_more_instruments_than_the_api_accepts() {
 #[tokio::test]
 async fn resolve_symbol_returns_the_matching_instrument_id() {
     let mock = serve_once("200 OK", SEARCH_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     assert_eq!(client.resolve_symbol("AAPL").await.unwrap(), Some(1001));
 
@@ -203,8 +225,7 @@ async fn resolve_symbol_returns_the_matching_instrument_id() {
 #[tokio::test]
 async fn resolve_symbol_matches_case_insensitively() {
     let mock = serve_once("200 OK", SEARCH_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     assert_eq!(client.resolve_symbol("aapl").await.unwrap(), Some(1001));
     mock.server.join().unwrap();
@@ -216,8 +237,7 @@ async fn resolve_symbol_reports_no_match_when_the_server_ignored_the_filter() {
     // instruments, none of them the one that was asked for. Reporting the
     // first item would be the bug this check exists to prevent.
     let mock = serve_once("200 OK", SEARCH_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     assert_eq!(client.resolve_symbol("TSLA").await.unwrap(), None);
     mock.server.join().unwrap();
@@ -226,8 +246,7 @@ async fn resolve_symbol_reports_no_match_when_the_server_ignored_the_filter() {
 #[tokio::test]
 async fn resolve_symbol_never_resolves_the_negative_pseudo_instrument() {
     let mock = serve_once("200 OK", SEARCH_PSEUDO_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     // The symbol matches, but a negative ID is a system aggregate that no
     // order endpoint would accept.
@@ -241,8 +260,7 @@ async fn search_tolerates_the_duplicate_instrument_id_the_api_sends() {
     // endpoint does. serde's derived Deserialize rejects that outright, so
     // this pins the two-step decode that works around it.
     let mock = serve_once("200 OK", SEARCH_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let response = client
         .search(&[("internalSymbolFull", "AAPL")])
@@ -262,8 +280,7 @@ async fn search_passes_results_through_without_verifying_them() {
     // The division of responsibility: search() reports what came back, and
     // resolve_symbol() is where the paranoia lives.
     let mock = serve_once("200 OK", SEARCH_FIXTURE);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let response = client.search(&[("noSuchField", "nonsense")]).await.unwrap();
     assert_eq!(response.items.len(), 3);
@@ -274,8 +291,7 @@ async fn search_passes_results_through_without_verifying_them() {
 #[tokio::test]
 async fn http_errors_include_status_body_and_request_id() {
     let mock = serve_once("500 Internal Server Error", r#"{"message":"boom"}"#);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let error = client.watchlists().await.unwrap_err();
 
@@ -304,8 +320,7 @@ async fn rate_limiting_is_typed_and_carries_retry_after() {
         &[("retry-after", "30")],
         r#"{"message":"rate limited"}"#,
     );
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let error = client.watchlists().await.unwrap_err();
 
@@ -323,8 +338,7 @@ async fn forbidden_is_reported_as_a_scope_problem_and_is_not_retryable() {
     // eToro returns 403, not 401, when a key lacks the scope for an endpoint.
     // Retrying that would only burn rate-limit budget.
     let mock = serve_once("403 Forbidden", r#"{"message":"insufficient scope"}"#);
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let error = client.watchlists().await.unwrap_err();
 
@@ -343,8 +357,7 @@ async fn api_level_failures_are_rejected_with_reason() {
         r#"{"isSucceeded":false,"status":200,"watchlists":[],
             "exception":{"reason":"LimitExceeded","message":"Watchlist limit exceeded","invalidItems":["abc"]}}"#,
     );
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let error = client.watchlists().await.unwrap_err().to_string();
     assert!(error.contains("API-level failure"), "{error}");
@@ -363,8 +376,7 @@ async fn api_level_failures_without_exception_still_report() {
         "200 OK",
         r#"{"isSucceeded":false,"status":200,"watchlists":[]}"#,
     );
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let error = client.watchlists().await.unwrap_err().to_string();
     assert!(error.contains("API-level failure"), "{error}");
@@ -382,8 +394,7 @@ async fn schema_mismatch_is_reported_as_decode_failure_not_invalid_json() {
         "200 OK",
         r#"{"isSucceeded":true,"status":200,"watchlists":"nope"}"#,
     );
-    let client =
-        EtoroClient::with_base_url("fixture-api-key", "fixture-user-key", &mock.base_url).unwrap();
+    let client = client_for(&mock.base_url);
 
     let error = format!("{:#}", client.watchlists().await.unwrap_err());
     assert!(error.contains("could not decode response body"), "{error}");
@@ -405,7 +416,7 @@ fn plaintext_http_is_only_allowed_for_loopback_hosts() {
         "https://sandbox.example.com/",
     ] {
         assert!(
-            EtoroClient::with_base_url("k", "u", allowed).is_ok(),
+            EtoroClient::with_base_url("k", "u", allowed, Environment::Demo).is_ok(),
             "{allowed} should be accepted"
         );
     }
@@ -415,10 +426,88 @@ fn plaintext_http_is_only_allowed_for_loopback_hosts() {
         "http://example.com",
         "ftp://127.0.0.1",
     ] {
-        let error = EtoroClient::with_base_url("k", "u", rejected)
+        let error = EtoroClient::with_base_url("k", "u", rejected, Environment::Demo)
             .err()
             .unwrap_or_else(|| panic!("{rejected} should be rejected"))
             .to_string();
         assert!(error.contains("non-HTTPS"), "{error}");
     }
+}
+
+#[tokio::test]
+async fn the_environment_decides_which_portfolio_is_read() {
+    // eToro separates the accounts in the URL, not just in the key, so this is
+    // the assertion that a demo client cannot read real holdings -- and, once
+    // orders exist on the same mechanism, cannot place a real order.
+    for (environment, expected) in [
+        (
+            Environment::Demo,
+            "GET /api/v1/trading/info/demo/portfolio HTTP/1.1\r\n",
+        ),
+        (
+            Environment::Real,
+            "GET /api/v1/trading/info/portfolio HTTP/1.1\r\n",
+        ),
+    ] {
+        let mock = serve_once("200 OK", PORTFOLIO_FIXTURE);
+        let client = EtoroClient::with_base_url(
+            "fixture-api-key",
+            "fixture-user-key",
+            &mock.base_url,
+            environment,
+        )
+        .unwrap();
+        assert_eq!(client.environment(), environment);
+
+        client.portfolio().await.unwrap();
+
+        let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+        assert!(request.starts_with(expected), "{environment}: {request}");
+        mock.server.join().unwrap();
+    }
+}
+
+#[tokio::test]
+async fn a_key_scoped_to_the_other_environment_is_refused_at_startup() {
+    // The fixture's scopes are demo-only, so a client declaring Real must
+    // refuse rather than proceed and fail later on a write.
+    let mock = serve_once("200 OK", ME_FIXTURE);
+    let client = EtoroClient::with_base_url(
+        "fixture-api-key",
+        "fixture-user-key",
+        &mock.base_url,
+        Environment::Real,
+    )
+    .unwrap();
+
+    let error = client.verify_environment().await.unwrap_err();
+    assert!(
+        matches!(&error.kind, ApiErrorKind::EnvironmentMismatch { declared, .. } if *declared == "real"),
+        "{error}"
+    );
+    // Nothing about this gets better by trying again.
+    assert!(!error.is_retryable());
+    // The message must name what the token actually carries, or the reader is
+    // left guessing which key they configured.
+    assert!(error.to_string().contains("trade.demo"), "{error}");
+    mock.server.join().unwrap();
+}
+
+#[tokio::test]
+async fn a_key_scoped_to_the_declared_environment_is_accepted() {
+    let mock = serve_once("200 OK", ME_FIXTURE);
+    let client = EtoroClient::with_base_url(
+        "fixture-api-key",
+        "fixture-user-key",
+        &mock.base_url,
+        Environment::Demo,
+    )
+    .unwrap();
+
+    let me = client.verify_environment().await.unwrap();
+    assert_eq!(me.username, "fixture-user");
+
+    let request = mock.request.recv_timeout(Duration::from_secs(1)).unwrap();
+    assert!(request.starts_with("GET /api/v1/me HTTP/1.1\r\n"));
+    mock.server.join().unwrap();
 }

@@ -26,15 +26,110 @@ const MAX_RATE_INSTRUMENTS: usize = 100;
 /// nulls the ones we actually want, so it is always sent.
 const SYMBOL_FIELDS: &str = "instrumentId,internalSymbolFull,displayname";
 
+/// Which eToro account a client acts on.
+///
+/// A property of the whole client, fixed at construction, rather than a flag on
+/// individual calls. The point is that a client built for [`Demo`] has no way
+/// to reach a real-money endpoint, so "which account did that touch?" is never
+/// a question about the call site.
+///
+/// That is a stronger guarantee than it first looks, because eToro separates
+/// the two in the **URL** as well as in the key:
+/// `POST /api/v2/trading/execution/orders` spends real money and
+/// `POST /api/v2/trading/execution/demo/orders` does not.
+///
+/// [`Demo`]: Self::Demo
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Environment {
+    /// Virtual money. Every write path here is reversible by definition.
+    Demo,
+    /// Real money.
+    Real,
+}
+
+/// A string that was meant to name an [`Environment`] and did not.
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[error("unknown environment {0:?}; expected \"demo\" or \"real\"")]
+pub struct UnknownEnvironment(String);
+
+impl Environment {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Demo => "demo",
+            Self::Real => "real",
+        }
+    }
+
+    /// The environment a single scope grants access to, if it names one.
+    ///
+    /// eToro scopes read `etoro-public:<resource>:<action>`, and the resource
+    /// either names an environment (`real`, `demo`, `trade.real`,
+    /// `trade.demo`) or is neutral (`watchlist`, `feed`, `user-info`, ...).
+    /// Only the first kind says anything about which account a token reaches,
+    /// so a neutral scope answers `None` rather than being guessed at.
+    pub fn from_scope(scope: &str) -> Option<Self> {
+        // `trade.real` and `real` both end in the environment word, so the
+        // last dot-separated component is the one that matters.
+        match scope.split(':').nth(1)?.rsplit('.').next()? {
+            "demo" => Some(Self::Demo),
+            "real" => Some(Self::Real),
+            _ => None,
+        }
+    }
+
+    /// Every environment a token's scopes reach, in a stable order.
+    ///
+    /// Separate from the request that fetches them so the rule can be tested
+    /// without a server.
+    pub fn granted_by<S: AsRef<str>>(scopes: &[S]) -> Vec<Self> {
+        [Self::Demo, Self::Real]
+            .into_iter()
+            .filter(|environment| {
+                scopes
+                    .iter()
+                    .any(|scope| Self::from_scope(scope.as_ref()) == Some(*environment))
+            })
+            .collect()
+    }
+}
+
+impl std::fmt::Display for Environment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl std::str::FromStr for Environment {
+    type Err = UnknownEnvironment;
+
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        match text.trim().to_ascii_lowercase().as_str() {
+            "demo" => Ok(Self::Demo),
+            "real" => Ok(Self::Real),
+            _ => Err(UnknownEnvironment(text.to_owned())),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct EtoroClient {
     http: reqwest::Client,
     base_url: Url,
+    environment: Environment,
 }
 
 impl EtoroClient {
-    pub fn new(api_key: &str, user_key: &str) -> Result<Self, ClientError> {
-        Self::with_base_url(api_key, user_key, BASE_URL)
+    /// A client for the live API, acting on `environment`.
+    ///
+    /// The environment is a required argument with no default, for the same
+    /// reason [`CostModel`](crate::backtest::CostModel) has none: the
+    /// convenient default here is the one that spends real money.
+    pub fn new(
+        api_key: &str,
+        user_key: &str,
+        environment: Environment,
+    ) -> Result<Self, ClientError> {
+        Self::with_base_url(api_key, user_key, BASE_URL, environment)
     }
 
     /// Constructs a client for a custom API origin.
@@ -48,6 +143,7 @@ impl EtoroClient {
         api_key: &str,
         user_key: &str,
         base_url: &str,
+        environment: Environment,
     ) -> Result<Self, ClientError> {
         let mut headers = header::HeaderMap::new();
 
@@ -80,7 +176,31 @@ impl EtoroClient {
                 .timeout(REQUEST_TIMEOUT)
                 .build()?,
             base_url,
+            environment,
         })
+    }
+
+    /// The account this client acts on.
+    pub fn environment(&self) -> Environment {
+        self.environment
+    }
+
+    /// Selects between an endpoint's two spellings.
+    ///
+    /// Both are written out at the call site rather than derived from one
+    /// another, because eToro does not insert `demo` at a consistent position:
+    /// it is `/trading/info/demo/portfolio` but `/trading/execution/demo/orders`,
+    /// and `/trading/info/real/pnl` spells *both* environments out explicitly.
+    /// Any derivation rule would therefore need exceptions, and the failure
+    /// mode of getting one wrong is sending a real order.
+    ///
+    /// Naming both at the call site also means a reviewer can see the complete
+    /// set of URLs an endpoint is able to reach without leaving the line.
+    const fn path(&self, demo: &'static str, real: &'static str) -> &'static str {
+        match self.environment {
+            Environment::Demo => demo,
+            Environment::Real => real,
+        }
     }
 
     pub async fn watchlists(&self) -> Result<WatchlistsResponse, ApiError> {
@@ -112,8 +232,15 @@ impl EtoroClient {
     }
 
     pub async fn portfolio(&self) -> Result<PortfolioResponse, ApiError> {
-        let (response, ctx): (PortfolioResponse, _) =
-            self.get_json("api/v1/trading/info/portfolio", &[]).await?;
+        let (response, ctx): (PortfolioResponse, _) = self
+            .get_json(
+                self.path(
+                    "api/v1/trading/info/demo/portfolio",
+                    "api/v1/trading/info/portfolio",
+                ),
+                &[],
+            )
+            .await?;
         if response.client_portfolio.is_none() {
             return Err(ctx.malformed("portfolio response omitted clientPortfolio"));
         }
@@ -127,8 +254,45 @@ impl EtoroClient {
     /// serde rejects a response missing any of them before this returns. The
     /// check lives in the type rather than here.
     pub async fn me(&self) -> Result<MeResponse, ApiError> {
-        let (response, _ctx): (MeResponse, _) = self.get_json("api/v1/me", &[]).await?;
+        Ok(self.me_with_context().await?.0)
+    }
+
+    /// Fetches the profile and confirms the credentials match [`Self::environment`].
+    ///
+    /// Keys are environment-scoped: *"Each key can only be used for one
+    /// environment. If you need to use both, please create two keys."* A key
+    /// pointed at the other environment's paths reads and writes nothing, and
+    /// announces this as a 403 on the first call that matters -- which is a
+    /// poor moment to discover it. Asking `me()` up front turns that into a
+    /// startup failure naming both what was declared and what the token
+    /// actually carries.
+    ///
+    /// The profile is returned because a caller that verifies almost always
+    /// wants it anyway, and the alternative is spending a second request on
+    /// the shared 60/60s pool for data already in hand.
+    pub async fn verify_environment(&self) -> Result<MeResponse, ApiError> {
+        let (response, ctx) = self.me_with_context().await?;
+        let granted = Environment::granted_by(&response.scopes);
+        if !granted.contains(&self.environment) {
+            return Err(ctx.error(ApiErrorKind::EnvironmentMismatch {
+                declared: self.environment.as_str(),
+                // The scopes themselves, not the parsed environments: an empty
+                // list here means the token reaches neither environment, and
+                // printing the raw strings is what lets a reader see why.
+                granted: response
+                    .scopes
+                    .iter()
+                    .filter(|scope| Environment::from_scope(scope).is_some())
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            }));
+        }
         Ok(response)
+    }
+
+    async fn me_with_context(&self) -> Result<(MeResponse, RequestContext), ApiError> {
+        self.get_json("api/v1/me", &[]).await
     }
 
     /// Live bid and ask for up to [`MAX_RATE_INSTRUMENTS`] instruments.
@@ -386,5 +550,81 @@ fn body_excerpt(body: &[u8]) -> String {
         format!("{excerpt}…")
     } else {
         excerpt
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_scope_names_an_environment_only_when_it_actually_does() {
+        // Both spellings eToro uses, in both environments.
+        assert_eq!(
+            Environment::from_scope("etoro-public:real:write"),
+            Some(Environment::Real)
+        );
+        assert_eq!(
+            Environment::from_scope("etoro-public:trade.real:read"),
+            Some(Environment::Real)
+        );
+        assert_eq!(
+            Environment::from_scope("etoro-public:demo:read"),
+            Some(Environment::Demo)
+        );
+        assert_eq!(
+            Environment::from_scope("etoro-public:trade.demo:write"),
+            Some(Environment::Demo)
+        );
+
+        // Neutral scopes answer None rather than being guessed at. Treating
+        // `watchlist:read` as evidence of an environment would let a key with
+        // no trading access at all pass the startup check.
+        for neutral in [
+            "etoro-public:watchlist:read",
+            "etoro-public:user-info:read",
+            "etoro-public:money.balance:read",
+            "etoro-public:money:transfer",
+            "etoro-public:feed:write",
+            "nonsense",
+            "",
+        ] {
+            assert_eq!(Environment::from_scope(neutral), None, "{neutral}");
+        }
+    }
+
+    #[test]
+    fn granted_environments_are_deduplicated_and_ordered() {
+        let scopes = [
+            "etoro-public:user-info:read",
+            "etoro-public:trade.real:write",
+            "etoro-public:real:read",
+        ];
+        assert_eq!(Environment::granted_by(&scopes), [Environment::Real]);
+
+        let both = ["etoro-public:demo:read", "etoro-public:real:read"];
+        assert_eq!(
+            Environment::granted_by(&both),
+            [Environment::Demo, Environment::Real]
+        );
+
+        // A token with no environment-bearing scope reaches neither, which is
+        // a mismatch against whichever environment was declared.
+        assert!(Environment::granted_by(&["etoro-public:feed:read"]).is_empty());
+        assert!(Environment::granted_by::<&str>(&[]).is_empty());
+    }
+
+    #[test]
+    fn an_environment_round_trips_through_its_name() {
+        for environment in [Environment::Demo, Environment::Real] {
+            assert_eq!(
+                environment.as_str().parse::<Environment>().unwrap(),
+                environment
+            );
+        }
+        assert_eq!("  REAL ".parse::<Environment>().unwrap(), Environment::Real);
+        // Not a default, not a guess: an unrecognised value is an error.
+        assert!("production".parse::<Environment>().is_err());
+        assert!("".parse::<Environment>().is_err());
     }
 }

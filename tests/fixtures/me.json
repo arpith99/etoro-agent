@@ -12,6 +12,7 @@
   "realCid": 333333,
   "scopes": [
     "etoro-public:demo:read",
+    "etoro-public:trade.demo:write",
     "etoro-public:user-info:read"
   ],
   "username": "fixture-user"

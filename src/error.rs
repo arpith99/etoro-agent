@@ -157,6 +157,21 @@ pub enum ApiErrorKind {
     #[error("request not sent: {detail}")]
     InvalidRequest { detail: String },
 
+    /// The credentials do not grant access to the environment the client was
+    /// built for.
+    ///
+    /// Caught deliberately at startup rather than left to surface as a 403 on
+    /// the first write, because the first write is the thing you least want to
+    /// be debugging. eToro scopes each key to one environment, so a key that
+    /// works perfectly for reads can still be the wrong key entirely.
+    #[error(
+        "credentials do not grant {declared} access; the token's environment scopes are [{granted}]"
+    )]
+    EnvironmentMismatch {
+        declared: &'static str,
+        granted: String,
+    },
+
     /// Only reachable from a malformed hardcoded path, i.e. a bug in this crate
     /// rather than anything the API did.
     #[error("invalid API path {path:?}")]
@@ -181,6 +196,7 @@ impl ApiError {
             | ApiErrorKind::ApiFailure { .. }
             | ApiErrorKind::Malformed { .. }
             | ApiErrorKind::InvalidRequest { .. }
+            | ApiErrorKind::EnvironmentMismatch { .. }
             | ApiErrorKind::InvalidPath { .. } => false,
         }
     }

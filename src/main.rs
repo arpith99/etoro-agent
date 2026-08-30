@@ -5,7 +5,7 @@ use chrono::{Datelike, NaiveDate, Utc};
 use etoro_agent::analysis::gaps;
 use etoro_agent::backtest::{Backtest, CostModel, FillPrice};
 use etoro_agent::chart::{ChartOptions, contains_split, render, render_html, summary};
-use etoro_agent::client::EtoroClient;
+use etoro_agent::client::{Environment, EtoroClient};
 use etoro_agent::data::{
     BarSource, DataError, DateRange, PriceBasis, SeriesChoice,
     store::{BarStore, FileStore, Interval, SeriesKey},
@@ -424,6 +424,23 @@ async fn fetch_bars(symbols: Vec<String>, range: DateRange) -> Result<()> {
     Ok(())
 }
 
+/// Which eToro account to act on, read from the environment.
+///
+/// Required, with no default. A default would have to be one of two things:
+/// `demo`, which silently does nothing useful for a real key, or `real`, which
+/// silently points at actual money. Neither is a good thing to happen by
+/// omission, so the program refuses to guess.
+fn environment() -> Result<Environment> {
+    let raw = std::env::var("ETORO_ENVIRONMENT").map_err(|_| {
+        anyhow!(
+            "ETORO_ENVIRONMENT is not set. Add `ETORO_ENVIRONMENT=demo` or \
+             `ETORO_ENVIRONMENT=real` to .env -- it must match the environment \
+             the API key was issued for, since eToro scopes each key to one."
+        )
+    })?;
+    raw.parse().map_err(Into::into)
+}
+
 /// Where series are written. Market data, not account data, so it carries no
 /// special permissions -- but it is gitignored, being derived and large.
 fn store_root() -> PathBuf {
@@ -437,7 +454,20 @@ async fn account_summary(symbols: Vec<String>) -> Result<()> {
     let user_key = std::env::var("ETORO_USER_KEY")?;
     let dump_responses = env_flag("ETORO_DUMP_RESPONSES");
 
-    let client = EtoroClient::new(&api_key, &user_key)?;
+    let environment = environment()?;
+    let client = EtoroClient::new(&api_key, &user_key, environment)?;
+
+    // Before anything else, and before the first write path ever exists: keys
+    // are scoped to one environment, and a mismatch is far cheaper to learn
+    // about here than as a 403 on an order.
+    let me = client.verify_environment().await?;
+    println!(
+        "Authenticated as {} on the {environment} account.",
+        me.username
+    );
+    if dump_responses {
+        dump_private("me_response.json", &me)?;
+    }
 
     let watchlists = client.watchlists().await?;
     println!("Fetched {} watchlist(s).", watchlists.watchlists.len());
@@ -453,12 +483,6 @@ async fn account_summary(symbols: Vec<String>) -> Result<()> {
     println!("Fetched a portfolio with {position_count} open position(s).");
     if dump_responses {
         dump_private("portfolio_response.json", &portfolio)?;
-    }
-
-    let me = client.me().await?;
-    println!("Fetched user details for user: {}.", me.username);
-    if dump_responses {
-        dump_private("me_response.json", &me)?;
     }
 
     // Resolution is one call per symbol -- the search filter takes a single

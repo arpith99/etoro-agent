@@ -288,15 +288,41 @@ and produce a plausible-looking disaster.
 **Done.** Equity curve, trade log and sweep all come out of stored data, with
 no network access anywhere in the path.
 
-### 5. Demo key and paper trading
+### 5. Demo key and paper trading — **in progress**
 
 Requires generating a second API key (Demo + Write) — an external dependency
-with lead time, worth starting early.
+with lead time. **Still outstanding, and it blocks the rest of this milestone.**
 
-- Introduce an `Environment` (Demo | Real) fixed at client construction, with
-  every write path gated on it. `me()` returns the token's scopes, so the
-  declared environment can be cross-checked against the key at startup rather
-  than trusted.
+- ~~Introduce an `Environment` (Demo | Real) fixed at client construction, with
+  every write path gated on it.~~ **Done 2026-08-30**, and the mechanism turned
+  out to be stronger than "a gate". Checking the spec's 169 operations showed
+  that **eToro separates the two accounts by URL, not only by key**:
+  `POST /api/v2/trading/execution/orders` spends real money and
+  `POST /api/v2/trading/execution/demo/orders` does not. So `Environment`
+  selects the path, and a client built for `Demo` has no reachable
+  real-money endpoint — a property of the type rather than a rule someone has
+  to remember at each call site.
+
+  The `demo` segment is **not** inserted at a consistent position
+  (`/trading/info/demo/portfolio`, `/trading/execution/demo/orders`,
+  `/trading/demo/positions/{id}`), and `/trading/info/real/pnl` names both
+  environments explicitly. Any derivation rule would need exceptions and the
+  cost of one mistake is a real order, so `EtoroClient::path` takes **both**
+  spellings written out at the call site, where a reviewer can see the complete
+  set of URLs a method can reach without leaving the line.
+
+  `portfolio()` was reading the real account unconditionally before this.
+
+  `ETORO_ENVIRONMENT` is required with no default: the two candidate defaults
+  are "silently does nothing useful" and "silently points at real money".
+- ~~`me()` returns the token's scopes, so the declared environment can be
+  cross-checked against the key at startup rather than trusted.~~ **Done**:
+  `verify_environment()` parses the scopes (`etoro-public:<resource>:<action>`,
+  where the resource is `real`, `demo`, `trade.real`, `trade.demo`, or
+  environment-neutral) and fails with `EnvironmentMismatch` naming both what
+  was declared and what the token carries. Neutral scopes answer "no
+  environment" rather than being guessed at, so a key with read-only feed
+  access cannot pass the check by accident.
 - Order submission plus the asynchronous status state machine above, using
   `referenceId` as the recovery handle when a response is lost.
 - The retry policy lands here, now that the idempotency rule is known.
