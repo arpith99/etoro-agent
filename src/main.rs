@@ -1,21 +1,25 @@
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use anyhow::{Context, Result, anyhow, bail};
 use chrono::{Datelike, NaiveDate, Utc};
 use etoro_agent::analysis::gaps;
-use etoro_agent::audit::AuditLog;
+use etoro_agent::audit::{AuditLog, Event, Record};
 use etoro_agent::backtest::{Backtest, CostModel, FillPrice};
 use etoro_agent::chart::{ChartOptions, contains_split, render, render_html, summary};
 use etoro_agent::client::{Environment, EtoroClient};
+use etoro_agent::costs::CostEstimate;
 use etoro_agent::data::{
     BarSource, DataError, DateRange, PriceBasis, SeriesChoice,
     store::{BarStore, FileStore, Interval, SeriesKey},
     tiingo::Tiingo,
 };
-use etoro_agent::limits::{Limits, open_exposure};
+use etoro_agent::limits::{Breach, Limits, open_exposure};
+use etoro_agent::orders::OrderHandle;
+use etoro_agent::retry::{RetryPolicy, with_retry_id};
 use etoro_agent::strategy::{Sma, backtest_sma, sweep_sma};
 use etoro_agent::trader::Action;
-use etoro_agent::trader::plan as plan_action;
+use etoro_agent::trader::{await_terminal, plan as plan_action};
 use etoro_agent::types::manual::Numeric;
 use serde::Serialize;
 
@@ -39,6 +43,12 @@ usage:
                                                what the strategy would do right
                                                now, against your live portfolio.
                                                Reads only; places nothing.
+  etoro-agent trade   SYM [SOURCE] [--fast N] [--slow N] [--allocation USD]
+                      [--unattended]
+                                               DOES IT. Prints the plan, checks
+                                               every limit, then asks before
+                                               sending. --unattended skips the
+                                               prompt and is refused on real.
 
 dates are YYYY-MM-DD; FROM defaults to five years ago and TO to today.
 SOURCE defaults to tiingo.
@@ -76,6 +86,7 @@ async fn main() -> Result<()> {
             slow,
             allocation,
         } => plan(&symbol, &source, fast, slow, allocation).await,
+        Command::Trade(options) => trade(&options).await,
     }
 }
 
@@ -184,13 +195,60 @@ fn gaps_report(symbols: &[String], source: &str) -> Result<()> {
 /// places nothing, cancels nothing, and needs no write scope. The hard limits,
 /// the cost check and the audit log that have to exist before anything acts on
 /// this output are milestone 6.
-async fn plan(
+/// Everything both `plan` and `trade` need, gathered once.
+///
+/// Extracted so the two cannot drift: a `trade` that checked slightly
+/// different things from the `plan` it printed would make the printed plan a
+/// lie, which is the one thing an approval prompt must never be.
+struct Prepared {
+    client: EtoroClient,
+    environment: Environment,
+    symbol: String,
+    instrument_id: i32,
+    decision: etoro_agent::trader::Plan,
+    allocation: Numeric,
+    exposure: Numeric,
+    submitted_today: usize,
+    limits: Limits,
+    audit: AuditLog,
+    /// The quote for an intended open. `None` for a hold or a close, or when
+    /// the quote could not be had -- which is not the same as free.
+    cost: Option<CostEstimate>,
+    cost_error: Option<String>,
+    bars: usize,
+    last_bar: Option<NaiveDate>,
+    source: String,
+    fast: usize,
+    slow: usize,
+}
+
+impl Prepared {
+    /// Every reason this action must not proceed, in the order they are found.
+    fn breaches(&self) -> Vec<Breach> {
+        let mut found = Vec::new();
+        if let Err(breach) =
+            self.limits
+                .check(&self.decision.action, self.exposure, self.submitted_today)
+        {
+            found.push(breach);
+        }
+        if let Some(estimate) = &self.cost
+            && let Err(breach) = self.limits.check_cost(estimate, self.allocation)
+        {
+            found.push(breach);
+        }
+        found
+    }
+}
+
+/// Reads everything needed to decide, and decides. Sends nothing.
+async fn prepare(
     symbol: &str,
     source: &str,
     fast: usize,
     slow: usize,
     allocation: Numeric,
-) -> Result<()> {
+) -> Result<Prepared> {
     let store = FileStore::new(store_root());
     let key = SeriesKey::new(source, symbol, Interval::Daily)?;
     let Some(series) = store.load(&key)? else {
@@ -211,11 +269,11 @@ async fn plan(
     let client = EtoroClient::new(&api_key, &user_key(environment)?, environment)?;
     client.verify_environment().await?;
 
-    let Some(instrument_id) = client.resolve_symbol(symbol).await? else {
+    let Some(resolved) = client.resolve_symbol(symbol).await? else {
         bail!("{symbol}: no instrument matched that symbol");
     };
-    let instrument_id = i32::try_from(instrument_id)
-        .with_context(|| format!("instrument id {instrument_id} does not fit an int32"))?;
+    let instrument_id = i32::try_from(resolved)
+        .with_context(|| format!("instrument id {resolved} does not fit an int32"))?;
 
     let response = client.portfolio().await?;
     let exposure = open_exposure(&response);
@@ -224,7 +282,7 @@ async fn plan(
         .ok_or_else(|| anyhow!("portfolio response omitted clientPortfolio"))?;
 
     let mut strategy = Sma::new(fast, slow)?;
-    let plan = plan_action(
+    let decision = plan_action(
         &portfolio,
         instrument_id,
         &series.bars,
@@ -233,25 +291,67 @@ async fn plan(
         allocation,
     )?;
 
-    // Read, never written, by this command. Recording a query as though it
-    // were an event would make the log worse at the job it exists for.
     let audit = AuditLog::new(audit_path());
     let submitted_today = audit.submissions_on(Utc::now().date_naive(), environment.as_str())?;
-    let limits = limits()?;
-    let verdict = limits.check(&plan.action, exposure, submitted_today);
 
-    let last = series.bars.last().map(|bar| bar.date);
+    // Only an open can be priced: the costs endpoint takes an order request
+    // body, and a close is a different endpoint entirely.
+    let (mut cost, mut cost_error) = (None, None);
+    if let Action::Open(order) = &decision.action {
+        match client.order_cost(order).await {
+            Ok(estimate) => cost = Some(estimate),
+            Err(error) => cost_error = Some(error.to_string()),
+        }
+    }
+
+    Ok(Prepared {
+        client,
+        environment,
+        symbol: symbol.to_owned(),
+        instrument_id,
+        decision,
+        allocation,
+        exposure,
+        submitted_today,
+        limits: limits()?,
+        audit,
+        cost,
+        cost_error,
+        bars: series.bars.len(),
+        last_bar: series.bars.last().map(|bar| bar.date),
+        source: source.to_owned(),
+        fast,
+        slow,
+    })
+}
+
+/// Prints what was decided and why it may or may not proceed.
+fn report_plan(prepared: &Prepared) -> Result<()> {
+    let Prepared {
+        symbol,
+        instrument_id,
+        environment,
+        decision,
+        allocation,
+        ..
+    } = prepared;
+
     println!(
         "{} (instrument {instrument_id}) on the {environment} account",
         symbol.to_ascii_uppercase()
     );
     println!(
-        "  strategy   sma {fast}/{slow} over {} stored bars, last {}",
-        series.bars.len(),
-        last.map_or_else(|| "-".to_owned(), |date| date.to_string()),
+        "  strategy   sma {}/{} over {} stored bars from {}, last {}",
+        prepared.fast,
+        prepared.slow,
+        prepared.bars,
+        prepared.source,
+        prepared
+            .last_bar
+            .map_or_else(|| "-".to_owned(), |date| date.to_string()),
     );
-    println!("  target     {:.0}% of allocation", plan.target * 100.0);
-    match &plan.held {
+    println!("  target     {:.0}% of allocation", decision.target * 100.0);
+    match &decision.held {
         Some(holding) => println!(
             "  held       position {} - {} units{}",
             holding.position_id,
@@ -264,75 +364,285 @@ async fn plan(
     }
     println!("  allocation ${}", allocation.0);
     println!(
-        "  exposure   ${} open, {submitted_today} order(s) submitted today",
-        exposure.0
+        "  exposure   ${} open, {} order(s) submitted today",
+        prepared.exposure.0, prepared.submitted_today
     );
-    println!("\n  -> {}", plan.action.describe());
+    println!("\n  -> {}", decision.action.describe());
 
-    // Only for an open: the costs endpoint prices an order request, and a
-    // close is a different endpoint with no such body. Its own 20/60s quota,
-    // so asking does not spend the budget needed to place the order.
-    if let Action::Open(order) = &plan.action {
-        match client.order_cost(order).await {
-            Ok(estimate) => {
-                println!("\n  quoted cost:");
-                print!("{}", estimate.report());
-                match estimate.upfront_fraction_of(allocation) {
-                    Ok(Some(fraction)) => println!(
-                        "    {:<16}{:>12} USD  ({:.3}% of the order)",
-                        "up-front total",
-                        estimate.upfront()?.0,
-                        fraction * rust_decimal::Decimal::ONE_HUNDRED,
-                    ),
-                    Ok(None) => {}
-                    Err(error) => println!("    could not total the quote: {error}"),
-                }
-                let per_day = estimate.per_day().unwrap_or(Numeric(0.into()));
-                if per_day.0 != rust_decimal::Decimal::ZERO {
-                    // The backtest charges costs on turnover only, so this is
-                    // a cost it does not model at all.
-                    println!(
-                        "  ! ${} per day held, which the backtest does not model",
-                        per_day.0
-                    );
-                }
-                if let Err(breach) = limits.check_cost(&estimate, allocation) {
-                    println!("  cost       REFUSED - {breach}");
-                }
-            }
-            // A quote that cannot be had is not a reason to hide the plan, but
-            // it is a reason not to act on it.
-            Err(error) => println!("\n  ! could not price the order: {error}"),
+    if let Some(estimate) = &prepared.cost {
+        println!("\n  quoted cost:");
+        print!("{}", estimate.report());
+        match estimate.upfront_fraction_of(*allocation) {
+            Ok(Some(fraction)) => println!(
+                "    {:<16}{:>12} USD  ({:.3}% of the order)",
+                "up-front total",
+                estimate.upfront()?.0,
+                fraction * rust_decimal::Decimal::ONE_HUNDRED,
+            ),
+            Ok(None) => {}
+            Err(error) => println!("    could not total the quote: {error}"),
+        }
+        let per_day = estimate.per_day().unwrap_or(Numeric(0.into()));
+        if per_day.0 != rust_decimal::Decimal::ZERO {
+            // The backtest charges costs on turnover only, so this is a cost
+            // it does not model at all.
+            println!(
+                "  ! ${} per day held, which the backtest does not model",
+                per_day.0
+            );
         }
     }
-
-    match &verdict {
-        Ok(()) => println!("  limits     ok"),
-        // Printed as a refusal rather than folded into an error, because the
-        // rest of the plan is still worth reading: knowing *what* was blocked
-        // is most of the value of blocking it.
-        Err(breach) => println!("  limits     REFUSED - {breach}"),
+    // A quote that could not be had is not the same as a free order, and the
+    // difference is worth a line of its own.
+    if let Some(error) = &prepared.cost_error {
+        println!("\n  ! could not price the order: {error}");
     }
 
-    // Said plainly, every time. The distance between "here is what I would do"
-    // and "I did it" is the entire safety margin at this stage.
-    println!(
-        "\nNothing was sent. This command only reads; no order path is wired to \
-         the command line yet."
-    );
+    let breaches = prepared.breaches();
+    if breaches.is_empty() {
+        println!("  limits     ok");
+    }
+    for breach in &breaches {
+        println!("  limits     REFUSED - {breach}");
+    }
 
     // The store is a snapshot, and a stale one silently plans against last
     // week's prices. Cheap to check, and invisible if it is not checked.
-    if let Some(last) = last {
+    if let Some(last) = prepared.last_bar {
         let age = (Utc::now().date_naive() - last).num_days();
         if age > STALE_BARS_DAYS {
             println!(
-                "! the newest stored bar is {age} days old; run: etoro-agent fetch-bars {symbol}"
+                "! the newest stored bar is {age} days old; run: etoro-agent fetch-bars {}",
+                prepared.symbol
             );
         }
     }
     Ok(())
 }
+
+/// Says what the strategy would do right now, and does none of it.
+async fn plan(
+    symbol: &str,
+    source: &str,
+    fast: usize,
+    slow: usize,
+    allocation: Numeric,
+) -> Result<()> {
+    let prepared = prepare(symbol, source, fast, slow, allocation).await?;
+    report_plan(&prepared)?;
+    println!("\nNothing was sent. `plan` only reads; use `trade` to act on this.");
+    Ok(())
+}
+
+/// Acts on a plan, after saying exactly what it is about to do.
+///
+/// The order of operations is the safety property: decide, print, check every
+/// rail, ask a human, log the intent, send, then poll. Anything sent before a
+/// refusal has been checked, or before the intent has been written down, is
+/// something that can happen without a record of why.
+async fn trade(options: &TradeOptions) -> Result<()> {
+    let prepared = prepare(
+        &options.symbol,
+        &options.source,
+        options.fast,
+        options.slow,
+        options.allocation,
+    )
+    .await?;
+    report_plan(&prepared)?;
+
+    let environment = prepared.environment;
+    let env = environment.as_str();
+
+    if matches!(prepared.decision.action, Action::Hold) {
+        println!("\nNothing to do.");
+        return Ok(());
+    }
+
+    // Every refusal is logged, because a refusal leaves no other trace: no
+    // order, no position, no balance change. "Did nothing today" and "was
+    // stopped four times" have to be distinguishable afterwards.
+    let breaches = prepared.breaches();
+    if !breaches.is_empty() {
+        for breach in &breaches {
+            prepared.audit.append(&Record::now(
+                env,
+                Event::Refused {
+                    symbol: prepared.symbol.clone(),
+                    instrument_id: prepared.instrument_id,
+                    action: prepared.decision.action.describe(),
+                    reason: breach.to_string(),
+                },
+            ))?;
+        }
+        bail!(
+            "refused by {} check(s); nothing was sent, and each refusal is in {}",
+            breaches.len(),
+            prepared.audit.path().display()
+        );
+    }
+
+    // Unattended real trading is not something this program does. The roadmap
+    // is explicit that approval mode comes first, and "first" has to mean
+    // something a flag cannot skip past.
+    if options.unattended && environment == Environment::Real {
+        bail!(
+            "--unattended is refused on the real account. Approval mode comes first: run \
+             it attended, on demo, long enough to compare fills against the backtest."
+        );
+    }
+    if !options.unattended {
+        confirm(&prepared)?;
+    }
+
+    // Minted here so the audit record can be written *before* the request and
+    // can abort it. An order that goes out unlogged is one nothing can find.
+    let reference_id = uuid::Uuid::new_v4();
+    let describe = prepared.decision.action.describe();
+
+    match &prepared.decision.action {
+        // Excluded above; matching exhaustively rather than unwrapping.
+        Action::Hold => return Ok(()),
+        Action::Open(order) => {
+            prepared.audit.append(&Record::now(
+                env,
+                Event::Submitted {
+                    symbol: prepared.symbol.clone(),
+                    instrument_id: prepared.instrument_id,
+                    action: describe.clone(),
+                    reference_id,
+                    amount: Some(order.amount()),
+                },
+            ))?;
+            // `once()`, not `standard()`. Retrying a write is safe only if
+            // eToro's idempotency behaves as documented, and that has not been
+            // observed here yet. Until demo shows a reused id producing one
+            // order rather than two, the honest policy is not to retry.
+            let accepted = with_retry_id(&RetryPolicy::once(), reference_id, |request_id| {
+                prepared.client.place_order(order, request_id)
+            })
+            .await;
+            settle(&prepared, reference_id, accepted.map(|a| a.order_id)).await?;
+        }
+        Action::Close(close) => {
+            prepared.audit.append(&Record::now(
+                env,
+                Event::Submitted {
+                    symbol: prepared.symbol.clone(),
+                    instrument_id: prepared.instrument_id,
+                    action: describe.clone(),
+                    reference_id,
+                    amount: None,
+                },
+            ))?;
+            let accepted = prepared
+                .client
+                .close_position(close, reference_id)
+                .await
+                .map(|response| response.order.and_then(|order| order.order_id));
+            settle(&prepared, reference_id, accepted).await?;
+        }
+    }
+    Ok(())
+}
+
+/// Polls an accepted order to a terminal state and records the outcome.
+///
+/// Takes the submission `Result` rather than a success, because a *failed*
+/// submission is exactly the case that must still be recorded and still be
+/// looked up: the request may have arrived and executed with its response lost
+/// on the way back.
+async fn settle(
+    prepared: &Prepared,
+    reference_id: uuid::Uuid,
+    submitted: std::result::Result<Option<i64>, etoro_agent::error::ApiError>,
+) -> Result<()> {
+    let env = prepared.environment.as_str();
+    let order_id = match &submitted {
+        Ok(order_id) => {
+            println!("\nAccepted. reference {reference_id}");
+            *order_id
+        }
+        Err(error) => {
+            println!("\nSubmission failed: {error}");
+            println!("Checking whether it arrived anyway - reference {reference_id}");
+            None
+        }
+    };
+
+    let handle = order_id.map_or(OrderHandle::ReferenceId(reference_id), OrderHandle::OrderId);
+    let status = await_terminal(
+        &prepared.client,
+        handle,
+        Duration::from_secs(POLL_SECONDS),
+        POLL_ATTEMPTS,
+    )
+    .await;
+
+    let (status_name, detail) = match &status {
+        Ok(Some(status)) => (Some(status.to_string()), None),
+        // No status is not "no order": the lookup may simply not have found it
+        // yet, and saying "unknown" is the honest record.
+        Ok(None) => (None, Some("no status returned by lookup".to_owned())),
+        Err(error) => (None, Some(format!("lookup failed: {error}"))),
+    };
+    prepared.audit.append(&Record::now(
+        env,
+        Event::Settled {
+            reference_id,
+            order_id,
+            status: status_name.clone(),
+            detail: detail.clone(),
+        },
+    ))?;
+
+    match (&status_name, &detail) {
+        (Some(name), _) => println!("Settled: {name}"),
+        (None, Some(detail)) => println!("Unsettled: {detail}"),
+        (None, None) => {}
+    }
+    println!("Recorded in {}", prepared.audit.path().display());
+
+    // The submission error is surfaced only after the outcome has been looked
+    // up and written down, so a failure never costs us the record.
+    submitted?;
+    Ok(())
+}
+
+/// Asks a human, at the terminal, before anything is sent.
+///
+/// The phrase is deliberately more than a keystroke, and longer still on the
+/// real account. A prompt answered by reflex is not approval.
+fn confirm(prepared: &Prepared) -> Result<()> {
+    use std::io::Write;
+
+    let phrase = match prepared.environment {
+        Environment::Demo => "yes",
+        Environment::Real => "yes, real money",
+    };
+    println!(
+        "\nAbout to {} on the {} account.",
+        prepared.decision.action.describe(),
+        prepared.environment
+    );
+    print!("Type {phrase:?} to send, anything else to abort: ");
+    std::io::stdout().flush()?;
+
+    let mut answer = String::new();
+    std::io::stdin().read_line(&mut answer)?;
+    if answer.trim() != phrase {
+        bail!("not confirmed; nothing was sent");
+    }
+    Ok(())
+}
+
+/// Seconds between order-status polls, and how many to make.
+///
+/// The lookup pool refills 60 requests per 60 s, so five seconds apart leaves
+/// most of the budget for everything else; twelve attempts covers a minute,
+/// which is generous for a market order and short enough not to hang a run.
+const POLL_SECONDS: u64 = 5;
+const POLL_ATTEMPTS: u32 = 12;
 
 /// Backtests a dual moving-average crossover over stored bars.
 /// Backtests a dual moving-average crossover over stored bars.
@@ -870,6 +1180,18 @@ enum Command {
         /// Cash to put into a new position, in USD.
         allocation: Numeric,
     },
+    Trade(TradeOptions),
+}
+
+#[derive(Debug, PartialEq)]
+struct TradeOptions {
+    symbol: String,
+    source: String,
+    fast: usize,
+    slow: usize,
+    allocation: Numeric,
+    /// Skip the confirmation prompt. Refused on the real account.
+    unattended: bool,
 }
 
 #[derive(Debug, PartialEq)]
@@ -930,6 +1252,10 @@ impl Command {
                 })
             }
             Some((verb, rest)) if verb == "chart" => {
+                // Note the `-` rather than `--` in the guard below: a mistyped
+                // short flag like `-y` would otherwise be swallowed as a
+                // positional argument and silently reinterpreted as a source
+                // name. No ticker or source begins with a dash.
                 let (mut positional, mut html, mut html_path) = (Vec::new(), false, None);
                 let mut args = rest.iter();
                 while let Some(arg) = args.next() {
@@ -947,7 +1273,7 @@ impl Command {
                                     PathBuf::from(next)
                                 });
                         }
-                        other if other.starts_with("--") => {
+                        other if other.starts_with('-') => {
                             bail!("unknown option {other:?}\n\n{USAGE}")
                         }
                         other => positional.push(other.to_owned()),
@@ -998,7 +1324,7 @@ impl Command {
                         "--close-fill" => options.fill = FillPrice::SameClose,
                         "--sweep" => options.sweep = true,
                         "--trades" => options.trades = true,
-                        other if other.starts_with("--") => {
+                        other if other.starts_with('-') => {
                             bail!("unknown option {other:?}\n\n{USAGE}")
                         }
                         other => positional.push(other.to_owned()),
@@ -1028,7 +1354,7 @@ impl Command {
                         "--fast" => fast = parse_window(&value("--fast")?, "--fast")?,
                         "--slow" => slow = parse_window(&value("--slow")?, "--slow")?,
                         "--allocation" => allocation = parse_allocation(&value("--allocation")?)?,
-                        other if other.starts_with("--") => {
+                        other if other.starts_with('-') => {
                             bail!("unknown option {other:?}\n\n{USAGE}")
                         }
                         other => positional.push(other.to_owned()),
@@ -1047,6 +1373,47 @@ impl Command {
                     slow,
                     allocation,
                 })
+            }
+            Some((verb, rest)) if verb == "trade" => {
+                let (mut fast, mut slow) = (DEFAULT_FAST, DEFAULT_SLOW);
+                let mut allocation = Numeric(DEFAULT_ALLOCATION_USD.into());
+                let mut unattended = false;
+                let mut positional = Vec::new();
+                let mut args = rest.iter();
+                while let Some(arg) = args.next() {
+                    let mut value = |flag: &str| -> Result<String> {
+                        args.next()
+                            .cloned()
+                            .ok_or_else(|| anyhow!("{flag} needs a value\n\n{USAGE}"))
+                    };
+                    match arg.as_str() {
+                        "--fast" => fast = parse_window(&value("--fast")?, "--fast")?,
+                        "--slow" => slow = parse_window(&value("--slow")?, "--slow")?,
+                        "--allocation" => allocation = parse_allocation(&value("--allocation")?)?,
+                        // Spelled out rather than `-y`: a flag that removes the
+                        // only human in the loop should be typed on purpose,
+                        // not reached for by muscle memory.
+                        "--unattended" => unattended = true,
+                        other if other.starts_with('-') => {
+                            bail!("unknown option {other:?}\n\n{USAGE}")
+                        }
+                        other => positional.push(other.to_owned()),
+                    }
+                }
+                let Some(symbol) = positional.first() else {
+                    bail!("trade needs a symbol\n\n{USAGE}");
+                };
+                Ok(Self::Trade(TradeOptions {
+                    symbol: symbol.clone(),
+                    source: positional
+                        .get(1)
+                        .cloned()
+                        .unwrap_or_else(|| DEFAULT_SOURCE.to_owned()),
+                    fast,
+                    slow,
+                    allocation,
+                    unattended,
+                }))
             }
             // A bare symbol list used to mean "price these". Rejecting it is
             // better than guessing, now that a verb could also be a ticker.
@@ -1522,6 +1889,58 @@ mod tests {
         assert!(parse(&["plan"]).is_err());
         assert!(parse(&["plan", "AAPL", "--execute"]).is_err());
         assert!(parse(&["plan", "AAPL", "--allocation"]).is_err());
+    }
+
+    fn trade_options(args: &[&str]) -> TradeOptions {
+        match parse(args).unwrap() {
+            Command::Trade(options) => options,
+            other => panic!("expected a trade, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn trade_asks_before_sending_unless_told_not_to() {
+        let options = trade_options(&["trade", "AAPL"]);
+        assert!(
+            !options.unattended,
+            "the confirmation prompt is the default, not the opt-in"
+        );
+        assert_eq!(options.allocation.0.to_string(), "100");
+
+        assert!(trade_options(&["trade", "AAPL", "--unattended"]).unattended);
+    }
+
+    #[test]
+    fn trade_takes_the_same_options_as_plan() {
+        // They share a preparation path, so a divergence in parsing would make
+        // the printed plan a description of something else.
+        let options = trade_options(&[
+            "trade",
+            "MSFT",
+            "tiingo",
+            "--fast",
+            "5",
+            "--slow",
+            "50",
+            "--allocation",
+            "2500",
+        ]);
+        assert_eq!(options.symbol, "MSFT");
+        assert_eq!((options.fast, options.slow), (5, 50));
+        assert_eq!(options.allocation.0.to_string(), "2500");
+    }
+
+    #[test]
+    fn there_is_no_short_spelling_of_unattended() {
+        // A flag that removes the only human in the loop should be typed on
+        // purpose, so `-y` and friends must not quietly work.
+        for shorthand in ["-y", "--yes", "-u"] {
+            assert!(
+                parse(&["trade", "AAPL", shorthand]).is_err(),
+                "{shorthand} should not be accepted"
+            );
+        }
+        assert!(parse(&["trade"]).is_err());
     }
 
     #[test]

@@ -460,8 +460,39 @@ Only after milestone 5 has produced that comparison. Prerequisites:
 
   Live on demo, a $2500 AAPL buy quotes four components, all zero. ⚠️ Demo may
   not quote realistic costs; re-check on real before relying on the figures.
-- Approval mode first — print the intended order and require confirmation —
-  before anything runs unattended.
+- ~~Approval mode first — print the intended order and require confirmation —
+  before anything runs unattended.~~ **Done 2026-08-30**: `etoro-agent trade`.
+
+  `plan` and `trade` share one `prepare` path, so the two cannot drift. A
+  `trade` that checked slightly different things from the `plan` it printed
+  would make the printed plan a lie, which is the one thing an approval prompt
+  must never be.
+
+  Order of operations, which is the safety property: decide → print → check
+  every rail → ask a human → **log the intent** → send → poll → log the
+  outcome. Anything sent before a refusal has been checked, or before the
+  intent is written down, can happen without a record of why.
+
+  The confirmation phrase is more than a keystroke — `yes` on demo, and
+  `yes, real money` on real. A prompt answered by reflex is not approval.
+  `--unattended` skips it and is **refused outright on the real account**: the
+  roadmap says approval mode comes first, and "first" has to mean something a
+  flag cannot skip past.
+
+  `settle` takes the submission `Result` rather than a success, because a
+  *failed* submission is exactly the case that must still be looked up and
+  recorded — the request may have arrived and executed with its response lost
+  coming back. The submission error surfaces only after the outcome has been
+  written down.
+
+  Retries are `RetryPolicy::once()`, not `standard()`. Retrying a write is safe
+  only if eToro's idempotency behaves as documented, and that has not been
+  observed here yet; until demo shows a reused id producing one order rather
+  than two, the honest policy is not to retry.
+
+  Found while testing: the flag guards matched `--`, so a mistyped short flag
+  like `-y` was silently swallowed as a positional and reinterpreted as a
+  *source name*. All four parsers now reject anything beginning with `-`.
 - Audit logging of every submitted order and its resolved outcome.
 
 ## The broker question, deferred

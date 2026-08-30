@@ -120,6 +120,10 @@ default *limit*. Every value above sits at the cautious end of what this project
 set out to trade, so forgetting to configure them yields an agent that is too
 timid rather than one that is too bold.
 
+`etoro-agent trade SYM` prints the plan, checks every limit, and then asks
+before sending — `yes` on demo, `yes, real money` on real. `--unattended` skips
+the prompt and is refused outright on the real account.
+
 To stop the agent acting, `touch STOP`. A file rather than a flag because it can
 be created from any shell, over ssh, mid-run, by somebody who has never read the
 code. It blocks closing as well as opening: if you no longer trust the program to
