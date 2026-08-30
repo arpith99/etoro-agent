@@ -92,13 +92,26 @@ Spec-vs-reality, all verified empirically:
   median deviation versus 0.542% against `adjClose`. So eToro bars correspond
   to Tiingo `close`, never `adjClose`. A strategy assuming reinvested dividends
   is measuring something these bars do not contain.
-- **Closes sit ~0.16% away from Tiingo's**, consistently: 0.161% (TSLA), 0.150%
-  (INTC), 0.174% (MBLY), median absolute. Too large to be bid-versus-last —
-  25x to 50x the observed spreads — and far too small to be a one-day
-  misalignment, which would land near the median daily move of 1-2%. A
-  different session boundary or snapshot time is the likeliest explanation.
-  **Unresolved**, and it matters: backtesting on one series and executing
-  against the other carries this as a basis.
+- **A daily candle's `close` is the last bid of the regular session**, not a
+  last trade and not a mid. Measured 2026-08-30 with
+  `scripts/compare_close_to_quote.py`: for MBLY, INTC and AMD the candle close
+  equalled the live bid *exactly* to four decimals, with the quote stamped
+  `19:59:5xZ` — about six seconds before the 16:00 ET close.
+- **Consequently eToro's closes sit ~0.16% below Tiingo's**: 0.161% (TSLA),
+  0.150% (INTC), 0.174% (MBLY), median, and the signed medians match the
+  absolute ones, so eToro is below on essentially every session. Tiingo reports
+  the official closing auction print; eToro reports the pre-auction bid. The
+  direction is fully explained by that. The magnitude is larger than today's
+  half-spreads (0.006-0.058% on the same names), so part of it is presumably
+  wider spreads earlier in the window — worth re-measuring on recent bars alone
+  before relying on the size.
+- Two practical consequences. Returns are unaffected: a constant proportional
+  offset cancels in `close_t / close_{t-1}`. Absolute price levels are not —
+  stop and limit levels, share counts, and any calculation mixing eToro prices
+  with another vendor's. Never combine the two in one expression.
+- The offset is not a defect for execution purposes: the bid is what a sell
+  actually fills at, so eToro's close is an executable price rather than a
+  theoretical one. A buy still pays the ask.
 - `candlesCount` is capped by listing date as well as by the 1000 maximum:
   MBLY returned 930 bars from 2022-10-26, its listing, rather than padding to
   1000. Do not treat a short series as an error.

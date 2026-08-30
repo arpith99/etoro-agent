@@ -259,8 +259,10 @@ error taxonomy all port. The 242 generated types do not.
 
 ## Open items
 
-- Confirm whether eToro candles are split- and dividend-adjusted. Assume not
-  until proven; record the finding in [`api-observations.md`](api-observations.md).
+- ~~Confirm whether eToro candles are split- and dividend-adjusted.~~ Done:
+  split-adjusted, not dividend-adjusted. And a candle's `close` is the last
+  *bid* of the session, which is why eToro's closes run ~0.16% under Tiingo's.
+  Both in [`api-observations.md`](api-observations.md).
 - `docs/spec/operations.json` does not capture request parameters, only tags,
   scopes, rate limits, and schema `$ref`s. Endpoints with query or path
   parameters currently require reading the docs directly. Extending the
