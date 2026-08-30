@@ -45,9 +45,15 @@ CANDLE_COUNT = 1000
 #: with SPIKE_USER_AGENT if this value is not accepted either.
 USER_AGENT = os.environ.get("SPIKE_USER_AGENT", "etoro-agent/0.1 (candle source comparison)")
 
-#: Below this, the two Tiingo series are indistinguishable and the comparison
-#: says nothing about which one eToro follows.
+#: Below this, a float comparison is treated as equality.
 INCONCLUSIVE_EPSILON = 1e-9
+
+#: The two medians must differ by at least this fraction of the larger before
+#: the dividend comparison means anything. Without it, a symbol that pays no
+#: dividend produces two near-identical medians and the smaller one "wins" on
+#: noise -- which is how an early version of this script reported TSLA as
+#: dividend-adjusted on a 0.001-percentage-point gap.
+DIVIDEND_SIGNAL_TOLERANCE = 0.5
 
 
 # --------------------------------------------------------------------------
@@ -78,45 +84,82 @@ def biggest_jump(series):
     return worst
 
 
+def split_findings(etoro, tiingo):
+    """Per split, does eToro's series show the discontinuity or not?
+
+    This is a point test, not an aggregate. A split moves the price by an exact
+    factor on one day, so an unadjusted series shows that factor across the
+    split date and an adjusted one shows an ordinary day's move. Aggregates
+    cannot see this: a single split in a thousand-bar window does not move a
+    median at all.
+
+    Returns a list of ``(date, factor, observed_ratio, verdict)``.
+    """
+    dates = list(etoro)
+    position = {date: index for index, date in enumerate(dates)}
+    findings = []
+    for date, (_, _, factor) in tiingo.items():
+        if abs(factor - 1.0) <= INCONCLUSIVE_EPSILON:
+            continue
+        index = position.get(date)
+        if index is None or index == 0:
+            findings.append((date, factor, None, "not covered by the eToro series"))
+            continue
+        before, after = etoro[dates[index - 1]], etoro[dates[index]]
+        if not after:
+            findings.append((date, factor, None, "no usable price"))
+            continue
+        observed = before / after
+        verdict = "unadjusted" if abs(observed - factor) < abs(observed - 1.0) else "adjusted"
+        findings.append((date, factor, observed, verdict))
+    return findings
+
+
 def compare_series(etoro, tiingo):
     """Decide which Tiingo series eToro's closes track.
 
     ``etoro`` maps date -> close. ``tiingo`` maps date -> (close, adj_close,
-    split_factor). Returns a summary dict; ``verdict`` is one of ``adjusted``,
-    ``raw`` or ``inconclusive``.
+    split_factor).
+
+    Splits and dividends are answered separately because they are adjusted
+    independently, and the common convention -- split-adjusted but not
+    dividend-adjusted -- is invisible to a single verdict.
     """
     shared = [date for date in etoro if date in tiingo]
-    raw_diffs, adj_diffs = [], []
+    raw_diffs, adj_diffs, signed = [], [], []
     for date in shared:
         mine = etoro[date]
         close, adj_close, _ = tiingo[date]
         if close:
             raw_diffs.append(abs(mine - close) / close)
+            # Signed, so a systematic markup can be told from symmetric noise.
+            # A median near +/- the absolute median means eToro sits
+            # consistently on one side and the offset is correctable; a median
+            # near zero means it scatters and it is not.
+            signed.append((mine - close) / close)
         if adj_close:
             adj_diffs.append(abs(mine - adj_close) / adj_close)
 
     median_raw, median_adj = median(raw_diffs), median(adj_diffs)
-    if not shared:
-        verdict = "inconclusive"
-    elif abs(median_raw - median_adj) < INCONCLUSIVE_EPSILON:
-        # No corporate action in the window: close == adjClose throughout, so
-        # matching both proves nothing.
-        verdict = "inconclusive"
+    low, high = sorted((median_raw, median_adj))
+    if not shared or high <= INCONCLUSIVE_EPSILON:
+        dividend_verdict = "inconclusive"
+    elif (high - low) / high <= DIVIDEND_SIGNAL_TOLERANCE:
+        # The two series are too close to tell apart: no dividend in the
+        # window, or one too small to register.
+        dividend_verdict = "inconclusive"
     elif median_adj < median_raw:
-        verdict = "adjusted"
+        dividend_verdict = "adjusted"
     else:
-        verdict = "raw"
+        dividend_verdict = "raw"
 
     return {
         "overlap": len(shared),
         "median_raw": median_raw,
         "median_adj": median_adj,
-        "verdict": verdict,
-        "splits": [
-            (date, factor)
-            for date, (_, _, factor) in tiingo.items()
-            if abs(factor - 1.0) > INCONCLUSIVE_EPSILON
-        ],
+        "median_signed": median(signed),
+        "dividend_verdict": dividend_verdict,
+        "splits": split_findings(etoro, tiingo),
         "largest_jump": biggest_jump(etoro),
     }
 
@@ -226,18 +269,25 @@ def report(symbol):
 
     result = compare_series(etoro, tiingo)
     print(f"  overlap: {result['overlap']} dates")
-    print(f"\n  median |diff| vs Tiingo close    (raw): {result['median_raw']:.6%}")
-    print(f"  median |diff| vs Tiingo adjClose (adj): {result['median_adj']:.6%}")
-    print(f"\n  splits in window (Tiingo): {result['splits'] or 'none'}")
+
+    print("\n  SPLITS")
+    if not result["splits"]:
+        print("    none in window -- says nothing either way")
+    for date, factor, observed, verdict in result["splits"]:
+        seen = f"{observed:.3f}x" if observed is not None else "n/a"
+        print(f"    {date}  factor {factor:g}x  eToro moved {seen}  -> {verdict}")
+
+    print("\n  DIVIDENDS")
+    print(f"    median |diff| vs Tiingo close    (raw): {result['median_raw']:.6%}")
+    print(f"    median |diff| vs Tiingo adjClose (adj): {result['median_adj']:.6%}")
+    print(f"    -> {result['dividend_verdict']}")
+    if result["dividend_verdict"] == "inconclusive":
+        print("       (the two Tiingo series are too close to tell apart here)")
+
     ratio, from_date, to_date = result["largest_jump"]
+    print(f"\n  tracking error vs Tiingo close: {result['median_raw']:.4%} (median |diff|)")
+    print(f"                            signed: {result['median_signed']:+.4%} (median)")
     print(f"  largest 1-day move in eToro series: {ratio:.2f}x  ({from_date} -> {to_date})")
-    print(f"\n  --> eToro closes look {result['verdict'].upper()}")
-    if result["verdict"] == "inconclusive":
-        print("      (no corporate action in the window, or no overlapping dates)")
-    elif result["splits"]:
-        print("      (a split is in the window, so this is a strong signal)")
-    else:
-        print("      (dividends only -- weaker than a split, but real)")
 
 
 def main(argv):

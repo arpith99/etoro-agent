@@ -16,6 +16,7 @@ from compare_candle_sources import (  # noqa: E402
     biggest_jump,
     compare_series,
     median,
+    split_findings,
 )
 
 
@@ -55,36 +56,107 @@ class TestCompareSeries(unittest.TestCase):
     def tiingo(rows):
         return OrderedDict(rows)
 
-    def test_detects_an_unadjusted_series(self):
-        etoro = OrderedDict([("d1", 1200.0), ("d2", 120.0)])
-        tiingo = self.tiingo([("d1", (1200.0, 120.0, 1.0)), ("d2", (120.0, 120.0, 10.0))])
-        result = compare_series(etoro, tiingo)
-        self.assertEqual(result["verdict"], "raw")
-        self.assertEqual(result["splits"], [("d2", 10.0)])
+    def test_detects_a_dividend_unadjusted_series(self):
+        etoro = OrderedDict([("d1", 100.0), ("d2", 101.0)])
+        tiingo = self.tiingo([("d1", (100.0, 90.0, 1.0)), ("d2", (101.0, 91.0, 1.0))])
+        self.assertEqual(compare_series(etoro, tiingo)["dividend_verdict"], "raw")
 
-    def test_detects_an_adjusted_series(self):
-        etoro = OrderedDict([("d1", 120.0), ("d2", 120.0)])
-        tiingo = self.tiingo([("d1", (1200.0, 120.0, 1.0)), ("d2", (120.0, 120.0, 10.0))])
-        self.assertEqual(compare_series(etoro, tiingo)["verdict"], "adjusted")
+    def test_detects_a_dividend_adjusted_series(self):
+        etoro = OrderedDict([("d1", 90.0), ("d2", 91.0)])
+        tiingo = self.tiingo([("d1", (100.0, 90.0, 1.0)), ("d2", (101.0, 91.0, 1.0))])
+        self.assertEqual(compare_series(etoro, tiingo)["dividend_verdict"], "adjusted")
 
     def test_identical_tiingo_series_cannot_decide(self):
         # No corporate action: close == adjClose, so matching both proves
         # nothing and claiming "adjusted" would be a false positive.
         etoro = OrderedDict([("d1", 100.0), ("d2", 101.0)])
         tiingo = self.tiingo([("d1", (100.0, 100.0, 1.0)), ("d2", (101.0, 101.0, 1.0))])
-        self.assertEqual(compare_series(etoro, tiingo)["verdict"], "inconclusive")
+        self.assertEqual(compare_series(etoro, tiingo)["dividend_verdict"], "inconclusive")
 
-    def test_no_overlapping_dates_cannot_decide(self):
-        etoro = OrderedDict([("d1", 100.0)])
-        tiingo = self.tiingo([("d9", (100.0, 90.0, 1.0))])
+    def test_a_near_tie_is_not_a_verdict(self):
+        # The regression this exists for: TSLA pays no dividend, the two
+        # medians landed 0.001 percentage points apart, and the smaller one
+        # won. A gap that small is noise, not evidence.
+        etoro = OrderedDict([("d1", 100.0), ("d2", 100.0)])
+        tiingo = self.tiingo([("d1", (100.161, 100.160, 1.0)), ("d2", (100.161, 100.160, 1.0))])
+        self.assertEqual(compare_series(etoro, tiingo)["dividend_verdict"], "inconclusive")
+
+    def test_signed_error_separates_a_markup_from_scatter(self):
+        # eToro consistently 1% above: a correctable bias.
+        etoro = OrderedDict([("d1", 101.0), ("d2", 202.0)])
+        tiingo = self.tiingo([("d1", (100.0, 100.0, 1.0)), ("d2", (200.0, 200.0, 1.0))])
+        self.assertAlmostEqual(compare_series(etoro, tiingo)["median_signed"], 0.01)
+
+        # Same absolute error, scattered either side: nothing to correct. An
+        # odd number of points, because a two-element median is just one of
+        # the two values and cannot show a distribution centred on zero.
+        etoro = OrderedDict([("d1", 99.0), ("d2", 100.0), ("d3", 101.0)])
+        tiingo = self.tiingo(
+            [
+                ("d1", (100.0, 100.0, 1.0)),
+                ("d2", (100.0, 100.0, 1.0)),
+                ("d3", (100.0, 100.0, 1.0)),
+            ]
+        )
         result = compare_series(etoro, tiingo)
-        self.assertEqual(result["verdict"], "inconclusive")
-        self.assertEqual(result["overlap"], 0)
+        self.assertAlmostEqual(result["median_raw"], 0.01)
+        self.assertAlmostEqual(result["median_signed"], 0.0)
 
     def test_counts_only_dates_present_in_both(self):
         etoro = OrderedDict([("d1", 100.0), ("d2", 101.0), ("d3", 102.0)])
         tiingo = self.tiingo([("d2", (101.0, 100.0, 1.0)), ("d9", (1.0, 1.0, 1.0))])
         self.assertEqual(compare_series(etoro, tiingo)["overlap"], 1)
+
+    def test_no_overlapping_dates_cannot_decide(self):
+        etoro = OrderedDict([("d1", 100.0)])
+        tiingo = self.tiingo([("d9", (100.0, 90.0, 1.0))])
+        result = compare_series(etoro, tiingo)
+        self.assertEqual(result["dividend_verdict"], "inconclusive")
+        self.assertEqual(result["overlap"], 0)
+
+
+class TestSplitFindings(unittest.TestCase):
+    @staticmethod
+    def tiingo_with_split(date, factor):
+        return OrderedDict(
+            [
+                ("d1", (1.0, 1.0, 1.0)),
+                (date, (1.0, 1.0, factor)),
+                ("d3", (1.0, 1.0, 1.0)),
+            ]
+        )
+
+    def test_an_unadjusted_series_shows_the_split_factor(self):
+        etoro = OrderedDict([("d1", 1200.0), ("d2", 120.0), ("d3", 121.0)])
+        (date, factor, observed, verdict), = split_findings(
+            etoro, self.tiingo_with_split("d2", 10.0)
+        )
+        self.assertEqual((date, factor), ("d2", 10.0))
+        self.assertAlmostEqual(observed, 10.0)
+        self.assertEqual(verdict, "unadjusted")
+
+    def test_an_adjusted_series_shows_an_ordinary_move(self):
+        # The real TSLA case: a 3:1 split with no discontinuity in the series.
+        etoro = OrderedDict([("d1", 120.0), ("d2", 119.0), ("d3", 121.0)])
+        (_, _, observed, verdict), = split_findings(etoro, self.tiingo_with_split("d2", 3.0))
+        self.assertAlmostEqual(observed, 120.0 / 119.0)
+        self.assertEqual(verdict, "adjusted")
+
+    def test_a_split_outside_the_series_is_reported_not_guessed(self):
+        etoro = OrderedDict([("d1", 100.0), ("d3", 101.0)])
+        (_, _, observed, verdict), = split_findings(etoro, self.tiingo_with_split("d2", 3.0))
+        self.assertIsNone(observed)
+        self.assertIn("not covered", verdict)
+
+    def test_a_split_on_the_first_bar_has_no_prior_day_to_compare(self):
+        etoro = OrderedDict([("d2", 120.0), ("d3", 121.0)])
+        (_, _, observed, _), = split_findings(etoro, self.tiingo_with_split("d2", 3.0))
+        self.assertIsNone(observed)
+
+    def test_no_splits_means_no_findings(self):
+        etoro = OrderedDict([("d1", 100.0), ("d2", 101.0)])
+        self.assertEqual(split_findings(etoro, self.tiingo_with_split("d2", 1.0)), [])
+
 
 
 if __name__ == "__main__":

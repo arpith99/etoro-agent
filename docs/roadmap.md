@@ -129,11 +129,38 @@ A local store, merge-on-refetch, keyed by (instrument, interval, timestamp).
 Necessary because the API window rolls forward; every fetch not persisted is
 history permanently lost.
 
-This is also where the data source is chosen. Stooq offers free daily OHLCV
-going back decades with no API key; Tiingo has a generous free tier and a
-proper REST API. Either provides real date ranges and adjusted series, both of
-which eToro lacks. A useful first step is a spike fetching one ticker from both
-eToro and the candidate vendor and diffing them.
+This is also where the data source is chosen.
+
+**Tiingo** is the choice, for a reason beyond history depth: it returns
+`close` *and* `adjClose` per bar, plus the `divCash` and `splitFactor` that
+explain the difference. That corporate-action metadata is what makes it usable
+as a **referee** — a series to validate any other source against. A vendor that
+returns only a price leaves you exactly where eToro does, holding an unlabelled
+number.
+
+**Stooq was ruled out** on 2026-08-30. Two reasons, the second sufficient on
+its own:
+
+- Its CSV endpoint serves a JavaScript proof-of-work challenge rather than
+  data, even with a browser user agent. Getting past it means defeating a bot
+  protection, which is out of scope here for the same reason it was for the
+  eToro docs portal. This may be IP- or region-dependent, so it is worth
+  re-checking before treating it as permanent.
+- It carries no per-bar corporate-action fields, so it can neither answer the
+  adjustment question nor be checked against a source that can.
+
+`scripts/compare_candle_sources.py` was the spike, and it has run. **eToro
+candles are split-adjusted but not dividend-adjusted** — a price-return series
+matching Tiingo's `close`, never `adjClose`. Evidence and the ~0.16% tracking
+error are in [`api-observations.md`](api-observations.md).
+
+That settles the storage schema, and the conclusion is: **do not bake the
+adjustment decision into storage.** Persist Tiingo's `close` *and* `adjClose`
+alongside `divCash` and `splitFactor`, so price-return versus total-return
+becomes a query-time choice. Storing one adjusted series discards the
+information needed to recover the other, and which one a strategy should use is
+not knowable in advance — a momentum rule wants price return, anything holding
+dividend payers for the yield wants total return.
 
 **Done when** re-running the fetch does not duplicate rows, and the store
 survives a source change without a schema change.

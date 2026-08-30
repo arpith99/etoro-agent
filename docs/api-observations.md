@@ -85,6 +85,23 @@ Spec-vs-reality, all verified empirically:
 - `candlesResponse` nests `candles` inside `candles`: outer items are
   per-instrument, inner items per-time-period. Outer uses `instrumentId`, inner
   uses `instrumentID`. Yes, really.
+- **Candles are split-adjusted but *not* dividend-adjusted** — a price-return
+  series. Measured 2026-08-30 with `scripts/compare_candle_sources.py` against
+  Tiingo: TSLA moved 1.003x across its 3:1 split on 2022-08-25 (an unadjusted
+  series would show 3.0x), while INTC's closes track Tiingo's `close` at 0.150%
+  median deviation versus 0.542% against `adjClose`. So eToro bars correspond
+  to Tiingo `close`, never `adjClose`. A strategy assuming reinvested dividends
+  is measuring something these bars do not contain.
+- **Closes sit ~0.16% away from Tiingo's**, consistently: 0.161% (TSLA), 0.150%
+  (INTC), 0.174% (MBLY), median absolute. Too large to be bid-versus-last —
+  25x to 50x the observed spreads — and far too small to be a one-day
+  misalignment, which would land near the median daily move of 1-2%. A
+  different session boundary or snapshot time is the likeliest explanation.
+  **Unresolved**, and it matters: backtesting on one series and executing
+  against the other carries this as a basis.
+- `candlesCount` is capped by listing date as well as by the 1000 maximum:
+  MBLY returned 930 bars from 2022-10-26, its listing, rather than padding to
+  1000. Do not treat a short series as an error.
 - `closingPricesResponse` is a **bare array**, no envelope. Prices can be `-1`
   as a sentinel for "no data" — worth an `Option<Decimal>` via a custom
   deserializer rather than letting `-1` through as a price.
