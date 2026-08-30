@@ -56,6 +56,10 @@ SOURCE defaults to tiingo.
 backtest options:
   --fast N       fast moving-average window in sessions (default 20)
   --slow N       slow window; must exceed the fast one (default 100)
+  --carry PCT    financing per calendar day held, as a percentage of position
+                 value (default 0). Zero is right for an unleveraged real
+                 stock; anything eToro quotes an overnightFee on is not. Get
+                 the figure from `plan`, which prints the quote.
   --spread PCT   quoted spread as a percentage of mid (default 0.02). Half is
                  charged per leg. Get the real figure from `prices SYM`: the
                  observed range across ordinary names is ~50x, so one constant
@@ -653,7 +657,7 @@ const POLL_ATTEMPTS: u32 = 12;
 /// value of one is being able to re-run it and get the same answer.
 fn backtest(options: &BacktestOptions) -> Result<()> {
     let store = FileStore::new(store_root());
-    let costs = CostModel::from_spread(options.spread);
+    let costs = CostModel::from_spread(options.spread).with_carry(options.carry);
     let mut rows = Vec::new();
 
     for symbol in &options.symbols {
@@ -1202,6 +1206,8 @@ struct BacktestOptions {
     slow: usize,
     /// Quoted spread as a fraction of mid, halved per leg by the cost model.
     spread: f64,
+    /// Financing per calendar day held, as a fraction of position value.
+    carry: f64,
     fill: FillPrice,
     sweep: bool,
     trades: bool,
@@ -1302,6 +1308,7 @@ impl Command {
                     fast: DEFAULT_FAST,
                     slow: DEFAULT_SLOW,
                     spread: DEFAULT_SPREAD_PCT / 100.0,
+                    carry: 0.0,
                     fill: FillPrice::NextOpen,
                     sweep: false,
                     trades: false,
@@ -1321,6 +1328,7 @@ impl Command {
                         "--fast" => options.fast = parse_window(&value("--fast")?, "--fast")?,
                         "--slow" => options.slow = parse_window(&value("--slow")?, "--slow")?,
                         "--spread" => options.spread = parse_spread(&value("--spread")?)?,
+                        "--carry" => options.carry = parse_carry(&value("--carry")?)?,
                         "--close-fill" => options.fill = FillPrice::SameClose,
                         "--sweep" => options.sweep = true,
                         "--trades" => options.trades = true,
@@ -1468,6 +1476,29 @@ fn parse_allocation(text: &str) -> Result<Numeric> {
         bail!("--allocation must be greater than zero, got {amount}");
     }
     Ok(Numeric(amount))
+}
+
+/// Daily financing, quoted as a percentage of position value.
+///
+/// Capped well below the spread limit because this is charged *every day*: at
+/// 0.1% a day a position held a year costs a third of itself, so a value large
+/// enough to trip this is far more likely to be a units mistake than a real
+/// rate.
+fn parse_carry(text: &str) -> Result<f64> {
+    let percent: f64 = text
+        .parse()
+        .with_context(|| format!("--carry takes a percentage per day, not {text:?}"))?;
+    if !percent.is_finite() || percent < 0.0 {
+        bail!("--carry must be a percentage per day that is zero or more, got {percent}");
+    }
+    if percent > 1.0 {
+        bail!(
+            "--carry is a percentage of position value per DAY, and {percent}% a day \
+             compounds to roughly {:.0}% a year; 0.02 means two basis points",
+            ((1.0 + percent / 100.0f64).powi(365) - 1.0) * 100.0
+        );
+    }
+    Ok(percent / 100.0)
 }
 
 fn parse_date(text: &str) -> Result<NaiveDate> {

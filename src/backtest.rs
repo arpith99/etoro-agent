@@ -91,6 +91,20 @@ pub struct CostModel {
     pub half_spread: f64,
     /// Commission as a fraction of notional. Zero for eToro real stocks.
     pub commission: f64,
+    /// Financing charged for each **calendar day** a position is held, as a
+    /// fraction of its value.
+    ///
+    /// Zero for an ordinary unleveraged long, which is why the engine got this
+    /// far without it. Non-zero for anything eToro quotes an `overnightFee` or
+    /// `overWeekendFee` on -- CFDs, leverage, and shorts. Without this term a
+    /// strategy holding such a position is measured optimistically by an amount
+    /// that grows with the holding period, so the error is smallest exactly
+    /// where it is easiest to notice and largest where it is not.
+    ///
+    /// Charged on calendar days rather than bars, so a Friday-to-Monday hold
+    /// costs three days. The weekend fee is then not a special case; it is
+    /// simply the weekend.
+    pub carry_per_day: f64,
 }
 
 impl CostModel {
@@ -105,7 +119,18 @@ impl CostModel {
         Self {
             half_spread: spread / 2.0,
             commission: 0.0,
+            carry_per_day: 0.0,
         }
+    }
+
+    /// The same costs with a daily financing rate attached.
+    ///
+    /// The figure comes from `overnightFee` in a
+    /// [`CostEstimate`](crate::costs::CostEstimate), divided by the position
+    /// value it was quoted against.
+    pub fn with_carry(mut self, per_day: f64) -> Self {
+        self.carry_per_day = per_day;
+        self
     }
 
     /// No trading costs at all.
@@ -117,6 +142,7 @@ impl CostModel {
         Self {
             half_spread: 0.0,
             commission: 0.0,
+            carry_per_day: 0.0,
         }
     }
 
@@ -243,8 +269,15 @@ pub struct Backtest {
     pub exposure: f64,
     /// Summed absolute weight changes. A full round trip is 2.0.
     pub turnover: f64,
-    /// Total charged, as a fraction of starting equity.
+    /// Turnover cost charged, as a fraction of starting equity.
     pub costs_paid: f64,
+    /// Financing charged for holding, as a fraction of starting equity.
+    ///
+    /// Reported apart from [`Self::costs_paid`] because the two respond to
+    /// different things: turnover cost falls if you trade less, carry falls
+    /// only if you hold for less time, and a strategy can easily improve one
+    /// while making the other worse.
+    pub carry_paid: f64,
     /// Cumulative equity from 1.0, stamped with the date of each fill.
     pub equity: Vec<(NaiveDate, f64)>,
     pub trades: Vec<Trade>,
@@ -292,6 +325,7 @@ pub fn run(
     let mut weight = 0.0;
     let mut equity = 1.0;
     let (mut turnover, mut costs_paid, mut exposure) = (0.0, 0.0, 0.0);
+    let mut carry_paid = 0.0;
     let mut strategy_returns = Vec::with_capacity(bars.len() - needed + 1);
     let mut benchmark_returns = Vec::with_capacity(strategy_returns.capacity());
     let mut trades = Vec::new();
@@ -324,13 +358,21 @@ pub fn run(
         turnover += traded;
         costs_paid += cost;
         weight = target;
-        exposure += weight;
+        // `abs`, because a short is exposure too. A no-op while targets are
+        // confined to [0, 1], and load-bearing the moment they are not.
+        exposure += weight.abs();
 
         // Fill to fill, not close to close: the holding period is bounded by
         // the prices actually transacted at, so the return earned and the
         // costs charged refer to the same instants.
         let asset = prices[i + 1] / prices[i] - 1.0;
-        let net = weight * asset - cost;
+        // Calendar days, not bars: a position held over a weekend is financed
+        // for three days, and a market holiday costs the same as any other day
+        // the position is open.
+        let days = (bars[i + 1].date - bars[i].date).num_days().max(0) as f64;
+        let held = weight.abs() * costs.carry_per_day * days;
+        carry_paid += held;
+        let net = weight * asset - cost - held;
 
         equity *= 1.0 + net;
         curve.push((bars[i + 1].date, equity));
@@ -353,6 +395,7 @@ pub fn run(
         exposure: exposure / segments as f64,
         turnover,
         costs_paid,
+        carry_paid,
         equity: curve,
         trades,
     })
@@ -431,6 +474,13 @@ impl Backtest {
             self.turnover / 2.0,
             self.exposure * 100.0,
         ));
+        if self.cost_model.carry_per_day != 0.0 {
+            out.push_str(&format!(
+                "{:.2}% paid in financing at {:.4}% per day held\n",
+                self.carry_paid * 100.0,
+                self.cost_model.carry_per_day * 100.0,
+            ));
+        }
         out.push_str(&format!(
             "{:.2}% paid in costs at {:.3}% half-spread + {:.3}% commission, filled {}\n",
             self.costs_paid * 100.0,
@@ -551,6 +601,7 @@ mod tests {
         let costs = CostModel {
             half_spread: 0.01,
             commission: 0.0,
+            carry_per_day: 0.0,
         };
         let result = run(
             &bars,
@@ -653,6 +704,7 @@ mod tests {
             &CostModel {
                 half_spread: 0.01,
                 commission: 0.0,
+                carry_per_day: 0.0,
             },
             FillPrice::SameClose,
         )
@@ -809,6 +861,106 @@ mod tests {
                 "{error} for {target}"
             );
         }
+    }
+
+    #[test]
+    fn financing_is_charged_for_every_calendar_day_a_position_is_held() {
+        // Friday to Monday: three days of financing, not one bar's worth.
+        // The weekend fee is not a special case, it is simply the weekend.
+        let bars = [
+            bar("2026-08-07", "100", "100"), // Friday
+            bar("2026-08-10", "100", "100"), // Monday
+            bar("2026-08-11", "100", "100"), // Tuesday
+        ];
+        let costs = CostModel::frictionless().with_carry(0.01);
+        let result = run(
+            &bars,
+            SeriesChoice::Reported,
+            &mut BuyAndHold,
+            &costs,
+            FillPrice::SameClose,
+        )
+        .unwrap();
+
+        // Segment one spans three calendar days, segment two spans one.
+        assert!(close(result.carry_paid, 0.04), "{}", result.carry_paid);
+        // Prices never moved, so financing is the entire loss.
+        assert!(close(
+            result.strategy.compounded,
+            (1.0 - 0.03) * (1.0 - 0.01) - 1.0
+        ));
+    }
+
+    #[test]
+    fn a_strategy_that_is_flat_pays_no_financing() {
+        // Carry is charged on what is held, so sitting in cash is free -- the
+        // property that makes carry different from a cost on turnover.
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "100", "100"),
+            bar("2026-08-05", "100", "100"),
+        ];
+        let result = run(
+            &bars,
+            SeriesChoice::Reported,
+            &mut Fixed::new(&[0.0, 0.0, 0.0]),
+            &CostModel::frictionless().with_carry(0.05),
+            FillPrice::SameClose,
+        )
+        .unwrap();
+        assert!(close(result.carry_paid, 0.0));
+    }
+
+    #[test]
+    fn financing_and_turnover_costs_are_reported_apart() {
+        // They respond to different things: trading less cuts one, holding for
+        // less time cuts the other, and a strategy can improve one while
+        // making the other worse.
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "100", "100"),
+            bar("2026-08-05", "100", "100"),
+        ];
+        let result = run(
+            &bars,
+            SeriesChoice::Reported,
+            &mut BuyAndHold,
+            &CostModel::from_spread(0.02).with_carry(0.01),
+            FillPrice::SameClose,
+        )
+        .unwrap();
+
+        assert!(
+            close(result.costs_paid, 0.01),
+            "one entry at a 1% half-spread"
+        );
+        assert!(close(result.carry_paid, 0.02), "two days held");
+        let report = result.report();
+        assert!(report.contains("paid in financing"), "{report}");
+        assert!(report.contains("paid in costs"), "{report}");
+    }
+
+    #[test]
+    fn a_zero_carry_rate_changes_nothing_and_is_not_mentioned() {
+        let bars = [
+            bar("2026-08-03", "100", "100"),
+            bar("2026-08-04", "110", "110"),
+            bar("2026-08-05", "120", "120"),
+        ];
+        let result = run(
+            &bars,
+            SeriesChoice::Reported,
+            &mut BuyAndHold,
+            &CostModel::frictionless(),
+            FillPrice::NextOpen,
+        )
+        .unwrap();
+        assert!(close(result.carry_paid, 0.0));
+        assert!(close(
+            result.strategy.compounded,
+            result.benchmark.compounded
+        ));
+        assert!(!result.report().contains("financing"));
     }
 
     #[test]

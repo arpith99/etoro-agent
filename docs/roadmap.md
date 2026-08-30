@@ -495,6 +495,50 @@ Only after milestone 5 has produced that comparison. Prerequisites:
   *source name*. All four parsers now reject anything beginning with `-`.
 - Audit logging of every submitted order and its resolved outcome.
 
+### 7. Shorting — in progress
+
+Asked for on 2026-08-30. The venue supports it: `transaction: sellShort` opens
+a short today, and closing goes through the position-close endpoint regardless
+of direction. It is blocked here at four layers, all deliberate — `MarketBuy`
+hardcodes `buy`, `backtest::run` rejects targets outside `[0, 1]`,
+`trader::decide` accepts only 0 or 1, and `holding_for` refuses any position
+that is not a plain long.
+
+**The cost model came first, and it was the right order.** The engine charged
+costs on turnover only, so a position carrying a daily financing fee was
+measured optimistically by an amount that grows with the holding period —
+precisely the cost structure a short has. `CostModel::carry_per_day` closes
+that, charged on **calendar** days between bars, so a Friday-to-Monday hold
+costs three days and the weekend fee stops being a special case.
+
+Measured immediately, at 0.02% a day (2 bp, a plausible CFD rate), over the
+same five years:
+
+| | no financing | 0.02%/day | benchmark |
+|---|---|---|---|
+| AAPL | 0.23 | **0.01** | 0.56 |
+| MSFT | 0.21 | **−0.00** | 0.41 |
+| NVDA | 1.26 | **1.09** | 1.10 |
+| GOOG | 0.82 | 0.61 | 0.57 |
+
+Two things worth keeping. **Financing dwarfs trading cost for a strategy that
+holds**: on AAPL it took 20.68% of equity against 0.19% for spread — about a
+hundred times more, for a rule in the market only 56% of the time. And
+**NVDA's result flips**: 1.26 to 1.09 against a benchmark of 1.10, so the
+single most convincing cell in the basket becomes a loss under a cost the
+engine previously ignored.
+
+The comparison is fair rather than harsh, and for a specific reason: the
+benchmark holds the real share and pays no financing, while a CFD or short
+position does. That is the actual choice.
+
+**Still to do:** `MarketShort` (`stopLossRate` is *required* by the API for
+shorts, so it is a constructor argument rather than an option),
+`settlementType` from `POST /api/v2/trading/info/eligibility` →
+`leverageConfigs[].settlementType`, target range `[-1, 1]` in the engine,
+three-state `decide`, and `holding_for` learning to accept a short it opened
+while still refusing one it did not.
+
 ## The broker question, deferred
 
 Staying with eToro is right for a daily-bar strategy at this size. The
