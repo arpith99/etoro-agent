@@ -2,10 +2,11 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, anyhow, bail};
 use chrono::{Datelike, NaiveDate, Utc};
+use etoro_agent::analysis::gaps;
 use etoro_agent::chart::{ChartOptions, contains_split, render, render_html, summary};
 use etoro_agent::client::EtoroClient;
 use etoro_agent::data::{
-    BarSource, DataError, DateRange, PriceBasis,
+    BarSource, DataError, DateRange, PriceBasis, SeriesChoice,
     store::{BarStore, FileStore, Interval, SeriesKey},
     tiingo::Tiingo,
 };
@@ -17,6 +18,8 @@ usage:
   etoro-agent prices  SYM[,SYM...]             live bid/ask from eToro
   etoro-agent fetch-bars SYM[,SYM...] [FROM] [TO]
                                                daily bars from Tiingo into the store
+  etoro-agent gaps    SYM [SOURCE]             split returns into overnight
+                                               and intraday parts
   etoro-agent chart   SYM [SOURCE] [--html [FILE]]
                                                draw a stored series; --html writes
                                                an interactive candlestick page
@@ -31,12 +34,57 @@ async fn main() -> Result<()> {
     match Command::parse(std::env::args().skip(1).collect())? {
         Command::Summary { symbols } => account_summary(symbols).await,
         Command::FetchBars { symbols, range } => fetch_bars(symbols, range).await,
+        Command::Gaps { symbol, source } => gaps_report(&symbol, &source),
         Command::Chart {
             symbol,
             source,
             html,
         } => chart(&symbol, &source, html.as_deref()),
     }
+}
+
+/// Splits a stored series' returns into overnight and intraday parts.
+///
+/// Uses the total-return series when the source has one. On as-traded prices
+/// an ex-dividend date reads as an overnight loss no holder suffered, and a
+/// split reads as an overnight collapse -- both would land straight in the
+/// "largest overnight moves" list and crowd out the real ones.
+fn gaps_report(symbol: &str, source: &str) -> Result<()> {
+    let store = FileStore::new(store_root());
+    let key = SeriesKey::new(source, symbol, Interval::Daily)?;
+    let Some(series) = store.load(&key)? else {
+        bail!("no stored series for {symbol} from {source}; run: etoro-agent fetch-bars {symbol}");
+    };
+
+    let adjusted = series
+        .bars
+        .iter()
+        .any(|bar| bar.total_return_close.is_some());
+    let choice = if adjusted {
+        SeriesChoice::TotalReturn
+    } else {
+        SeriesChoice::Reported
+    };
+    let Some(stats) = gaps(&series.bars, choice, GAP_SAMPLE) else {
+        bail!("{symbol} has too few bars to measure gaps");
+    };
+
+    println!(
+        "{} {} ({:?} prices from {source}, {} sessions)",
+        symbol.to_ascii_uppercase(),
+        Interval::Daily.as_str(),
+        choice,
+        stats.sessions
+    );
+    if !adjusted {
+        println!(
+            "! no adjusted closes in this series, so dividends and splits will \
+             show up as overnight moves"
+        );
+    }
+    println!();
+    print!("{}", stats.report());
+    Ok(())
 }
 
 /// Draws a stored series. Reads the local store only -- no network, no
@@ -224,6 +272,9 @@ const DEFAULT_HISTORY_YEARS: i32 = 5;
 /// Bar source assumed when `chart` is not told one.
 const DEFAULT_SOURCE: &str = "tiingo";
 
+/// How many outlier sessions `gaps` lists.
+const GAP_SAMPLE: usize = 8;
+
 /// What the binary was asked to do.
 #[derive(Debug, PartialEq)]
 enum Command {
@@ -233,6 +284,10 @@ enum Command {
     FetchBars {
         symbols: Vec<String>,
         range: DateRange,
+    },
+    Gaps {
+        symbol: String,
+        source: String,
     },
     Chart {
         symbol: String,
@@ -272,6 +327,18 @@ impl Command {
                 Ok(Self::FetchBars {
                     symbols: parse_symbols(symbols),
                     range: DateRange::new(start, end).map_err(|detail| anyhow!(detail))?,
+                })
+            }
+            Some((verb, rest)) if verb == "gaps" => {
+                let Some(symbol) = rest.first() else {
+                    bail!("gaps needs a symbol\n\n{USAGE}");
+                };
+                Ok(Self::Gaps {
+                    symbol: symbol.clone(),
+                    source: rest
+                        .get(1)
+                        .cloned()
+                        .unwrap_or_else(|| DEFAULT_SOURCE.to_owned()),
                 })
             }
             Some((verb, rest)) if verb == "chart" => {
@@ -473,6 +540,18 @@ mod tests {
         };
         assert_eq!(range.start.to_string(), "2020-01-01");
         assert_eq!(range.end.to_string(), "2020-12-31");
+    }
+
+    #[test]
+    fn gaps_takes_a_symbol_and_an_optional_source() {
+        assert_eq!(
+            Command::parse(vec!["gaps".to_owned(), "AAPL".to_owned()]).unwrap(),
+            Command::Gaps {
+                symbol: "AAPL".to_owned(),
+                source: "tiingo".to_owned()
+            }
+        );
+        assert!(Command::parse(vec!["gaps".to_owned()]).is_err());
     }
 
     #[test]

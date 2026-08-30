@@ -27,6 +27,7 @@ cargo run                              # account summary, and price AAPL
 cargo run -- prices AAPL,MSFT,TSLA     # live bid/ask from eToro
 cargo run -- fetch-bars AAPL,MSFT      # daily bars from Tiingo, last five years
 cargo run -- fetch-bars AAPL 2020-01-01 2024-12-31
+cargo run -- gaps AAPL                 # overnight vs intraday return split
 cargo run -- chart AAPL                # draw a stored series in the terminal
 cargo run -- chart AAPL --html         # interactive candlesticks -> aapl.html
 ```
@@ -36,6 +37,13 @@ the series' `PriceBasis` in its header, because two series can look identical
 and mean different things. It reports the largest date gap, which is how a
 vendor outage or a bad date filter becomes visible; a bar count alone looks the
 same whether the fetch worked or not.
+
+`gaps` splits each session's return into the part earned while the market was
+shut (`open / previous close`) and the part earned while it was open
+(`close / open`). The two compound back to the close-to-close return exactly,
+because the opening prices cancel — so it is a decomposition, not an estimate.
+It uses the total-return series where one exists, since on as-traded prices an
+ex-dividend date reads as an overnight loss no holder suffered.
 
 `--html` writes a self-contained interactive candlestick page — zoom, pan and
 crosshair — with the charting library embedded rather than fetched from a CDN,

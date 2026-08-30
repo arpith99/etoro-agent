@@ -42,6 +42,15 @@ pub enum PriceBasis {
     TotalReturn,
 }
 
+/// Which price series a caller wants.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SeriesChoice {
+    /// Whatever the source reported, on its own [`PriceBasis`].
+    Reported,
+    /// The dividend- and split-adjusted series, where the source has one.
+    TotalReturn,
+}
+
 /// One period of price history for one instrument.
 ///
 /// `close` means whatever the producing source's [`BarSource::basis`] says it
@@ -88,6 +97,46 @@ pub struct Bar {
     /// dividends folded into it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub split_adjusted_volume: Option<Numeric>,
+}
+
+impl Bar {
+    /// Open, high, low and close on the chosen series, as `f64`.
+    ///
+    /// Floating point is correct here and nowhere near storage: these values
+    /// feed ratios, statistics and pixel positions, where a character cell or
+    /// a percentage to two decimals is a far coarser quantisation than `f64`.
+    /// Prices are still stored and transmitted as [`Numeric`]; nothing derived
+    /// here flows back into either.
+    ///
+    /// Only the adjusted *close* is stored, so the adjusted open, high and low
+    /// come from the ratio between the two closes. That ratio is the session's
+    /// cumulative adjustment factor and applies to every price in the bar, so
+    /// scaling by it is exact rather than an approximation.
+    pub fn ohlc(&self, series: SeriesChoice) -> [f64; 4] {
+        let raw = [
+            to_f64(&self.open),
+            to_f64(&self.high),
+            to_f64(&self.low),
+            to_f64(&self.close),
+        ];
+        match series {
+            SeriesChoice::Reported => raw,
+            SeriesChoice::TotalReturn => match self.total_return_close.as_ref() {
+                Some(adjusted) if raw[3] > 0.0 => {
+                    let factor = to_f64(adjusted) / raw[3];
+                    raw.map(|price| price * factor)
+                }
+                // Fall back rather than fabricate an adjustment.
+                _ => raw,
+            },
+        }
+    }
+}
+
+/// See [`Bar::ohlc`] for why leaving `Numeric` is acceptable here.
+pub(crate) fn to_f64(value: &Numeric) -> f64 {
+    use rust_decimal::prelude::ToPrimitive;
+    value.0.to_f64().unwrap_or(f64::NAN)
 }
 
 /// An inclusive range of sessions to fetch.

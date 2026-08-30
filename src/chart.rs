@@ -12,16 +12,7 @@
 
 use chrono::NaiveDate;
 
-use crate::data::Bar;
-
-/// Which price series to draw.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SeriesChoice {
-    /// Whatever the source reported, on its own basis.
-    Reported,
-    /// The dividend- and split-adjusted series, where the source has one.
-    TotalReturn,
-}
+use crate::data::{Bar, SeriesChoice, to_f64 as as_f64};
 
 #[derive(Debug, Clone, Copy)]
 pub struct ChartOptions {
@@ -37,33 +28,6 @@ impl Default for ChartOptions {
             height: 20,
             series: SeriesChoice::Reported,
         }
-    }
-}
-
-/// A bar's open, high, low and close on the chosen series.
-///
-/// Only the adjusted *close* is stored, so adjusted open/high/low are derived
-/// from the ratio between the two closes. That ratio is the session's
-/// cumulative adjustment factor and applies to every price in the bar, so
-/// scaling by it is exact rather than an approximation.
-fn prices(bar: &Bar, series: SeriesChoice) -> [f64; 4] {
-    let raw = [
-        as_f64(&bar.open),
-        as_f64(&bar.high),
-        as_f64(&bar.low),
-        as_f64(&bar.close),
-    ];
-    match series {
-        SeriesChoice::Reported => raw,
-        SeriesChoice::TotalReturn => match bar.total_return_close.as_ref() {
-            Some(adjusted) if raw[3] > 0.0 => {
-                let factor = as_f64(adjusted) / raw[3];
-                raw.map(|price| price * factor)
-            }
-            // No adjusted close: report the raw prices rather than fabricate
-            // an adjustment. Callers are warned separately.
-            _ => raw,
-        },
     }
 }
 
@@ -111,11 +75,11 @@ pub fn render(bars: &[Bar], options: ChartOptions) -> String {
             let slice = &bars[from..to.min(bars.len())];
             let low = slice
                 .iter()
-                .map(|bar| prices(bar, options.series)[2])
+                .map(|bar| bar.ohlc(options.series)[2])
                 .fold(f64::MAX, f64::min);
             let high = slice
                 .iter()
-                .map(|bar| prices(bar, options.series)[1])
+                .map(|bar| bar.ohlc(options.series)[1])
                 .fold(f64::MIN, f64::max);
             (low, high)
         })
@@ -186,8 +150,8 @@ pub fn summary(bars: &[Bar], series: SeriesChoice) -> String {
     let Some((first, last)) = bars.first().zip(bars.last()) else {
         return "no bars".to_owned();
     };
-    let open = prices(first, series)[3];
-    let close = prices(last, series)[3];
+    let open = first.ohlc(series)[3];
+    let close = last.ohlc(series)[3];
     let change = if open > 0.0 {
         (close / open - 1.0) * 100.0
     } else {
@@ -222,12 +186,6 @@ fn largest_gap(bars: &[Bar]) -> Option<(NaiveDate, NaiveDate, i64)> {
         .max_by_key(|(_, _, days)| *days)
 }
 
-/// Display-only conversion; see the module docs.
-fn as_f64(value: &crate::types::manual::Numeric) -> f64 {
-    use rust_decimal::prelude::ToPrimitive;
-    value.0.to_f64().unwrap_or(f64::NAN)
-}
-
 /// A self-contained interactive candlestick page.
 ///
 /// Zoom, pan, crosshair with an OHLC legend, a volume pane, moving-average
@@ -249,7 +207,7 @@ pub fn render_html(bars: &[Bar], title: &str, subtitle: &str) -> String {
     let points = |series: SeriesChoice| -> Vec<serde_json::Value> {
         bars.iter()
             .map(|bar| {
-                let [open, high, low, close] = prices(bar, series);
+                let [open, high, low, close] = bar.ohlc(series);
                 serde_json::json!({
                     "time": bar.date.to_string(),
                     "open": open, "high": high, "low": low, "close": close,
@@ -395,7 +353,7 @@ mod tests {
         b.close = Numeric("50".parse().unwrap());
         b.total_return_close = Some(Numeric("25".parse().unwrap()));
 
-        let [open, high, low, close] = prices(&b, SeriesChoice::TotalReturn);
+        let [open, high, low, close] = b.ohlc(SeriesChoice::TotalReturn);
         assert_eq!((open, high, low, close), (20.0, 30.0, 15.0, 25.0));
     }
 
@@ -403,8 +361,8 @@ mod tests {
     fn a_bar_without_an_adjusted_close_falls_back_instead_of_inventing_one() {
         let b = bar_with("2026-08-03", "50", None, None);
         assert_eq!(
-            prices(&b, SeriesChoice::TotalReturn),
-            prices(&b, SeriesChoice::Reported)
+            b.ohlc(SeriesChoice::TotalReturn),
+            b.ohlc(SeriesChoice::Reported)
         );
     }
 
