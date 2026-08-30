@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result, anyhow, bail};
 use chrono::{Datelike, NaiveDate, Utc};
 use etoro_agent::analysis::gaps;
+use etoro_agent::audit::AuditLog;
 use etoro_agent::backtest::{Backtest, CostModel, FillPrice};
 use etoro_agent::chart::{ChartOptions, contains_split, render, render_html, summary};
 use etoro_agent::client::{Environment, EtoroClient};
@@ -11,6 +12,7 @@ use etoro_agent::data::{
     store::{BarStore, FileStore, Interval, SeriesKey},
     tiingo::Tiingo,
 };
+use etoro_agent::limits::{Limits, open_exposure};
 use etoro_agent::strategy::{Sma, backtest_sma, sweep_sma};
 use etoro_agent::trader::plan as plan_action;
 use etoro_agent::types::manual::Numeric;
@@ -214,8 +216,9 @@ async fn plan(
     let instrument_id = i32::try_from(instrument_id)
         .with_context(|| format!("instrument id {instrument_id} does not fit an int32"))?;
 
-    let portfolio = client.portfolio().await?;
-    let portfolio = portfolio
+    let response = client.portfolio().await?;
+    let exposure = open_exposure(&response);
+    let portfolio = response
         .client_portfolio
         .ok_or_else(|| anyhow!("portfolio response omitted clientPortfolio"))?;
 
@@ -228,6 +231,13 @@ async fn plan(
         &mut strategy,
         allocation,
     )?;
+
+    // Read, never written, by this command. Recording a query as though it
+    // were an event would make the log worse at the job it exists for.
+    let audit = AuditLog::new(audit_path());
+    let submitted_today = audit.submissions_on(Utc::now().date_naive(), environment.as_str())?;
+    let limits = limits()?;
+    let verdict = limits.check(&plan.action, exposure, submitted_today);
 
     let last = series.bars.last().map(|bar| bar.date);
     println!(
@@ -252,7 +262,19 @@ async fn plan(
         None => println!("  held       nothing"),
     }
     println!("  allocation ${}", allocation.0);
+    println!(
+        "  exposure   ${} open, {submitted_today} order(s) submitted today",
+        exposure.0
+    );
     println!("\n  -> {}", plan.action.describe());
+
+    match &verdict {
+        Ok(()) => println!("  limits     ok"),
+        // Printed as a refusal rather than folded into an error, because the
+        // rest of the plan is still worth reading: knowing *what* was blocked
+        // is most of the value of blocking it.
+        Err(breach) => println!("  limits     REFUSED - {breach}"),
+    }
 
     // Said plainly, every time. The distance between "here is what I would do"
     // and "I did it" is the entire safety margin at this stage.
@@ -688,6 +710,60 @@ const DEFAULT_SLOW: usize = 100;
 /// which is why the report prints what it charged rather than leaving it
 /// implied.
 const DEFAULT_SPREAD_PCT: f64 = 0.02;
+
+/// The hard limits, read from the environment.
+///
+/// Unlike `ETORO_ENVIRONMENT` these do have defaults, and the difference is
+/// worth being explicit about: there is no safe default environment, but there
+/// is a safe default limit. Every value here is at the cautious end of what
+/// this project set out to trade, so forgetting to configure them produces an
+/// agent that is too timid rather than one that is too bold.
+fn limits() -> Result<Limits> {
+    let money = |name: &str, fallback: &str| -> Result<Numeric> {
+        let raw = std::env::var(name).unwrap_or_else(|_| fallback.to_owned());
+        let amount: rust_decimal::Decimal = raw
+            .parse()
+            .with_context(|| format!("{name} takes a USD amount, not {raw:?}"))?;
+        if amount <= rust_decimal::Decimal::ZERO {
+            bail!("{name} must be greater than zero, got {amount}");
+        }
+        Ok(Numeric(amount))
+    };
+
+    let orders = std::env::var("ETORO_MAX_ORDERS_PER_DAY")
+        .unwrap_or_else(|_| DEFAULT_MAX_ORDERS_PER_DAY.to_string());
+    Ok(Limits {
+        max_position_usd: money("ETORO_MAX_POSITION_USD", "100")?,
+        max_exposure_usd: money("ETORO_MAX_EXPOSURE_USD", "500")?,
+        max_orders_per_day: orders
+            .parse()
+            .with_context(|| format!("ETORO_MAX_ORDERS_PER_DAY takes a count, not {orders:?}"))?,
+        kill_switch: std::env::var("ETORO_KILL_SWITCH")
+            .unwrap_or_else(|_| DEFAULT_KILL_SWITCH.to_owned())
+            .into(),
+    })
+}
+
+/// Where the audit log lives.
+fn audit_path() -> PathBuf {
+    std::env::var("ETORO_AUDIT_LOG")
+        .unwrap_or_else(|_| DEFAULT_AUDIT_LOG.to_owned())
+        .into()
+}
+
+/// Create this file to stop the agent acting. See [`Limits::kill_switch`].
+const DEFAULT_KILL_SWITCH: &str = "STOP";
+
+/// Append-only record of intents and outcomes. Contains account activity, so
+/// it is gitignored and written 0600.
+const DEFAULT_AUDIT_LOG: &str = "audit.ndjson";
+
+/// Orders per UTC day when `ETORO_MAX_ORDERS_PER_DAY` is unset.
+///
+/// Four is enough for a daily-bar strategy to enter and exit twice, and far
+/// too few for a signal that has started flickering -- which is the failure it
+/// is here to bound.
+const DEFAULT_MAX_ORDERS_PER_DAY: u32 = 4;
 
 /// How stale the newest stored bar may be before `plan` says so.
 ///

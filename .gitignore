@@ -19,3 +19,9 @@ docs/spec/.staging/
 # Python bytecode from scripts/
 __pycache__/
 *.pyc
+
+# Audit log: account activity, written 0600 and appended to forever.
+/audit.ndjson
+
+# Kill switch: create this file to stop the agent acting.
+/STOP

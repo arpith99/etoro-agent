@@ -402,8 +402,34 @@ comparison.
 
 Only after milestone 5 has produced that comparison. Prerequisites:
 
-- Hard limits: maximum position size, maximum orders per day, maximum total
-  exposure, and a kill switch.
+- ~~Hard limits: maximum position size, maximum orders per day, maximum total
+  exposure, and a kill switch.~~ **Done 2026-08-30**: `src/limits.rs` and
+  `src/audit.rs`, both checked by `plan` before it reports a verdict.
+
+  **Only opening is constrained.** Closing is always permitted — kill switch
+  aside — because every limit exists to bound risk and refusing to close
+  increases it. A daily order cap that stopped an exit would be a limit that
+  traps you in a position.
+
+  The **kill switch is a file**, not a flag or a variable, because those all
+  require reaching the program: a file can be created from any shell, over ssh,
+  while a run is in progress, by somebody who has never read this code. It
+  blocks closing too — it means "this program is not to act", and closing by
+  hand is always available. It fails open (a wiped disk resumes trading), which
+  is the deliberate trade against a present-to-trade token that fails safe but
+  gets forgotten.
+
+  The **audit log is also the state**. The daily cap counts what the log says
+  was submitted, so it survives a restart, a crash, or two copies running at
+  once; an in-memory counter would reset at the moment it mattered most. It
+  counts *submissions*, not settlements — an order whose outcome was never
+  recorded still consumed a slot and may well have filled. And an unparseable
+  line is an error rather than a skipped line, because quietly counting fewer
+  orders than were placed is the one failure a cap must not have.
+
+  Refusals are logged as loudly as submissions: "did nothing today" and "was
+  stopped twelve times" look identical in a portfolio and are not the same
+  situation.
 - A cost check via `POST /api/v2/trading/info/costs` before every order, with a
   refusal path when cost is large relative to expected edge.
 - Approval mode first — print the intended order and require confirmation —

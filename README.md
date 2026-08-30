@@ -107,6 +107,26 @@ so re-fetching an overlapping range updates rather than duplicates.
 | `TIINGO_API_KEY` | for `fetch-bars` | Tiingo token, sent as an `Authorization` header |
 | `ETORO_DUMP_RESPONSES` | no | Set to `1`, `true`, or `yes` to write full responses |
 | `ETORO_AGENT_STORE` | no | Bar store root; defaults to `market-data/` |
+| `ETORO_MAX_POSITION_USD` | no | Cap on one new position; defaults to `100` |
+| `ETORO_MAX_EXPOSURE_USD` | no | Cap on all positions at once; defaults to `500` |
+| `ETORO_MAX_ORDERS_PER_DAY` | no | Submissions per UTC day; defaults to `4` |
+| `ETORO_KILL_SWITCH` | no | While this file exists nothing is sent; defaults to `STOP` |
+| `ETORO_AUDIT_LOG` | no | Append-only record; defaults to `audit.ndjson` |
+
+The limits have defaults where `ETORO_ENVIRONMENT` does not, and the difference
+is the point: there is no safe default *environment*, but there is a safe
+default *limit*. Every value above sits at the cautious end of what this project
+set out to trade, so forgetting to configure them yields an agent that is too
+timid rather than one that is too bold.
+
+To stop the agent acting, `touch STOP`. A file rather than a flag because it can
+be created from any shell, over ssh, mid-run, by somebody who has never read the
+code. It blocks closing as well as opening: if you no longer trust the program to
+open a position, you should not trust it to choose when to exit one — close by
+hand instead. Note the direction of failure, which is deliberate: presence stops
+trading, so a wiped disk resumes it. Requiring a file to be *present* before
+trading would fail safe, but gets forgotten far more often, and a rail that is
+disabled for being annoying protects nothing.
 
 Full responses can contain sensitive financial data. They are gitignored and,
 on Unix, created with mode `0600`. Anything already at that path (an older
