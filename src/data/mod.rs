@@ -9,9 +9,11 @@
 //! Everything here is source-agnostic. [`BarSource`] is the seam: adding a
 //! vendor means implementing it, and nothing downstream changes.
 
+pub mod store;
 pub mod tiingo;
 
 use chrono::NaiveDate;
+use serde::{Deserialize, Serialize};
 
 use crate::types::manual::Numeric;
 
@@ -29,7 +31,7 @@ use crate::types::manual::Numeric;
 /// [`AsTraded`]: Self::AsTraded
 /// [`SplitAdjusted`]: Self::SplitAdjusted
 /// [`TotalReturn`]: Self::TotalReturn
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PriceBasis {
     /// Exactly as traded. A split appears as a discontinuity.
     AsTraded,
@@ -52,7 +54,7 @@ pub enum PriceBasis {
 /// them into `close` is the point: an adjusted series discards the information
 /// needed to recover the unadjusted one, and which basis a strategy needs is
 /// not knowable when the bar is written.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Bar {
     /// The session this bar covers, in the exchange's local trading calendar.
     ///
@@ -66,12 +68,16 @@ pub struct Bar {
     pub low: Numeric,
     pub close: Numeric,
     /// Absent where a source does not report it, which is not the same as zero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub volume: Option<Numeric>,
     /// The [`PriceBasis::TotalReturn`] close, when the source carries both.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub total_return_close: Option<Numeric>,
     /// Dividend paid with this session as its ex-date, in the quote currency.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dividend_cash: Option<Numeric>,
     /// Split ratio effective this session; `1` means no split.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub split_factor: Option<Numeric>,
 }
 
